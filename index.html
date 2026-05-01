@@ -275,7 +275,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 // =========================================================
 // ESTADO Y PERSISTENCIA
 // =========================================================
-const STORE_KEY = 'winflex_op_v2';
+const STORE_KEY = 'winflex_op_v3';
 
 const DEFAULT_STATE = {
   config: {
@@ -306,23 +306,23 @@ const DEFAULT_STATE = {
     '5104': {nombre:'Juan Brest',rol:'Operario',modo:'operario'},
   },
   catalogo: [
-    {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1},
-    {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1},
-    {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
-    {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
-    {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
-    {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1},
-    {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1},
-    {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1},
-    {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1},
-    {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1},
-    {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2},
-    {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1},
-    {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
-    {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
-    {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:50, anchoFinal:422, tiras:1},
-    {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1},
-    {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2},
+    {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:50, anchoFinal:422, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
+    {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5},
   ],
   ocs: [],
   ops: [],
@@ -619,43 +619,94 @@ function calcularNecesidades(producto, kgFinales){
   };
 }
 
-function getBobinasOp(opId){
-  return state.bobinas.filter(b=>b.opId === opId);
+function getTurnosOp(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return {turnosLam:[], turnosRef:[]};
+  return {
+    turnosLam: op.turnosLaminado || [],
+    turnosRef: op.turnosRefilado || []
+  };
 }
 
-function calcularConsumosLaminado(opId){
-  const bobs = getBobinasOp(opId);
-  const petBobs = bobs.filter(b=>b.tipo==='PET');
-  const peBobs = bobs.filter(b=>b.tipo==='PE');
-  // Consumo real = pesoNeto - desperdicio
-  const kgPet = petBobs.reduce((s,b)=>s + (b.pesoNeto - (b.desperdicio||0)), 0);
-  const kgPe = peBobs.reduce((s,b)=>s + (b.pesoNeto - (b.desperdicio||0)), 0);
-  return {kgPet, kgPe, petBobs, peBobs};
+function calcularConsumosOp(op){
+  const turnosLam = op.turnosLaminado || [];
+  let kgPet = 0, kgPe = 0, kgLaminados = 0;
+  let cantBobinasPet = 0, cantBobinasPe = 0, cantBobinasLam = 0;
+  let metrosPet = 0, metrosPe = 0, metrosLam = 0;
+  
+  turnosLam.forEach(t=>{
+    (t.bobinasPet||[]).forEach(b=>{
+      kgPet += (b.pesoNeto || 0) - (b.scrapKg || 0);
+      cantBobinasPet++;
+      metrosPet += (b.metros || 0);
+    });
+    (t.bobinasPe||[]).forEach(b=>{
+      kgPe += (b.pesoNeto || 0) - (b.scrapKg || 0);
+      cantBobinasPe++;
+      metrosPe += (b.metros || 0);
+    });
+    (t.bobinasSalientes||[]).forEach(b=>{
+      kgLaminados += (b.pesoNeto || 0);
+      cantBobinasLam++;
+      metrosLam += (b.metros || 0);
+    });
+  });
+  
+  const turnosRef = op.turnosRefilado || [];
+  let kgFinales = 0, cantBobinasRef = 0, metrosRef = 0;
+  turnosRef.forEach(t=>{
+    (t.bobinasRefiladas||[]).forEach(b=>{
+      kgFinales += (b.pesoNeto || 0);
+      cantBobinasRef++;
+      metrosRef += (b.metros || 0);
+    });
+  });
+  
+  return {
+    kgPet, kgPe, kgLaminados, kgFinales,
+    cantBobinasPet, cantBobinasPe, cantBobinasLam, cantBobinasRef,
+    metrosPet, metrosPe, metrosLam, metrosRef
+  };
+}
+
+function contarBobinasTotales(){
+  let total = 0;
+  state.ops.forEach(op=>{
+    (op.turnosLaminado||[]).forEach(t=>{
+      total += (t.bobinasPet||[]).length;
+      total += (t.bobinasPe||[]).length;
+      total += (t.bobinasSalientes||[]).length;
+    });
+    (op.turnosRefilado||[]).forEach(t=>{
+      total += (t.bobinasRefiladas||[]).length;
+    });
+  });
+  return total;
 }
 
 function calcularReal(op){
   const c = state.config;
-  if(!op.laminadoReal || !op.refiladoReal) return null;
+  if(op.estado !== 'cerrada') return null;
   
-  const consumos = calcularConsumosLaminado(op.id);
-  const kgPetUsado = consumos.kgPet;
-  const kgPeUsado = consumos.kgPe;
-  const kgLaminados = op.laminadoReal.kgLaminados || 0;
-  const kgFinales = op.refiladoReal.kgFinales || 0;
-  const kgScrapRefilado = op.refiladoReal.kgScrap || 0;
+  const cons = calcularConsumosOp(op);
   
-  const costoPetReal = kgPetUsado * c.costoPet;
-  const costoPeReal = kgPeUsado * c.costoPe;
-  const costoProcesoReal = kgLaminados * c.costoProceso;
+  if(cons.kgFinales === 0) return null;
+  
+  const costoPetReal = cons.kgPet * c.costoPet;
+  const costoPeReal = cons.kgPe * c.costoPe;
+  const costoProcesoReal = cons.kgLaminados * c.costoProceso;
   const costoTotalReal = costoPetReal + costoPeReal + costoProcesoReal;
-  const costoUnitarioReal = kgFinales > 0 ? costoTotalReal / kgFinales : 0;
+  const costoUnitarioReal = costoTotalReal / cons.kgFinales;
   
-  const mermaLaminado = (kgPetUsado + kgPeUsado) - kgLaminados;
-  const pctMermaLaminado = (kgPetUsado + kgPeUsado) > 0 ? mermaLaminado / (kgPetUsado + kgPeUsado) : 0;
-  const yieldRefilado = kgLaminados > 0 ? kgFinales / kgLaminados : 0;
+  const mermaLaminado = (cons.kgPet + cons.kgPe) - cons.kgLaminados;
+  const pctMermaLaminado = (cons.kgPet + cons.kgPe) > 0 ? mermaLaminado / (cons.kgPet + cons.kgPe) : 0;
+  const yieldRefilado = cons.kgLaminados > 0 ? cons.kgFinales / cons.kgLaminados : 0;
   
   return {
-    kgPetUsado, kgPeUsado, kgLaminados, kgFinales, kgScrapRefilado,
+    kgPetUsado: cons.kgPet,
+    kgPeUsado: cons.kgPe,
+    kgLaminados: cons.kgLaminados,
+    kgFinales: cons.kgFinales,
     costoPetReal, costoPeReal, costoProcesoReal, costoTotalReal, costoUnitarioReal,
     mermaLaminado, pctMermaLaminado, yieldRefilado
   };
@@ -684,18 +735,26 @@ function getEstadoBadge(estado){
 }
 
 // =========================================================
-// MODO OPERARIO — Pantalla principal
+// MODO OPERARIO — Pantalla principal con turnos
 // =========================================================
 function renderOperarioHome(){
   let html = `<div class="op-tabs">
-    <div class="op-tab active" onclick="renderOperarioHome()">Mis tareas</div>
+    <div class="op-tab active">Mis tareas</div>
   </div>`;
   
-  // OPs en estado laminando o para_refilar
-  const opsParaLaminar = state.ops.filter(op=>op.estado==='nueva' || op.estado==='laminando');
-  const opsParaRefilar = state.ops.filter(op=>op.estado==='para_refilar' || op.estado==='refilando');
+  const opsParaLaminar = state.ops.filter(op=>op.estado==='nueva' || op.estado==='laminando' || op.estado==='para_refilar');
+  const opsParaRefilar = state.ops.filter(op=>{
+    if(op.estado === 'cerrada') return false;
+    // Hay bobinas laminadas para refilar
+    const turnosLam = (op.turnosLaminado||[]);
+    const bobinasLamTotal = turnosLam.flatMap(t=>t.bobinasSalientes||[]);
+    const turnosRef = (op.turnosRefilado||[]);
+    const bobinasRefiladas = turnosRef.flatMap(t=>t.bobinasRefiladas||[]).flatMap(br=>br.bobinaLamId);
+    const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladas.includes(bl.id));
+    return bobinasLamPendientes.length > 0;
+  });
   
-  // LAMINADO
+  // Sección LAMINADO
   html += `<div style="margin-bottom:24px">
     <h2 style="font-size:16px;color:var(--navy);margin-bottom:10px;font-weight:600">⚙ LAMINADO (${opsParaLaminar.length})</h2>`;
   
@@ -704,8 +763,9 @@ function renderOperarioHome(){
   } else {
     opsParaLaminar.forEach(op=>{
       const nec = calcularNecesidades(op.producto, op.kgSolicitados);
-      const enProgreso = op.estado === 'laminando';
-      const consumos = calcularConsumosLaminado(op.id);
+      const turnos = op.turnosLaminado || [];
+      const turnoActivo = turnos.find(t=>!t.cerrado);
+      const totalKgLam = turnos.flatMap(t=>t.bobinasSalientes||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
       
       html += `<div class="op-card">
         <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></div>
@@ -714,18 +774,20 @@ function renderOperarioHome(){
           <div><div class="label">Solicitado</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
           <div><div class="label">PET necesario</div><div class="value">${nec.kgPetTotal.toFixed(1)} kg</div></div>
           <div><div class="label">PE necesario</div><div class="value">${nec.kgPeTotal.toFixed(1)} kg</div></div>
-          <div><div class="label">Tiempo estimado</div><div class="value">${nec.horasLaminado.toFixed(1)} hs</div></div>
+          <div><div class="label">Laminado a la fecha</div><div class="value">${totalKgLam.toFixed(1)} kg · ${turnos.length} turno(s)</div></div>
         </div>
-        ${enProgreso ? `<div class="alert alert-info" style="margin-top:10px;font-size:12px">En progreso · ${consumos.petBobs.length} bobina(s) PET, ${consumos.peBobs.length} bobina(s) PE cargadas</div>` : ''}
+        ${op.notas ? `<div class="alert alert-info" style="margin-top:10px;font-size:12px"><strong>Notas:</strong> ${op.notas}</div>` : ''}
         <div class="op-card-action">
-          <button class="btn btn-block" onclick="opAbrirLaminado('${op.id}')">${enProgreso ? 'Continuar laminado' : 'Iniciar laminado'} →</button>
+          ${turnoActivo 
+            ? `<button class="btn btn-block" onclick="opAbrirTurnoLaminado('${op.id}','${turnoActivo.id}')">Continuar turno actual →</button>`
+            : `<button class="btn btn-block" onclick="opNuevoTurnoLaminado('${op.id}')">+ Nuevo turno de laminado</button>`}
         </div>
       </div>`;
     });
   }
   html += '</div>';
   
-  // REFILADO
+  // Sección REFILADO
   html += `<div>
     <h2 style="font-size:16px;color:var(--navy);margin-bottom:10px;font-weight:600">✂ REFILADO (${opsParaRefilar.length})</h2>`;
   
@@ -733,20 +795,28 @@ function renderOperarioHome(){
     html += '<div class="op-card"><p style="color:var(--muted);text-align:center;padding:14px">No hay OPs para refilar.</p></div>';
   } else {
     opsParaRefilar.forEach(op=>{
-      const enProgreso = op.estado === 'refilando';
-      const lr = op.laminadoReal;
+      const turnos = op.turnosRefilado || [];
+      const turnoActivo = turnos.find(t=>!t.cerrado);
+      const turnosLam = (op.turnosLaminado||[]);
+      const bobinasLamTotal = turnosLam.flatMap(t=>t.bobinasSalientes||[]);
+      const bobinasRefiladasIds = turnos.flatMap(t=>t.bobinasRefiladas||[]).map(br=>br.bobinaLamId);
+      const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladasIds.includes(bl.id));
+      const kgPendientes = bobinasLamPendientes.reduce((s,b)=>s+(b.pesoNeto||0),0);
+      const kgRefilado = turnos.flatMap(t=>t.bobinasRefiladas||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
       
       html += `<div class="op-card">
         <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></div>
         <div class="op-card-medida">${op.medida} — ${op.numero}</div>
         <div class="op-card-meta">
-          <div><div class="label">kg laminados</div><div class="value">${lr ? lr.kgLaminados.toFixed(1) : '—'} kg</div></div>
-          <div><div class="label">Solicitado</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
-          <div><div class="label">Ancho final</div><div class="value">${op.producto.anchoFinal} mm</div></div>
-          <div><div class="label">Tiras</div><div class="value">${op.producto.tiras}</div></div>
+          <div><div class="label">Bobinas pendientes</div><div class="value">${bobinasLamPendientes.length} · ${kgPendientes.toFixed(1)} kg</div></div>
+          <div><div class="label">Solicitado final</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
+          <div><div class="label">Refilado a la fecha</div><div class="value">${kgRefilado.toFixed(1)} kg</div></div>
+          <div><div class="label">Tiras / final</div><div class="value">${op.producto.tiras} × ${op.producto.anchoFinal}mm</div></div>
         </div>
         <div class="op-card-action">
-          <button class="btn btn-orange btn-block" onclick="opAbrirRefilado('${op.id}')">${enProgreso ? 'Continuar refilado' : 'Iniciar refilado'} →</button>
+          ${turnoActivo 
+            ? `<button class="btn btn-orange btn-block" onclick="opAbrirTurnoRefilado('${op.id}','${turnoActivo.id}')">Continuar turno actual →</button>`
+            : `<button class="btn btn-orange btn-block" onclick="opNuevoTurnoRefilado('${op.id}')">+ Nuevo turno de refilado</button>`}
         </div>
       </div>`;
     });
@@ -756,443 +826,759 @@ function renderOperarioHome(){
   document.getElementById('opContent').innerHTML = html;
 }
 
-function opAbrirLaminado(opId){
+// =========================================================
+// LAMINADO — Turnos
+// =========================================================
+function opNuevoTurnoLaminado(opId){
   const op = state.ops.find(o=>o.id===opId);
   if(!op) return;
   
-  // Si está en estado nueva, cambiar a laminando
+  // Si OP está nueva, pasar a laminando
   if(op.estado === 'nueva'){
     op.estado = 'laminando';
-    op.laminadoIniciadoPor = currentUser.nombre;
-    op.laminadoIniciadoFecha = new Date().toISOString();
     op.fechaUltimoCambio = new Date().toISOString();
-    saveState();
   }
   
+  if(!op.turnosLaminado) op.turnosLaminado = [];
+  
+  const nuevoTurno = {
+    id: uid('TLAM'),
+    operario: currentUser.nombre,
+    fechaInicio: new Date().toISOString(),
+    fechaFin: null,
+    turno: getTurnoActual(),
+    bobinasPet: [],
+    bobinasPe: [],
+    bobinasSalientes: [],
+    notas: '',
+    cerrado: false
+  };
+  
+  op.turnosLaminado.push(nuevoTurno);
+  saveState();
+  opAbrirTurnoLaminado(opId, nuevoTurno.id);
+}
+
+function getTurnoActual(){
+  const h = new Date().getHours();
+  if(h >= 6 && h < 14) return 'Mañana';
+  if(h >= 14 && h < 22) return 'Tarde';
+  return 'Noche';
+}
+
+function opAbrirTurnoLaminado(opId, turnoId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  if(!op || !turno) return;
+  
   const nec = calcularNecesidades(op.producto, op.kgSolicitados);
-  const bobs = getBobinasOp(opId);
-  const petBobs = bobs.filter(b=>b.tipo==='PET');
-  const peBobs = bobs.filter(b=>b.tipo==='PE');
-  const consumos = calcularConsumosLaminado(opId);
+  const totalSalientes = turno.bobinasSalientes.reduce((s,b)=>s+(b.pesoNeto||0),0);
   
   let html = `<div class="op-card" style="background:var(--navy);color:white">
-    <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${op.numero} · LAMINADO</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${op.numero} · LAMINADO · TURNO</div>
     <div style="font-size:20px;font-weight:600">${op.cliente}</div>
-    <div style="opacity:0.85;margin-top:4px">${op.medida} · ${op.kgSolicitados.toFixed(0)} kg</div>
+    <div style="opacity:0.85;margin-top:4px">${op.medida} · ${op.kgSolicitados.toFixed(0)} kg solicitados</div>
+    <div style="margin-top:10px;font-size:12px;opacity:0.85">
+      Operario: <strong>${turno.operario}</strong> · Turno ${turno.turno} · Inicio ${fmtDateTime(turno.fechaInicio)}
+    </div>
   </div>
   
   <div class="op-card">
-    <div class="op-card-title">Necesidades teóricas</div>
+    <div class="op-card-title">Especificaciones</div>
     <div class="op-card-meta">
-      <div><div class="label">PET necesario</div><div class="value">${nec.kgPetTotal.toFixed(1)} kg</div></div>
-      <div><div class="label">PE necesario</div><div class="value">${nec.kgPeTotal.toFixed(1)} kg</div></div>
-      <div><div class="label">Ancho PET</div><div class="value">${op.producto.anchoPet} mm · ${op.producto.espPet}µm</div></div>
-      <div><div class="label">Ancho PE</div><div class="value">${op.producto.anchoPe} mm · ${op.producto.espPe}µm</div></div>
+      <div><div class="label">PET</div><div class="value">${op.producto.anchoPet}mm × ${op.producto.espPet}µm</div></div>
+      <div><div class="label">PE</div><div class="value">${op.producto.anchoPe}mm × ${op.producto.espPe}µm</div></div>
+      <div><div class="label">Cono PET</div><div class="value">${op.producto.conoPet||2} kg</div></div>
+      <div><div class="label">Cono PE</div><div class="value">${op.producto.conoPe||1} kg</div></div>
     </div>
-    ${op.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${op.notas}</div>` : ''}
+    ${op.notas ? `<div class="alert alert-info" style="margin-top:10px;font-size:12px">${op.notas}</div>` : ''}
   </div>
   
   <div class="op-card">
     <div class="op-card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Bobinas PET cargadas (${petBobs.length})</span>
-      <button class="btn btn-sm" onclick="opCargarBobina('${opId}','PET')">+ Cargar</button>
+      <span>Bobinas PET entrantes (${turno.bobinasPet.length})</span>
+      <button class="btn btn-sm" onclick="opCargarBobinaEntrante('${opId}','${turnoId}','PET')">+ Cargar PET</button>
     </div>
-    ${petBobs.length === 0 ? '<p style="color:var(--muted);font-size:13px">Cargá las bobinas a medida que las pones en máquina.</p>' :
-      petBobs.map(b=>renderBobinaCard(b, true)).join('')}
-    ${petBobs.length > 0 ? `<div class="alert alert-success" style="margin-top:10px;font-size:12px">Total PET consumido: <strong>${consumos.kgPet.toFixed(1)} kg</strong></div>` : ''}
+    ${turno.bobinasPet.length === 0 
+      ? '<p style="color:var(--muted);font-size:13px">Cargá las bobinas a medida que las pones en máquina.</p>' 
+      : turno.bobinasPet.map(b=>renderBobinaEntranteCard(b, opId, turnoId)).join('')}
   </div>
   
   <div class="op-card">
     <div class="op-card-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Bobinas PE cargadas (${peBobs.length})</span>
-      <button class="btn btn-sm" onclick="opCargarBobina('${opId}','PE')">+ Cargar</button>
+      <span>Bobinas PE entrantes (${turno.bobinasPe.length})</span>
+      <button class="btn btn-sm" onclick="opCargarBobinaEntrante('${opId}','${turnoId}','PE')">+ Cargar PE</button>
     </div>
-    ${peBobs.length === 0 ? '<p style="color:var(--muted);font-size:13px">Cargá las bobinas a medida que las pones en máquina.</p>' :
-      peBobs.map(b=>renderBobinaCard(b, true)).join('')}
-    ${peBobs.length > 0 ? `<div class="alert alert-success" style="margin-top:10px;font-size:12px">Total PE consumido: <strong>${consumos.kgPe.toFixed(1)} kg</strong></div>` : ''}
+    ${turno.bobinasPe.length === 0 
+      ? '<p style="color:var(--muted);font-size:13px">Cargá las bobinas a medida que las pones en máquina.</p>' 
+      : turno.bobinasPe.map(b=>renderBobinaEntranteCard(b, opId, turnoId)).join('')}
   </div>
   
   <div class="op-card">
-    <div class="op-card-title">Cierre del laminado</div>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:10px">Cuando termines, cargá los kg laminados producidos (antes de refilar) para cerrar este proceso.</p>
-    <button class="btn btn-success btn-block btn-lg" onclick="opCerrarLaminado('${opId}')" ${(petBobs.length===0||peBobs.length===0)?'disabled style="opacity:0.5;cursor:not-allowed"':''}>
-      ${(petBobs.length===0||peBobs.length===0) ? 'Cargá al menos una bobina PET y una PE' : 'Cerrar laminado →'}
+    <div class="op-card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Bobinas LAMINADAS salientes (${turno.bobinasSalientes.length}) — Producto en proceso</span>
+      <button class="btn btn-sm btn-success" onclick="opCargarBobinaSaliente('${opId}','${turnoId}')">+ Cargar saliente</button>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Cada bobina laminada que sale del proceso. Vinculá con qué bobinas PET y PE se hizo.</p>
+    ${turno.bobinasSalientes.length === 0 
+      ? '<p style="color:var(--muted);font-size:13px">Cargá las bobinas laminadas a medida que salen.</p>' 
+      : turno.bobinasSalientes.map(b=>renderBobinaSalienteCard(b, opId, turnoId)).join('')}
+    ${turno.bobinasSalientes.length > 0 ? `<div class="alert alert-success" style="margin-top:10px;font-size:13px">Total laminado en este turno: <strong>${totalSalientes.toFixed(1)} kg</strong></div>` : ''}
+  </div>
+  
+  <div class="op-card">
+    <div class="op-card-title">Cerrar turno</div>
+    <div class="form-tablet">
+      <div class="form-group">
+        <label class="form-label">Notas del turno (paradas, problemas, etc)</label>
+        <textarea class="form-textarea" id="turnoNotasLam" rows="2">${turno.notas||''}</textarea>
+      </div>
+    </div>
+    <button class="btn btn-success btn-block btn-lg" onclick="opCerrarTurnoLaminado('${opId}','${turnoId}')" 
+      ${turno.bobinasSalientes.length === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+      ${turno.bobinasSalientes.length === 0 ? 'Cargá al menos una bobina saliente' : 'Cerrar turno y volver →'}
     </button>
   </div>
   
   <div style="text-align:center;margin-top:20px">
-    <button class="btn btn-secondary" onclick="renderOperarioHome()">← Volver a tareas</button>
+    <button class="btn btn-secondary" onclick="renderOperarioHome()">← Volver a tareas (sin cerrar turno)</button>
   </div>`;
   
   document.getElementById('opContent').innerHTML = html;
 }
 
-function renderBobinaCard(b, esOperario){
-  const consumido = b.pesoNeto - (b.desperdicio || 0);
+function renderBobinaEntranteCard(b, opId, turnoId){
   return `<div class="bobina-card">
-    <div class="code">${b.codigo}</div>
+    <div class="code">${b.numero || '(sin número)'} ${b.partida ? `· P.${b.partida}` : ''}</div>
     <div class="desc">
-      ${b.tipo} · ${b.espesor}µm · ${b.ancho}mm · 
-      Bruto ${b.pesoBruto.toFixed(1)}kg · Cono ${b.pesoCono}kg · 
-      <strong>Consumido ${consumido.toFixed(1)}kg</strong>
-      ${b.desperdicio ? ` · <span style="color:var(--orange)">Desperdicio ${b.desperdicio.toFixed(1)}kg</span>` : ''}
+      Bruto ${b.pesoBruto.toFixed(1)}kg · Cono ${b.cono}kg · 
+      <strong>Neto ${b.pesoNeto.toFixed(1)}kg</strong> · 
+      ${b.metros}m
+      ${b.scrapKg > 0 ? ` · <span style="color:var(--orange)">Scrap final ${b.scrapKg.toFixed(1)}kg</span>` : ''}
     </div>
-    ${esOperario ? `<div class="actions">
-      <button class="btn-icon" onclick="opEditarBobina('${b.id}')" title="Editar">✎</button>
-      <button class="btn-icon" onclick="opEliminarBobina('${b.id}')" title="Eliminar">×</button>
-    </div>` : ''}
+    <div class="actions">
+      <button class="btn-icon" onclick="opEditarBobinaEntrante('${opId}','${turnoId}','${b.id}')" title="Editar">✎</button>
+      <button class="btn-icon" onclick="opEliminarBobinaEntrante('${opId}','${turnoId}','${b.id}')" title="Eliminar">×</button>
+    </div>
   </div>`;
 }
 
-function opCargarBobina(opId, tipo){
-  const c = state.config;
+function renderBobinaSalienteCard(b, opId, turnoId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  const petUsadas = (b.bobinasPetIds||[]).map(id=>turno.bobinasPet.find(x=>x.id===id)).filter(Boolean);
+  const peUsadas = (b.bobinasPeIds||[]).map(id=>turno.bobinasPe.find(x=>x.id===id)).filter(Boolean);
+  
+  return `<div class="bobina-card" style="border-left:3px solid var(--green)">
+    <div class="code" style="color:var(--green)">★ ${b.numero}</div>
+    <div class="desc">
+      Bruto ${b.pesoBruto.toFixed(1)}kg · Cono ${b.cono}kg · 
+      <strong>Neto ${b.pesoNeto.toFixed(1)}kg</strong> · 
+      ${b.metros}m
+    </div>
+    <div class="desc" style="margin-top:4px">
+      Hecha con: 
+      ${petUsadas.length > 0 ? petUsadas.map(p=>`<span style="background:var(--blue-bg);color:var(--blue);padding:2px 6px;border-radius:3px;font-size:10px;margin-right:4px">PET ${p.numero}</span>`).join('') : '<em>sin PET</em>'}
+      ${peUsadas.length > 0 ? peUsadas.map(p=>`<span style="background:var(--green-bg);color:var(--green);padding:2px 6px;border-radius:3px;font-size:10px;margin-right:4px">PE ${p.numero}</span>`).join('') : '<em>sin PE</em>'}
+    </div>
+    <div class="actions">
+      <button class="btn-icon" onclick="opEditarBobinaSaliente('${opId}','${turnoId}','${b.id}')" title="Editar">✎</button>
+      <button class="btn-icon" onclick="opEliminarBobinaSaliente('${opId}','${turnoId}','${b.id}')" title="Eliminar">×</button>
+    </div>
+  </div>`;
+}
+
+function opCargarBobinaEntrante(opId, turnoId, tipo){
+  bobinaEntranteFormModal(opId, turnoId, tipo, null);
+}
+
+function opEditarBobinaEntrante(opId, turnoId, bobId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  let bob = turno.bobinasPet.find(b=>b.id===bobId);
+  let tipo = 'PET';
+  if(!bob){bob = turno.bobinasPe.find(b=>b.id===bobId); tipo = 'PE';}
+  if(!bob) return;
+  bobinaEntranteFormModal(opId, turnoId, tipo, bobId);
+}
+
+function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  const esEdicion = bobId !== null;
+  let bob = null;
+  if(esEdicion){
+    bob = (tipo === 'PET' ? turno.bobinasPet : turno.bobinasPe).find(b=>b.id===bobId);
+  }
+  
+  const conoDefault = tipo === 'PET' ? (op.producto.conoPet||2) : (op.producto.conoPe||1);
+  
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Cargar bobina ${tipo}</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Cargá los datos de la bobina al ponerla en máquina.</p>
+    <h2>${esEdicion?'Editar':'Cargar'} bobina ${tipo} entrante</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Datos de la bobina al ponerla en máquina.</p>
     
     <div class="form-tablet">
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Espesor (µm)</label>
-          <input type="number" class="form-input" id="bobEspesor" step="any" inputmode="decimal">
+          <label class="form-label">N° de bobina (etiqueta)</label>
+          <input type="text" class="form-input" id="bobNumero" value="${bob?bob.numero:''}" placeholder="ej: 4520">
         </div>
         <div class="form-group">
-          <label class="form-label">Ancho (mm)</label>
-          <input type="number" class="form-input" id="bobAncho" step="any" inputmode="decimal">
+          <label class="form-label">N° de partida</label>
+          <input type="text" class="form-input" id="bobPartida" value="${bob?(bob.partida||''):''}" placeholder="ej: 0489">
         </div>
         <div class="form-group">
-          <label class="form-label">Peso bruto (kg)</label>
-          <input type="number" class="form-input" id="bobPesoBruto" step="any" inputmode="decimal" placeholder="Bobina + cono">
+          <label class="form-label">Peso BRUTO (kg)</label>
+          <input type="number" class="form-input" id="bobPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoEntrante(${conoDefault})">
         </div>
         <div class="form-group">
           <label class="form-label">Peso del cono (kg)</label>
-          <input type="number" class="form-input" id="bobPesoCono" step="any" inputmode="decimal" value="${c.pesoConoDefault}">
+          <input type="number" class="form-input" id="bobCono" value="${bob?bob.cono:conoDefault}" step="any" inputmode="decimal" oninput="calcularNetoEntrante(${conoDefault})">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peso NETO (kg) — calculado</label>
+          <input type="number" class="form-input" id="bobPesoNeto" value="${bob?bob.pesoNeto.toFixed(2):''}" step="any" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metros lineales</label>
+          <input type="number" class="form-input" id="bobMetros" value="${bob?bob.metros:''}" step="any" inputmode="decimal">
+        </div>
+      </div>
+      
+      <div class="alert alert-orange" style="margin-top:10px">
+        <strong>Si quedó scrap al final:</strong> pesá el resto físico (cono + sobrante) y cargalo. La app calcula los kg de scrap.
+      </div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Peso del resto al final (kg)</label>
+          <input type="number" class="form-input" id="bobScrapBruto" value="${bob?(bob.scrapBruto||''):''}" step="any" inputmode="decimal" oninput="calcularScrapEntrante(${conoDefault})" placeholder="Cono + sobrante">
+          <div class="form-help">Si la bobina se gastó completa, dejar vacío.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Scrap calculado (kg)</label>
+          <input type="number" class="form-input" id="bobScrapKg" value="${bob?(bob.scrapKg||0).toFixed(2):'0'}" step="any" readonly style="background:var(--bg-2);color:var(--orange);font-weight:600">
         </div>
       </div>
       
       <div class="form-group" style="margin-top:6px">
         <label class="form-label">Notas (opcional)</label>
-        <input type="text" class="form-input" id="bobNotas" placeholder="ej: lote 45, color">
+        <input type="text" class="form-input" id="bobNotas" value="${bob?(bob.notas||''):''}">
       </div>
     </div>
     
     <div class="form-row">
-      <button class="btn btn-lg" onclick="opGuardarBobina('${opId}','${tipo}')">Guardar bobina</button>
+      <button class="btn btn-lg" onclick="opGuardarBobinaEntrante('${opId}','${turnoId}','${tipo}',${bobId?`'${bobId}'`:'null'})">Guardar</button>
       <button class="btn btn-secondary btn-lg" onclick="closeModal()">Cancelar</button>
     </div>`;
   showModal(html);
 }
 
-function opGuardarBobina(opId, tipo){
-  const espesor = parseFloat(document.getElementById('bobEspesor').value);
-  const ancho = parseFloat(document.getElementById('bobAncho').value);
-  const pesoBruto = parseFloat(document.getElementById('bobPesoBruto').value);
-  const pesoCono = parseFloat(document.getElementById('bobPesoCono').value) || 0;
-  const notas = document.getElementById('bobNotas').value;
-  
-  if(!espesor || !ancho || !pesoBruto){alert('Faltan datos'); return;}
-  if(pesoCono >= pesoBruto){alert('El cono no puede pesar más que la bobina'); return;}
-  
-  const numCount = state.bobinas.filter(b=>b.tipo===tipo).length + 1;
-  const fechaStr = new Date().toISOString().split('T')[0].replace(/-/g,'').slice(2);
-  const codigo = `${tipo}-${fechaStr}-${numCount.toString().padStart(4,'0')}`;
-  
-  state.bobinas.push({
-    id: uid('BOB'),
-    codigo, tipo, espesor, ancho,
-    pesoBruto, pesoCono,
-    pesoNeto: pesoBruto - pesoCono,
-    desperdicio: 0,
-    fechaIngreso: new Date().toISOString(),
-    notas,
-    cargadaPor: currentUser.nombre,
-    opId: opId,
-  });
-  saveState();
-  closeModal();
-  // Refrescar la pantalla
-  if(currentUser.modo === 'operario'){
-    opAbrirLaminado(opId);
-  } else {
-    verOp(opId);
-  }
+function calcularNetoEntrante(conoDefault){
+  const bruto = parseFloat(document.getElementById('bobPesoBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('bobCono').value) || conoDefault;
+  const neto = bruto - cono;
+  document.getElementById('bobPesoNeto').value = neto > 0 ? neto.toFixed(2) : '';
+  // Recalcular scrap si hay bruto del scrap
+  calcularScrapEntrante(conoDefault);
 }
 
-function opEditarBobina(bobId){
-  const b = state.bobinas.find(x=>x.id===bobId);
-  if(!b) return;
+function calcularScrapEntrante(conoDefault){
+  const scrapBruto = parseFloat(document.getElementById('bobScrapBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('bobCono').value) || conoDefault;
+  const scrapKg = scrapBruto > 0 ? Math.max(0, scrapBruto - cono) : 0;
+  document.getElementById('bobScrapKg').value = scrapKg.toFixed(2);
+}
+
+function opGuardarBobinaEntrante(opId, turnoId, tipo, bobId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  
+  const numero = document.getElementById('bobNumero').value.trim();
+  const partida = document.getElementById('bobPartida').value.trim();
+  const pesoBruto = parseFloat(document.getElementById('bobPesoBruto').value);
+  const cono = parseFloat(document.getElementById('bobCono').value);
+  const pesoNeto = parseFloat(document.getElementById('bobPesoNeto').value);
+  const metros = parseFloat(document.getElementById('bobMetros').value);
+  const scrapBruto = parseFloat(document.getElementById('bobScrapBruto').value) || 0;
+  const scrapKg = parseFloat(document.getElementById('bobScrapKg').value) || 0;
+  const notas = document.getElementById('bobNotas').value;
+  
+  if(!numero || !pesoBruto || !cono){alert('Faltan datos: número, peso bruto y cono'); return;}
+  if(cono >= pesoBruto){alert('El cono no puede pesar más o igual que el bruto'); return;}
+  
+  const arr = tipo === 'PET' ? turno.bobinasPet : turno.bobinasPe;
+  
+  if(bobId){
+    // Editar
+    const b = arr.find(x=>x.id===bobId);
+    if(!b) return;
+    b.numero = numero;
+    b.partida = partida;
+    b.pesoBruto = pesoBruto;
+    b.cono = cono;
+    b.pesoNeto = pesoNeto;
+    b.metros = metros;
+    b.scrapBruto = scrapBruto;
+    b.scrapKg = scrapKg;
+    b.notas = notas;
+  } else {
+    arr.push({
+      id: uid('BOB'),
+      tipo, numero, partida,
+      pesoBruto, cono, pesoNeto, metros,
+      scrapBruto, scrapKg, notas,
+      cargadaPor: currentUser.nombre,
+      fecha: new Date().toISOString()
+    });
+  }
+  saveState();
+  closeModal();
+  opAbrirTurnoLaminado(opId, turnoId);
+}
+
+function opEliminarBobinaEntrante(opId, turnoId, bobId){
+  if(!confirm('¿Eliminar esta bobina?')) return;
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  turno.bobinasPet = turno.bobinasPet.filter(b=>b.id!==bobId);
+  turno.bobinasPe = turno.bobinasPe.filter(b=>b.id!==bobId);
+  // También quitarla de las salientes que la usaban
+  turno.bobinasSalientes.forEach(s=>{
+    s.bobinasPetIds = (s.bobinasPetIds||[]).filter(id=>id!==bobId);
+    s.bobinasPeIds = (s.bobinasPeIds||[]).filter(id=>id!==bobId);
+  });
+  saveState();
+  opAbrirTurnoLaminado(opId, turnoId);
+}
+
+function opCargarBobinaSaliente(opId, turnoId){
+  bobinaSalienteFormModal(opId, turnoId, null);
+}
+
+function opEditarBobinaSaliente(opId, turnoId, bobId){
+  bobinaSalienteFormModal(opId, turnoId, bobId);
+}
+
+function bobinaSalienteFormModal(opId, turnoId, bobId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  const esEdicion = bobId !== null;
+  const bob = esEdicion ? turno.bobinasSalientes.find(b=>b.id===bobId) : null;
+  
+  const conoDefault = op.producto.conoLaminado || 0.5;
+  const numeroSugerido = `L-${op.numero}-${(turno.bobinasSalientes.length+1).toString().padStart(2,'0')}`;
+  
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Editar bobina ${b.codigo}</h2>
+    <h2>${esEdicion?'Editar':'Cargar'} bobina LAMINADA saliente</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Esta bobina es producto en proceso (todavía falta refilar).</p>
     
     <div class="form-tablet">
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Espesor (µm)</label>
-          <input type="number" class="form-input" id="bobEspesorEdit" step="any" value="${b.espesor}">
+          <label class="form-label">N° de bobina</label>
+          <input type="text" class="form-input" id="lamNumero" value="${bob?bob.numero:numeroSugerido}">
+          <div class="form-help">Sugerido automático, podés cambiarlo.</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Ancho (mm)</label>
-          <input type="number" class="form-input" id="bobAnchoEdit" step="any" value="${b.ancho}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Peso bruto (kg)</label>
-          <input type="number" class="form-input" id="bobPesoBrutoEdit" step="any" value="${b.pesoBruto}">
+          <label class="form-label">Peso BRUTO (kg)</label>
+          <input type="number" class="form-input" id="lamPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoSaliente(${conoDefault})">
         </div>
         <div class="form-group">
           <label class="form-label">Peso del cono (kg)</label>
-          <input type="number" class="form-input" id="bobPesoConoEdit" step="any" value="${b.pesoCono}">
+          <input type="number" class="form-input" id="lamCono" value="${bob?bob.cono:conoDefault}" step="any" inputmode="decimal" oninput="calcularNetoSaliente(${conoDefault})">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peso NETO (kg) — calculado</label>
+          <input type="number" class="form-input" id="lamPesoNeto" value="${bob?bob.pesoNeto.toFixed(2):''}" step="any" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metros lineales</label>
+          <input type="number" class="form-input" id="lamMetros" value="${bob?bob.metros:''}" step="any" inputmode="decimal">
         </div>
       </div>
       
-      <div class="alert alert-orange" style="margin-top:10px">
-        <strong>¿La bobina tuvo desperdicio?</strong> Si no se usó completa, ingresá los kg que se descartaron (sin contar el cono).
+      <div class="card-title" style="margin-top:14px;padding-top:10px;border-top:1px solid var(--line)">
+        Vinculación con bobinas entrantes
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Marcá las bobinas PET y PE que se usaron para hacer ESTA bobina laminada.</p>
+      
+      <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-top:6px">
+        <div>
+          <strong style="font-size:12px;color:var(--muted)">Bobinas PET del turno (${turno.bobinasPet.length})</strong>
+          <div style="border:1px solid var(--line);border-radius:5px;padding:8px;margin-top:6px;max-height:150px;overflow-y:auto">
+          ${turno.bobinasPet.length === 0 
+            ? '<p style="font-size:12px;color:var(--muted)">Todavía no cargaste bobinas PET en este turno.</p>'
+            : turno.bobinasPet.map(b=>{
+                const checked = bob && (bob.bobinasPetIds||[]).includes(b.id);
+                return `<label style="display:block;padding:6px;cursor:pointer">
+                  <input type="checkbox" class="lam-pet-check" value="${b.id}" ${checked?'checked':''} style="margin-right:6px">
+                  <strong>${b.numero}</strong> ${b.partida?'· P.'+b.partida:''} — ${b.pesoNeto.toFixed(1)}kg, ${b.metros}m
+                </label>`;
+              }).join('')}
+          </div>
+        </div>
+        <div>
+          <strong style="font-size:12px;color:var(--muted)">Bobinas PE del turno (${turno.bobinasPe.length})</strong>
+          <div style="border:1px solid var(--line);border-radius:5px;padding:8px;margin-top:6px;max-height:150px;overflow-y:auto">
+          ${turno.bobinasPe.length === 0 
+            ? '<p style="font-size:12px;color:var(--muted)">Todavía no cargaste bobinas PE en este turno.</p>'
+            : turno.bobinasPe.map(b=>{
+                const checked = bob && (bob.bobinasPeIds||[]).includes(b.id);
+                return `<label style="display:block;padding:6px;cursor:pointer">
+                  <input type="checkbox" class="lam-pe-check" value="${b.id}" ${checked?'checked':''} style="margin-right:6px">
+                  <strong>${b.numero}</strong> ${b.partida?'· P.'+b.partida:''} — ${b.pesoNeto.toFixed(1)}kg, ${b.metros}m
+                </label>`;
+              }).join('')}
+          </div>
+        </div>
       </div>
       
-      <div class="form-group">
-        <label class="form-label">Desperdicio (kg) — opcional</label>
-        <input type="number" class="form-input" id="bobDesperdicioEdit" step="any" value="${b.desperdicio || 0}" placeholder="0">
-        <div class="form-help">Peso del material que NO se usó (sin contar el cono). Pesalo y cargalo acá.</div>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Notas</label>
-        <input type="text" class="form-input" id="bobNotasEdit" value="${b.notas||''}">
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" class="form-input" id="lamNotas" value="${bob?(bob.notas||''):''}">
       </div>
     </div>
     
     <div class="form-row">
-      <button class="btn btn-lg" onclick="opGuardarEdicionBobina('${bobId}')">Guardar cambios</button>
+      <button class="btn btn-lg" onclick="opGuardarBobinaSaliente('${opId}','${turnoId}',${bobId?`'${bobId}'`:'null'})">Guardar bobina laminada</button>
       <button class="btn btn-secondary btn-lg" onclick="closeModal()">Cancelar</button>
     </div>`;
   showModal(html);
 }
 
-function opGuardarEdicionBobina(bobId){
-  const b = state.bobinas.find(x=>x.id===bobId);
-  const espesor = parseFloat(document.getElementById('bobEspesorEdit').value);
-  const ancho = parseFloat(document.getElementById('bobAnchoEdit').value);
-  const pesoBruto = parseFloat(document.getElementById('bobPesoBrutoEdit').value);
-  const pesoCono = parseFloat(document.getElementById('bobPesoConoEdit').value) || 0;
-  const desperdicio = parseFloat(document.getElementById('bobDesperdicioEdit').value) || 0;
-  const notas = document.getElementById('bobNotasEdit').value;
-  
-  if(!espesor || !ancho || !pesoBruto){alert('Faltan datos'); return;}
-  if(desperdicio > (pesoBruto - pesoCono)){alert('El desperdicio no puede ser mayor al peso neto'); return;}
-  
-  b.espesor = espesor;
-  b.ancho = ancho;
-  b.pesoBruto = pesoBruto;
-  b.pesoCono = pesoCono;
-  b.pesoNeto = pesoBruto - pesoCono;
-  b.desperdicio = desperdicio;
-  b.notas = notas;
-  saveState();
-  closeModal();
-  if(currentUser.modo === 'operario'){
-    opAbrirLaminado(b.opId);
-  } else {
-    verOp(b.opId);
-  }
+function calcularNetoSaliente(conoDefault){
+  const bruto = parseFloat(document.getElementById('lamPesoBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('lamCono').value) || conoDefault;
+  const neto = bruto - cono;
+  document.getElementById('lamPesoNeto').value = neto > 0 ? neto.toFixed(2) : '';
 }
 
-function opEliminarBobina(bobId){
-  if(!confirm('¿Eliminar esta bobina del laminado?')) return;
-  const b = state.bobinas.find(x=>x.id===bobId);
-  if(!b) return;
-  const opId = b.opId;
-  state.bobinas = state.bobinas.filter(x=>x.id!==bobId);
-  saveState();
-  if(currentUser.modo === 'operario'){
-    opAbrirLaminado(opId);
-  } else {
-    verOp(opId);
-  }
-}
-
-function opCerrarLaminado(opId){
+function opGuardarBobinaSaliente(opId, turnoId, bobId){
   const op = state.ops.find(o=>o.id===opId);
-  const consumos = calcularConsumosLaminado(opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
   
-  let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Cerrar laminado — ${op.numero}</h2>
-    
-    <div class="alert alert-info">
-      Cargá los kg que salieron de la laminadora (producto laminado, antes de refilar).
-    </div>
-    
-    <div class="detail-grid">
-      <div class="detail-item"><div class="detail-label">PET consumido</div><div class="detail-value">${consumos.kgPet.toFixed(1)} kg</div></div>
-      <div class="detail-item"><div class="detail-label">PE consumido</div><div class="detail-value">${consumos.kgPe.toFixed(1)} kg</div></div>
-      <div class="detail-item"><div class="detail-label">Total entró</div><div class="detail-value">${(consumos.kgPet+consumos.kgPe).toFixed(1)} kg</div></div>
-    </div>
-    
-    <div class="form-tablet">
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">kg laminados producidos</label>
-          <input type="number" class="form-input" id="lamKgLaminados" step="any" inputmode="decimal" placeholder="Antes de refilar">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tiempo (horas)</label>
-          <input type="number" class="form-input" id="lamHoras" step="any" inputmode="decimal">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Turno</label>
-          <select class="form-select" id="lamTurno">
-            <option>Mañana</option><option>Tarde</option><option>Noche</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-group" style="margin-top:6px">
-        <label class="form-label">Notas (paradas, defectos, etc)</label>
-        <textarea class="form-textarea" id="lamNotas" rows="2"></textarea>
-      </div>
-    </div>
-    
-    <div class="form-row">
-      <button class="btn btn-success btn-lg" onclick="opGuardarCierreLaminado('${opId}')">Cerrar laminado</button>
-      <button class="btn btn-secondary btn-lg" onclick="closeModal()">Cancelar</button>
-    </div>`;
-  showModal(html);
-}
-
-function opGuardarCierreLaminado(opId){
-  const op = state.ops.find(o=>o.id===opId);
-  const kgLaminados = parseFloat(document.getElementById('lamKgLaminados').value);
-  const horas = parseFloat(document.getElementById('lamHoras').value);
-  const turno = document.getElementById('lamTurno').value;
+  const numero = document.getElementById('lamNumero').value.trim();
+  const pesoBruto = parseFloat(document.getElementById('lamPesoBruto').value);
+  const cono = parseFloat(document.getElementById('lamCono').value);
+  const pesoNeto = parseFloat(document.getElementById('lamPesoNeto').value);
+  const metros = parseFloat(document.getElementById('lamMetros').value);
   const notas = document.getElementById('lamNotas').value;
   
-  if(!kgLaminados){alert('Faltan kg laminados'); return;}
+  const bobinasPetIds = [...document.querySelectorAll('.lam-pet-check:checked')].map(c=>c.value);
+  const bobinasPeIds = [...document.querySelectorAll('.lam-pe-check:checked')].map(c=>c.value);
   
-  op.laminadoReal = {
-    kgLaminados, horas, turno, notas,
-    operario: currentUser.nombre,
-    fecha: new Date().toISOString()
-  };
-  op.estado = 'para_refilar';
-  op.fechaUltimoCambio = new Date().toISOString();
+  if(!numero || !pesoBruto){alert('Faltan datos: número y peso bruto'); return;}
+  if(bobinasPetIds.length === 0 || bobinasPeIds.length === 0){
+    if(!confirm('No marcaste bobinas PET o PE. ¿Guardar igual?')) return;
+  }
+  
+  if(bobId){
+    const b = turno.bobinasSalientes.find(x=>x.id===bobId);
+    if(!b) return;
+    b.numero = numero;
+    b.pesoBruto = pesoBruto;
+    b.cono = cono;
+    b.pesoNeto = pesoNeto;
+    b.metros = metros;
+    b.notas = notas;
+    b.bobinasPetIds = bobinasPetIds;
+    b.bobinasPeIds = bobinasPeIds;
+  } else {
+    turno.bobinasSalientes.push({
+      id: uid('LAM'),
+      numero, pesoBruto, cono, pesoNeto, metros, notas,
+      bobinasPetIds, bobinasPeIds,
+      cargadaPor: currentUser.nombre,
+      fecha: new Date().toISOString()
+    });
+  }
   saveState();
   closeModal();
-  alert('Laminado cerrado. La OP queda lista para refilar.');
-  if(currentUser.modo === 'operario'){
-    renderOperarioHome();
-  } else {
-    verOp(opId);
-  }
+  opAbrirTurnoLaminado(opId, turnoId);
 }
 
-function opAbrirRefilado(opId){
+function opEliminarBobinaSaliente(opId, turnoId, bobId){
+  if(!confirm('¿Eliminar esta bobina laminada?')) return;
   const op = state.ops.find(o=>o.id===opId);
-  if(!op || !op.laminadoReal) return;
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  turno.bobinasSalientes = turno.bobinasSalientes.filter(b=>b.id!==bobId);
+  saveState();
+  opAbrirTurnoLaminado(opId, turnoId);
+}
+
+function opCerrarTurnoLaminado(opId, turnoId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  if(turno.bobinasSalientes.length === 0){
+    alert('Cargá al menos una bobina laminada antes de cerrar el turno.');
+    return;
+  }
+  turno.notas = document.getElementById('turnoNotasLam').value;
+  turno.cerrado = true;
+  turno.fechaFin = new Date().toISOString();
+  
+  // Si estaba en estado nueva o laminando, pasar a para_refilar
+  if(op.estado === 'nueva' || op.estado === 'laminando'){
+    op.estado = 'para_refilar';
+  }
+  op.fechaUltimoCambio = new Date().toISOString();
+  saveState();
+  alert('Turno cerrado. La OP queda lista para que se siga refilando o se haga otro turno de laminado.');
+  renderOperarioHome();
+}
+
+// =========================================================
+// REFILADO — Turnos
+// =========================================================
+function opNuevoTurnoRefilado(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return;
   
   if(op.estado === 'para_refilar'){
     op.estado = 'refilando';
-    op.refiladoIniciadoPor = currentUser.nombre;
-    op.refiladoIniciadoFecha = new Date().toISOString();
     op.fechaUltimoCambio = new Date().toISOString();
-    saveState();
   }
   
-  const lr = op.laminadoReal;
-  const bobs = getBobinasOp(opId);
-  const consumos = calcularConsumosLaminado(opId);
+  if(!op.turnosRefilado) op.turnosRefilado = [];
+  
+  const nuevoTurno = {
+    id: uid('TREF'),
+    operario: currentUser.nombre,
+    fechaInicio: new Date().toISOString(),
+    fechaFin: null,
+    turno: getTurnoActual(),
+    bobinasRefiladas: [], // {id, numero, pesoBruto, cono, pesoNeto, metros, bobinaLamId}
+    notas: '',
+    cerrado: false
+  };
+  
+  op.turnosRefilado.push(nuevoTurno);
+  saveState();
+  opAbrirTurnoRefilado(opId, nuevoTurno.id);
+}
+
+function opAbrirTurnoRefilado(opId, turnoId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosRefilado.find(t=>t.id===turnoId);
+  if(!op || !turno) return;
+  
+  // Bobinas laminadas pendientes (no refiladas todavía)
+  const turnosLam = op.turnosLaminado || [];
+  const bobinasLamTotal = turnosLam.flatMap(t=>(t.bobinasSalientes||[]).map(b=>({...b, turnoLamId:t.id, operarioLam:t.operario})));
+  
+  const todosTurnosRef = op.turnosRefilado || [];
+  const yaRefiladasIds = todosTurnosRef.flatMap(t=>(t.bobinasRefiladas||[]).map(br=>br.bobinaLamId));
+  
+  const bobinasPendientes = bobinasLamTotal.filter(bl=>!yaRefiladasIds.includes(bl.id));
+  const bobinasYaRefiladasEnEsteTurno = (turno.bobinasRefiladas||[]).map(br=>br.bobinaLamId);
+  
+  const totalRefilado = (turno.bobinasRefiladas||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
   
   let html = `<div class="op-card" style="background:var(--orange);color:white">
-    <div style="font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${op.numero} · REFILADO</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${op.numero} · REFILADO · TURNO</div>
     <div style="font-size:20px;font-weight:600">${op.cliente}</div>
     <div style="opacity:0.9;margin-top:4px">${op.medida} · Final ${op.producto.anchoFinal}mm × ${op.producto.tiras} tira(s)</div>
-  </div>
-  
-  <div class="op-card">
-    <div class="op-card-title">Producto laminado disponible</div>
-    <div class="op-card-meta">
-      <div><div class="label">kg laminados</div><div class="value">${lr.kgLaminados.toFixed(1)} kg</div></div>
-      <div><div class="label">Solicitado final</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
-      <div><div class="label">Laminado por</div><div class="value" style="font-size:12px">${lr.operario}</div></div>
-      <div><div class="label">Fecha</div><div class="value" style="font-size:12px">${fmtDate(lr.fecha)}</div></div>
+    <div style="margin-top:10px;font-size:12px;opacity:0.9">
+      Operario: <strong>${turno.operario}</strong> · Turno ${turno.turno} · Inicio ${fmtDateTime(turno.fechaInicio)}
     </div>
   </div>
   
   <div class="op-card">
-    <div class="op-card-title">Trazabilidad — Bobinas usadas en laminado (${bobs.length})</div>
-    ${bobs.length === 0 ? '<p style="color:var(--muted);font-size:13px">Sin bobinas registradas.</p>' :
-      bobs.map(b=>renderBobinaCard(b, false)).join('')}
-    <div class="alert alert-info" style="margin-top:10px;font-size:12px">
-      Total entrada: ${consumos.kgPet.toFixed(1)} kg PET + ${consumos.kgPe.toFixed(1)} kg PE = ${(consumos.kgPet+consumos.kgPe).toFixed(1)} kg
-    </div>
+    <div class="op-card-title">Bobinas laminadas pendientes de refilar (${bobinasPendientes.length})</div>
+    ${bobinasPendientes.length === 0 
+      ? '<p style="color:var(--muted);font-size:13px">No hay bobinas pendientes. Todas fueron refiladas.</p>'
+      : bobinasPendientes.map(bl=>{
+          const yaRef = (turno.bobinasRefiladas||[]).filter(br=>br.bobinaLamId===bl.id);
+          return `<div class="bobina-card" style="border-left:3px solid var(--blue)">
+            <div class="code" style="color:var(--blue)">${bl.numero}</div>
+            <div class="desc">
+              ${bl.pesoNeto.toFixed(1)}kg · ${bl.metros}m · Laminado por ${bl.operarioLam}
+            </div>
+            ${yaRef.length > 0 ? `<div style="margin-top:6px;font-size:12px;color:var(--green)">
+              ✓ ${yaRef.length} bobina(s) refilada(s) de esta laminada en este turno
+            </div>` : ''}
+            <div class="op-card-action" style="margin-top:8px">
+              <button class="btn btn-orange btn-sm btn-block" onclick="opCargarBobinaRefilada('${opId}','${turnoId}','${bl.id}')">+ Refilar de esta bobina</button>
+            </div>
+          </div>`;
+        }).join('')}
   </div>
   
   <div class="op-card">
-    <div class="op-card-title">Cargar resultado del refilado</div>
-    
+    <div class="op-card-title">Bobinas refiladas en este turno (${(turno.bobinasRefiladas||[]).length})</div>
+    ${(turno.bobinasRefiladas||[]).length === 0
+      ? '<p style="color:var(--muted);font-size:13px">Todavía no cargaste bobinas refiladas. Refilá desde una bobina laminada.</p>'
+      : (turno.bobinasRefiladas||[]).map(br=>{
+          const bl = bobinasLamTotal.find(x=>x.id===br.bobinaLamId);
+          return `<div class="bobina-card" style="border-left:3px solid var(--green)">
+            <div class="code" style="color:var(--green)">★ ${br.numero}</div>
+            <div class="desc">
+              Bruto ${br.pesoBruto.toFixed(1)}kg · Cono ${br.cono}kg · 
+              <strong>Neto ${br.pesoNeto.toFixed(1)}kg</strong> · 
+              ${br.metros}m
+            </div>
+            <div class="desc" style="margin-top:4px">
+              De bobina laminada: <strong>${bl?bl.numero:'(eliminada)'}</strong>
+            </div>
+            <div class="actions">
+              <button class="btn-icon" onclick="opEliminarBobinaRefilada('${opId}','${turnoId}','${br.id}')" title="Eliminar">×</button>
+            </div>
+          </div>`;
+        }).join('')}
+    ${(turno.bobinasRefiladas||[]).length > 0 ? `<div class="alert alert-success" style="margin-top:10px;font-size:13px">Total refilado en este turno: <strong>${totalRefilado.toFixed(1)} kg</strong></div>` : ''}
+  </div>
+  
+  <div class="op-card">
+    <div class="op-card-title">Cerrar turno</div>
     <div class="form-tablet">
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">kg producto FINAL</label>
-          <input type="number" class="form-input" id="refKgFinal" step="any" inputmode="decimal" placeholder="Después de refilar">
-        </div>
-        <div class="form-group">
-          <label class="form-label">kg de scrap (refile)</label>
-          <input type="number" class="form-input" id="refKgScrap" step="any" inputmode="decimal" placeholder="Bordes descartados">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tiempo (horas)</label>
-          <input type="number" class="form-input" id="refHoras" step="any" inputmode="decimal">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Turno</label>
-          <select class="form-select" id="refTurno">
-            <option>Mañana</option><option>Tarde</option><option>Noche</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group" style="margin-top:6px">
-        <label class="form-label">Notas</label>
-        <textarea class="form-textarea" id="refNotas" rows="2"></textarea>
+      <div class="form-group">
+        <label class="form-label">Notas del turno</label>
+        <textarea class="form-textarea" id="turnoNotasRef" rows="2">${turno.notas||''}</textarea>
       </div>
     </div>
-    
-    <div class="form-row">
-      <button class="btn btn-success btn-block btn-lg" onclick="opGuardarRefilado('${opId}')">Cerrar OP →</button>
-    </div>
+    <button class="btn btn-success btn-block btn-lg" onclick="opCerrarTurnoRefilado('${opId}','${turnoId}')"
+      ${(turno.bobinasRefiladas||[]).length === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+      ${(turno.bobinasRefiladas||[]).length === 0 ? 'Cargá al menos una bobina refilada' : 'Cerrar turno y volver →'}
+    </button>
   </div>
   
   <div style="text-align:center;margin-top:20px">
-    <button class="btn btn-secondary" onclick="renderOperarioHome()">← Volver a tareas</button>
+    <button class="btn btn-secondary" onclick="renderOperarioHome()">← Volver a tareas (sin cerrar turno)</button>
   </div>`;
   
   document.getElementById('opContent').innerHTML = html;
 }
 
-function opGuardarRefilado(opId){
+function opCargarBobinaRefilada(opId, turnoId, bobinaLamId){
   const op = state.ops.find(o=>o.id===opId);
-  const kgFinales = parseFloat(document.getElementById('refKgFinal').value);
-  const kgScrap = parseFloat(document.getElementById('refKgScrap').value) || 0;
-  const horas = parseFloat(document.getElementById('refHoras').value);
-  const turno = document.getElementById('refTurno').value;
+  const turno = op.turnosRefilado.find(t=>t.id===turnoId);
+  const turnosLam = op.turnosLaminado || [];
+  const bobinaLam = turnosLam.flatMap(t=>t.bobinasSalientes||[]).find(b=>b.id===bobinaLamId);
+  if(!bobinaLam) return;
+  
+  const conoDefault = op.producto.conoLaminado || 0.5;
+  const numCount = (turno.bobinasRefiladas||[]).length + 1;
+  const numeroSugerido = `R-${op.numero}-${numCount.toString().padStart(2,'0')}`;
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Cargar bobina REFILADA</h2>
+    <div class="alert alert-info">
+      Esta bobina sale de la <strong>bobina laminada ${bobinaLam.numero}</strong> (${bobinaLam.pesoNeto.toFixed(1)}kg).
+    </div>
+    
+    <div class="form-tablet">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">N° de bobina</label>
+          <input type="text" class="form-input" id="refNumero" value="${numeroSugerido}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peso BRUTO (kg)</label>
+          <input type="number" class="form-input" id="refPesoBruto" step="any" inputmode="decimal" oninput="calcularNetoRefilado(${conoDefault})">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peso del cono (kg)</label>
+          <input type="number" class="form-input" id="refCono" value="${conoDefault}" step="any" inputmode="decimal" oninput="calcularNetoRefilado(${conoDefault})">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Peso NETO (kg) — calculado</label>
+          <input type="number" class="form-input" id="refPesoNeto" step="any" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metros lineales</label>
+          <input type="number" class="form-input" id="refMetros" step="any" inputmode="decimal">
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-top:6px">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" class="form-input" id="refNotas">
+      </div>
+    </div>
+    
+    <p style="color:var(--muted);font-size:12px;margin-top:10px">
+      💡 Una bobina laminada puede generar varias bobinas refiladas. Cargá esta y después podés cargar más de la misma laminada.
+    </p>
+    
+    <div class="form-row">
+      <button class="btn btn-success btn-lg" onclick="opGuardarBobinaRefilada('${opId}','${turnoId}','${bobinaLamId}')">Guardar refilada</button>
+      <button class="btn btn-secondary btn-lg" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  showModal(html);
+}
+
+function calcularNetoRefilado(conoDefault){
+  const bruto = parseFloat(document.getElementById('refPesoBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('refCono').value) || conoDefault;
+  const neto = bruto - cono;
+  document.getElementById('refPesoNeto').value = neto > 0 ? neto.toFixed(2) : '';
+}
+
+function opGuardarBobinaRefilada(opId, turnoId, bobinaLamId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosRefilado.find(t=>t.id===turnoId);
+  
+  const numero = document.getElementById('refNumero').value.trim();
+  const pesoBruto = parseFloat(document.getElementById('refPesoBruto').value);
+  const cono = parseFloat(document.getElementById('refCono').value);
+  const pesoNeto = parseFloat(document.getElementById('refPesoNeto').value);
+  const metros = parseFloat(document.getElementById('refMetros').value);
   const notas = document.getElementById('refNotas').value;
   
-  if(!kgFinales){alert('Faltan kg finales'); return;}
+  if(!numero || !pesoBruto){alert('Faltan datos: número y peso bruto'); return;}
   
-  op.refiladoReal = {
-    kgFinales, kgScrap, horas, turno, notas,
-    operario: currentUser.nombre,
+  if(!turno.bobinasRefiladas) turno.bobinasRefiladas = [];
+  turno.bobinasRefiladas.push({
+    id: uid('REF'),
+    numero, pesoBruto, cono, pesoNeto, metros, notas,
+    bobinaLamId,
+    cargadaPor: currentUser.nombre,
     fecha: new Date().toISOString()
-  };
-  op.estado = 'cerrada';
-  op.fechaCierre = new Date().toISOString();
+  });
+  saveState();
+  closeModal();
+  opAbrirTurnoRefilado(opId, turnoId);
+}
+
+function opEliminarBobinaRefilada(opId, turnoId, bobId){
+  if(!confirm('¿Eliminar esta bobina refilada?')) return;
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosRefilado.find(t=>t.id===turnoId);
+  turno.bobinasRefiladas = (turno.bobinasRefiladas||[]).filter(b=>b.id!==bobId);
+  saveState();
+  opAbrirTurnoRefilado(opId, turnoId);
+}
+
+function opCerrarTurnoRefilado(opId, turnoId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosRefilado.find(t=>t.id===turnoId);
+  if(!turno.bobinasRefiladas || turno.bobinasRefiladas.length === 0){
+    alert('Cargá al menos una bobina refilada.');
+    return;
+  }
+  turno.notas = document.getElementById('turnoNotasRef').value;
+  turno.cerrado = true;
+  turno.fechaFin = new Date().toISOString();
+  
+  // Verificar si todas las bobinas laminadas fueron refiladas
+  const turnosLam = op.turnosLaminado || [];
+  const bobinasLamIds = turnosLam.flatMap(t=>(t.bobinasSalientes||[]).map(b=>b.id));
+  const bobinasRefiladasIds = (op.turnosRefilado||[]).flatMap(t=>(t.bobinasRefiladas||[]).map(br=>br.bobinaLamId));
+  const todasRefiladas = bobinasLamIds.every(id=>bobinasRefiladasIds.includes(id));
+  
+  if(todasRefiladas && bobinasLamIds.length > 0){
+    op.estado = 'cerrada';
+    op.fechaCierre = new Date().toISOString();
+  } else {
+    op.estado = 'para_refilar';
+  }
   op.fechaUltimoCambio = new Date().toISOString();
   saveState();
-  alert('OP cerrada correctamente.');
-  if(currentUser.modo === 'operario'){
-    renderOperarioHome();
-  } else {
-    closeModal();
-    verOp(opId);
-  }
+  alert(todasRefiladas ? 'Turno cerrado. ¡OP cerrada completamente!' : 'Turno cerrado. Aún quedan bobinas laminadas pendientes de refilar.');
+  renderOperarioHome();
 }
+
 
 // =========================================================
 // MODO GESTIÓN — Dashboard
@@ -1206,7 +1592,10 @@ function renderDashboard(){
     return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
   
-  const kgMes = opsMes.reduce((s,op)=>s+(op.refiladoReal?.kgFinales||0),0);
+  const kgMes = opsMes.reduce((s,op)=>{
+    const cons = calcularConsumosOp(op);
+    return s + (cons.kgFinales || 0);
+  }, 0);
   const kgActivos = opsActivas.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
   
   let margenPromedio = null;
@@ -1297,10 +1686,13 @@ function renderOcs(){
     <input type="text" class="filter-input" placeholder="Buscar cliente..." id="ocFiltroCliente" oninput="renderOcsTable()">
     <select class="filter-input" id="ocFiltroEstado" onchange="renderOcsTable()">
       <option value="">Todos los estados</option>
-      <option value="pendiente">Pendientes</option>
-      <option value="parcial">Con OPs parciales</option>
-      <option value="completada">Cubiertas</option>
+      <option value="pendiente">Pendientes (sin OP)</option>
+      <option value="parcial">Parcial (OPs incompletas)</option>
+      <option value="completada">OPs completas</option>
     </select>
+    <span style="font-size:11px;color:var(--muted);margin-left:8px">
+      <strong>Pendiente</strong>: sin OP creada · <strong>Parcial</strong>: OPs no cubren los kg · <strong>OPs completas</strong>: OPs cubren todos los kg
+    </span>
   </div>`;
   
   html += '<div class="card" id="ocsTableWrap"></div>';
@@ -1337,8 +1729,9 @@ function renderOcsTable(){
       const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
       const pctCubierto = oc.kgSolicitados > 0 ? kgEnOp/oc.kgSolicitados : 0;
       const estadoBadge = pctCubierto >= 1 ? 'badge-success' : pctCubierto > 0 ? 'badge-warning' : 'badge-pending';
-      const estadoText = pctCubierto >= 1 ? 'Cubierta' : pctCubierto > 0 ? 'Parcial' : 'Pendiente';
       const numDisplay = oc.esNumeroInterno ? `<em style="color:var(--muted)">${oc.numero}</em>` : oc.numero;
+      const tooltipEstado = pctCubierto >= 1 ? 'OPs creadas cubren todos los kg solicitados' : pctCubierto > 0 ? 'Hay OPs creadas pero no cubren todos los kg' : 'No se generaron OPs todavía';
+      const estadoText = pctCubierto >= 1 ? 'OPs completas' : pctCubierto > 0 ? 'Parcial' : 'Pendiente';
       
       html += `<tr class="row-clickable" onclick="verOc('${oc.id}')">
         <td><strong>${numDisplay}</strong></td>
@@ -1347,8 +1740,11 @@ function renderOcsTable(){
         <td class="num">${(+oc.kgSolicitados).toFixed(0)}</td>
         <td class="num">${kgEnOp.toFixed(0)}</td>
         <td>${fmtDate(oc.fechaEntrega)}</td>
-        <td><span class="badge ${estadoBadge}">${estadoText}</span></td>
-        <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOc('${oc.id}')">Ver</button></td>
+        <td><span class="badge ${estadoBadge}" title="${tooltipEstado}">${estadoText}</span></td>
+        <td>
+          <button class="btn-icon" onclick="event.stopPropagation();editarOc('${oc.id}')" title="Editar">✎</button>
+          <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOc('${oc.id}')">Ver</button>
+        </td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -1357,18 +1753,30 @@ function renderOcsTable(){
 }
 
 function nuevaOc(){
+  ocFormModal(null);
+}
+
+function editarOc(id){
+  ocFormModal(id);
+}
+
+function ocFormModal(idEditar){
+  const esEdicion = idEditar !== null;
+  const oc = esEdicion ? state.ocs.find(o=>o.id===idEditar) : null;
+  if(esEdicion && !oc){alert('OC no encontrada'); return;}
+  
   const clientesUnicos = [...new Set(state.catalogo.map(p=>p.cliente))];
   const fechaHoy = new Date().toISOString().split('T')[0];
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Nueva Orden de Compra</h2>
+    <h2>${esEdicion ? 'Editar OC '+oc.numero : 'Nueva Orden de Compra'}</h2>
     
     <div class="form-grid">
       <div class="form-group">
         <label class="form-label">Cliente</label>
         <select class="form-select" id="ocCliente" onchange="actualizarMedidasOc()">
           <option value="">— Seleccionar —</option>
-          ${clientesUnicos.map(c=>`<option value="${c}">${c}</option>`).join('')}
+          ${clientesUnicos.map(c=>`<option value="${c}" ${oc&&oc.cliente===c?'selected':''}>${c}</option>`).join('')}
           <option value="__nuevo__">+ Cliente nuevo</option>
         </select>
       </div>
@@ -1380,45 +1788,54 @@ function nuevaOc(){
       </div>
       <div class="form-group">
         <label class="form-label">Número OC del cliente (opcional)</label>
-        <input type="text" class="form-input" id="ocNumero" placeholder="Dejar vacío si no hay">
+        <input type="text" class="form-input" id="ocNumero" placeholder="Dejar vacío si no hay" value="${esEdicion && !oc.esNumeroInterno ? oc.numero : ''}">
         <div class="form-help">Si no hay OC formal, el sistema asigna un código interno.</div>
       </div>
       <div class="form-group">
         <label class="form-label">kg solicitados</label>
-        <input type="number" class="form-input" id="ocKg" min="1" step="any">
+        <input type="number" class="form-input" id="ocKg" min="1" step="any" value="${oc ? oc.kgSolicitados : ''}">
       </div>
       <div class="form-group">
         <label class="form-label">Precio USD/kg</label>
-        <input type="number" class="form-input" id="ocPrecio" min="0" step="0.01">
+        <input type="number" class="form-input" id="ocPrecio" min="0" step="0.01" value="${oc ? oc.precioUsdKg : ''}">
       </div>
       <div class="form-group">
         <label class="form-label">Fecha de entrega</label>
-        <input type="date" class="form-input" id="ocFechaEntrega" value="">
+        <input type="date" class="form-input" id="ocFechaEntrega" value="${oc ? oc.fechaEntrega : ''}">
       </div>
       <div class="form-group">
         <label class="form-label">Modalidad</label>
         <select class="form-select" id="ocModalidad">
-          <option value="con_flete">Con flete (entregamos)</option>
-          <option value="sin_flete">Sin flete (cliente retira)</option>
+          <option value="con_flete" ${oc&&oc.modalidad==='con_flete'?'selected':''}>Con flete (entregamos)</option>
+          <option value="sin_flete" ${oc&&oc.modalidad==='sin_flete'?'selected':''}>Sin flete (cliente retira)</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">Plazo de pago</label>
-        <input type="text" class="form-input" id="ocPlazoPago" placeholder="30 / 60 / 90 días">
+        <input type="text" class="form-input" id="ocPlazoPago" placeholder="30 / 60 / 90 días" value="${oc ? (oc.plazoPago||'') : ''}">
       </div>
     </div>
     
     <div class="form-group">
       <label class="form-label">Notas / observaciones</label>
-      <textarea class="form-textarea" id="ocNotas" rows="2" placeholder="Lote, requisitos especiales, etc."></textarea>
+      <textarea class="form-textarea" id="ocNotas" rows="2" placeholder="Lote, requisitos especiales, etc.">${oc ? (oc.notas||'') : ''}</textarea>
     </div>
     
     <div class="form-row">
-      <button class="btn" onclick="guardarOc()">Guardar OC</button>
+      <button class="btn" onclick="guardarOc(${esEdicion?`'${idEditar}'`:'null'})">${esEdicion?'Guardar cambios':'Guardar OC'}</button>
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     </div>`;
   
   showModal(html, true);
+  
+  // Si es edición, cargar las medidas del cliente actual
+  if(esEdicion){
+    setTimeout(()=>{
+      actualizarMedidasOc();
+      const select = document.getElementById('ocMedida');
+      if(select) select.value = oc.medida;
+    }, 50);
+  }
 }
 
 function actualizarMedidasOc(){
@@ -1443,7 +1860,7 @@ function generarNumeroInterno(){
   return `INT-${fechaStr}-${(hoy+1).toString().padStart(3,'0')}`;
 }
 
-function guardarOc(){
+function guardarOc(idEditar){
   let cliente = document.getElementById('ocCliente').value;
   let medida = document.getElementById('ocMedida').value;
   let numero = document.getElementById('ocNumero').value.trim();
@@ -1467,6 +1884,43 @@ function guardarOc(){
     return;
   }
   
+  if(idEditar){
+    // Edición
+    const oc = state.ocs.find(o=>o.id===idEditar);
+    if(!oc) return;
+    
+    let esNumeroInterno = oc.esNumeroInterno;
+    if(!numero){
+      if(!oc.esNumeroInterno){
+        // Antes tenía número formal, ahora vacío → cambiar a interno
+        numero = generarNumeroInterno();
+        esNumeroInterno = true;
+      } else {
+        numero = oc.numero; // mantener interno existente
+      }
+    } else {
+      esNumeroInterno = false;
+    }
+    
+    oc.numero = numero;
+    oc.esNumeroInterno = esNumeroInterno;
+    oc.cliente = cliente;
+    oc.medida = medida;
+    oc.kgSolicitados = kg;
+    oc.precioUsdKg = precio;
+    oc.fechaEntrega = fechaEntrega;
+    oc.modalidad = modalidad;
+    oc.plazoPago = plazoPago;
+    oc.notas = notas;
+    oc.modificadoPor = currentUser.nombre;
+    oc.fechaModificacion = new Date().toISOString();
+    saveState();
+    closeModal();
+    navigateTo('ocs');
+    return;
+  }
+  
+  // Creación
   let esNumeroInterno = false;
   if(!numero){
     numero = generarNumeroInterno();
@@ -1532,6 +1986,7 @@ function verOc(id){
   
   html += `<div class="form-row">
     ${kgDisponibles>0 ? `<button class="btn" onclick="closeModal();nuevaOpDesdeOc('${oc.id}')">+ Generar OP</button>` : ''}
+    <button class="btn btn-secondary" onclick="closeModal();editarOc('${oc.id}')">✎ Editar OC</button>
     <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
     <button class="btn btn-danger" onclick="eliminarOc('${oc.id}')" style="margin-left:auto">Eliminar OC</button>
   </div>`;
@@ -1622,6 +2077,7 @@ function nuevaOpDesdeOc(ocId){
       <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value">${oc.cliente}</div></div>
       <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value">${oc.medida}</div></div>
       <div class="detail-item"><div class="detail-label">kg disponibles</div><div class="detail-value">${kgDisponibles.toFixed(0)} kg</div></div>
+      <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${fmtDate(oc.fechaEntrega)}</div></div>
     </div>
     
     <div class="form-grid">
@@ -1630,8 +2086,9 @@ function nuevaOpDesdeOc(ocId){
         <input type="number" class="form-input" id="opKg" min="1" max="${kgDisponibles}" value="${kgDisponibles}" step="any">
       </div>
       <div class="form-group">
-        <label class="form-label">Fecha producción prevista</label>
+        <label class="form-label">Fecha planeada de producción</label>
         <input type="date" class="form-input" id="opFechaPrevista" value="${new Date().toISOString().split('T')[0]}">
+        <div class="form-help">Cuándo se planea fabricar (no es la fecha de entrega).</div>
       </div>
     </div>
     
@@ -1675,6 +2132,8 @@ function guardarOp(ocId){
     creadoPor: currentUser.nombre,
     laminadoReal: null,
     refiladoReal: null,
+    turnosLaminado: [],
+    turnosRefilado: [],
   };
   
   state.ops.push(op);
@@ -1690,7 +2149,6 @@ function verOp(id){
   const oc = state.ocs.find(o=>o.id===op.ocId);
   const necesidades = calcularNecesidades(op.producto, op.kgSolicitados);
   const real = calcularReal(op);
-  const bobs = getBobinasOp(id);
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${op.numero} — ${op.cliente} ${op.medida}</h2>`;
@@ -1709,23 +2167,29 @@ function verOp(id){
     <div class="detail-item"><div class="detail-label">OC asociada</div><div class="detail-value">${oc?oc.numero:'—'}</div></div>
     <div class="detail-item"><div class="detail-label">kg solicitados</div><div class="detail-value">${op.kgSolicitados.toFixed(0)} kg</div></div>
     <div class="detail-item"><div class="detail-label">Precio venta</div><div class="detail-value">${fmtUsdShort(op.precioUsdKg)}/kg</div></div>
-    <div class="detail-item"><div class="detail-label">Fecha prevista</div><div class="detail-value">${fmtDate(op.fechaPrevista)}</div></div>
+    <div class="detail-item"><div class="detail-label">Producción planeada</div><div class="detail-value">${fmtDate(op.fechaPrevista)}</div></div>
+    <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${oc?fmtDate(oc.fechaEntrega):'—'}</div></div>
+    <div class="detail-item"><div class="detail-label">Creada</div><div class="detail-value">${fmtDate(op.fechaCreacion)}</div></div>
   </div>`;
+  
+  const tieneTurnosLam = (op.turnosLaminado||[]).length > 0;
+  const tieneTurnosRef = (op.turnosRefilado||[]).length > 0;
   
   html += `<div class="tabs">
     <div class="tab ${currentOpTab==='necesidades'?'active':''}" onclick="setOpTab('necesidades','${op.id}')">Necesidades</div>
-    <div class="tab ${currentOpTab==='laminado'?'active':''}" onclick="setOpTab('laminado','${op.id}')">Laminado ${op.laminadoReal?'✓':''}</div>
-    <div class="tab ${currentOpTab==='refilado'?'active':''}" onclick="setOpTab('refilado','${op.id}')">Refilado ${op.refiladoReal?'✓':''}</div>
+    <div class="tab ${currentOpTab==='laminado'?'active':''}" onclick="setOpTab('laminado','${op.id}')">Laminado ${tieneTurnosLam?'✓':''}</div>
+    <div class="tab ${currentOpTab==='refilado'?'active':''}" onclick="setOpTab('refilado','${op.id}')">Refilado ${tieneTurnosRef?'✓':''}</div>
     ${op.estado==='cerrada' ? `<div class="tab ${currentOpTab==='resultado'?'active':''}" onclick="setOpTab('resultado','${op.id}')">Resultado</div>` : ''}
   </div>`;
   
-  html += '<div id="opTabContent">'+renderOpTabContent(op, necesidades, real, bobs)+'</div>';
+  html += '<div id="opTabContent">'+renderOpTabContent(op, necesidades, real, [])+'</div>';
   
   html += '<div class="form-row" style="margin-top:18px">';
   if(op.estado === 'nueva'){
     html += `<button class="btn btn-accent" onclick="enviarMailIngenieros('${op.id}')">📧 Enviar mail a ingenieros</button>`;
   }
   if(op.estado !== 'cerrada'){
+    html += `<button class="btn btn-secondary" onclick="closeModal();editarOp('${op.id}')">✎ Editar OP</button>`;
     html += `<button class="btn btn-danger" onclick="eliminarOp('${op.id}')" style="margin-left:auto">Eliminar OP</button>`;
   }
   html += '</div>';
@@ -1759,56 +2223,79 @@ function renderOpTabContent(op, nec, real, bobs){
   }
   
   if(currentOpTab === 'laminado'){
-    const petBobs = bobs.filter(b=>b.tipo==='PET');
-    const peBobs = bobs.filter(b=>b.tipo==='PE');
-    const consumos = calcularConsumosLaminado(op.id);
-    
-    let html = `<div class="card-title" style="margin-top:6px">Datos del laminado</div>`;
-    
-    if(op.laminadoReal){
-      const lr = op.laminadoReal;
-      html += `<table class="table">
-        <tr><td>Operario</td><td>${lr.operario}</td></tr>
-        <tr><td>Fecha</td><td>${fmtDateTime(lr.fecha)}</td></tr>
-        <tr><td>Turno</td><td>${lr.turno}</td></tr>
-        <tr><td>kg PET consumidos</td><td class="num">${consumos.kgPet.toFixed(1)} kg (de ${petBobs.length} bobinas)</td></tr>
-        <tr><td>kg PE consumidos</td><td class="num">${consumos.kgPe.toFixed(1)} kg (de ${peBobs.length} bobinas)</td></tr>
-        <tr style="background:var(--blue-bg)"><td><strong>kg laminados producidos</strong></td><td class="num"><strong>${lr.kgLaminados.toFixed(1)} kg</strong></td></tr>
-        <tr><td>Merma laminado</td><td class="num">${(consumos.kgPet+consumos.kgPe-lr.kgLaminados).toFixed(1)} kg (${fmtPct((consumos.kgPet+consumos.kgPe-lr.kgLaminados)/(consumos.kgPet+consumos.kgPe))})</td></tr>
-        <tr><td>Tiempo</td><td class="num">${lr.horas?lr.horas.toFixed(1)+' hs':'—'}</td></tr>
-      </table>
-      ${lr.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${lr.notas}</div>` : ''}`;
-    } else {
-      html += `<div class="alert alert-info">Esta OP está en estado <strong>${getEstadoLabel(op.estado)}</strong>. La carga de laminado la realiza el operario desde la app de planta.</div>`;
+    const turnos = op.turnosLaminado || [];
+    if(turnos.length === 0){
+      return '<div class="alert alert-info">No hay turnos de laminado todavía. Los carga el operario desde la app de planta.</div>';
     }
     
-    if(bobs.length > 0){
-      html += `<div class="card-title" style="margin-top:14px">Bobinas usadas (${bobs.length})</div>`;
-      html += bobs.map(b=>renderBobinaCard(b, false)).join('');
-    }
+    const cons = calcularConsumosOp(op);
+    
+    let html = `<div class="card-title" style="margin-top:6px">Resumen del laminado</div>
+      <table class="table">
+        <tr><td>Turnos</td><td class="num">${turnos.length} (${turnos.filter(t=>t.cerrado).length} cerrados)</td></tr>
+        <tr><td>Bobinas PET entrantes</td><td class="num">${cons.cantBobinasPet} (${cons.kgPet.toFixed(1)} kg consumidos)</td></tr>
+        <tr><td>Bobinas PE entrantes</td><td class="num">${cons.cantBobinasPe} (${cons.kgPe.toFixed(1)} kg consumidos)</td></tr>
+        <tr style="background:var(--blue-bg)"><td><strong>Bobinas LAMINADAS salientes</strong></td><td class="num"><strong>${cons.cantBobinasLam} (${cons.kgLaminados.toFixed(1)} kg)</strong></td></tr>
+        <tr><td>Merma laminado</td><td class="num">${(cons.kgPet+cons.kgPe-cons.kgLaminados).toFixed(1)} kg (${cons.kgPet+cons.kgPe>0?fmtPct((cons.kgPet+cons.kgPe-cons.kgLaminados)/(cons.kgPet+cons.kgPe)):'—'})</td></tr>
+        <tr><td>Metros laminados</td><td class="num">${cons.metrosLam.toFixed(0)} m</td></tr>
+      </table>`;
+    
+    html += `<div class="card-title" style="margin-top:14px">Detalle por turno</div>`;
+    turnos.forEach((t, idx)=>{
+      const totalLam = (t.bobinasSalientes||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
+      html += `<div style="border:1px solid var(--line);border-radius:5px;padding:12px;margin-bottom:8px;background:var(--bg-2)">
+        <strong>Turno ${idx+1}</strong> · ${t.operario} · ${t.turno} · ${fmtDateTime(t.fechaInicio)}
+        ${t.cerrado ? `<span class="badge badge-success" style="margin-left:6px">Cerrado</span>` : `<span class="badge badge-active" style="margin-left:6px">Abierto</span>`}
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">
+          PET: ${(t.bobinasPet||[]).length} bobina(s) · 
+          PE: ${(t.bobinasPe||[]).length} bobina(s) · 
+          <strong>Salientes: ${(t.bobinasSalientes||[]).length} bobina(s) · ${totalLam.toFixed(1)} kg</strong>
+        </div>
+        ${t.notas ? `<div style="font-size:12px;color:var(--muted);margin-top:4px"><em>${t.notas}</em></div>` : ''}
+      </div>`;
+    });
     
     return html;
   }
   
   if(currentOpTab === 'refilado'){
-    if(!op.laminadoReal){
-      return '<div class="alert alert-info">El refilado se carga después de cerrar el laminado.</div>';
+    const turnos = op.turnosRefilado || [];
+    const turnosLam = op.turnosLaminado || [];
+    
+    if(turnosLam.flatMap(t=>t.bobinasSalientes||[]).length === 0){
+      return '<div class="alert alert-info">El refilado se carga después de tener bobinas laminadas.</div>';
     }
-    if(op.refiladoReal){
-      const rr = op.refiladoReal;
-      return `<div class="card-title" style="margin-top:6px">Datos del refilado</div>
-        <table class="table">
-          <tr><td>Operario</td><td>${rr.operario}</td></tr>
-          <tr><td>Fecha</td><td>${fmtDateTime(rr.fecha)}</td></tr>
-          <tr><td>Turno</td><td>${rr.turno}</td></tr>
-          <tr style="background:var(--blue-bg)"><td><strong>kg producto FINAL</strong></td><td class="num"><strong>${rr.kgFinales.toFixed(1)} kg</strong></td></tr>
-          <tr><td>kg scrap (refile)</td><td class="num">${rr.kgScrap.toFixed(1)} kg</td></tr>
-          <tr><td>Yield refilado</td><td class="num">${fmtPct(rr.kgFinales/op.laminadoReal.kgLaminados)}</td></tr>
-          <tr><td>Tiempo</td><td class="num">${rr.horas?rr.horas.toFixed(1)+' hs':'—'}</td></tr>
-        </table>
-        ${rr.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${rr.notas}</div>` : ''}`;
+    
+    if(turnos.length === 0){
+      return '<div class="alert alert-orange">Hay bobinas laminadas listas. Falta cargar el refilado desde la app de planta.</div>';
     }
-    return `<div class="alert alert-orange">Listo para refilar. La carga la realiza el operario de refilado desde la app de planta.</div>`;
+    
+    const cons = calcularConsumosOp(op);
+    const yieldRefilado = cons.kgLaminados > 0 ? cons.kgFinales / cons.kgLaminados : 0;
+    
+    let html = `<div class="card-title" style="margin-top:6px">Resumen del refilado</div>
+      <table class="table">
+        <tr><td>Turnos de refilado</td><td class="num">${turnos.length} (${turnos.filter(t=>t.cerrado).length} cerrados)</td></tr>
+        <tr><td>Bobinas refiladas</td><td class="num">${cons.cantBobinasRef}</td></tr>
+        <tr style="background:var(--blue-bg)"><td><strong>kg producto FINAL</strong></td><td class="num"><strong>${cons.kgFinales.toFixed(1)} kg</strong></td></tr>
+        <tr><td>Yield refilado</td><td class="num">${fmtPct(yieldRefilado)}</td></tr>
+        <tr><td>Metros finales</td><td class="num">${cons.metrosRef.toFixed(0)} m</td></tr>
+      </table>`;
+    
+    html += `<div class="card-title" style="margin-top:14px">Detalle por turno</div>`;
+    turnos.forEach((t, idx)=>{
+      const totalRef = (t.bobinasRefiladas||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
+      html += `<div style="border:1px solid var(--line);border-radius:5px;padding:12px;margin-bottom:8px;background:var(--bg-2)">
+        <strong>Turno ${idx+1}</strong> · ${t.operario} · ${t.turno} · ${fmtDateTime(t.fechaInicio)}
+        ${t.cerrado ? `<span class="badge badge-success" style="margin-left:6px">Cerrado</span>` : `<span class="badge badge-active" style="margin-left:6px">Abierto</span>`}
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">
+          <strong>${(t.bobinasRefiladas||[]).length} bobina(s) refilada(s) · ${totalRef.toFixed(1)} kg</strong>
+        </div>
+        ${t.notas ? `<div style="font-size:12px;color:var(--muted);margin-top:4px"><em>${t.notas}</em></div>` : ''}
+      </div>`;
+    });
+    
+    return html;
   }
   
   if(currentOpTab === 'resultado' && op.estado === 'cerrada'){
@@ -1863,12 +2350,70 @@ function renderResultadoOp(op, nec, real){
 }
 
 function eliminarOp(opId){
-  if(!confirm('¿Eliminar esta OP? Se eliminan también las bobinas asociadas.')) return;
-  state.bobinas = state.bobinas.filter(b=>b.opId!==opId);
+  if(!confirm('¿Eliminar esta OP? Se eliminan también todos los turnos y bobinas asociadas.')) return;
   state.ops = state.ops.filter(o=>o.id!==opId);
   saveState();
   closeModal();
   navigateTo('ops');
+}
+
+function editarOp(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return;
+  if(op.estado === 'cerrada'){
+    alert('No se puede editar una OP cerrada.');
+    return;
+  }
+  
+  const enProduccion = op.estado !== 'nueva';
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Editar OP ${op.numero}</h2>
+    
+    ${enProduccion ? `<div class="alert alert-warning">⚠ Esta OP ya está en producción (${getEstadoLabel(op.estado)}). Solo se pueden editar la fecha planeada y las notas.</div>` : ''}
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">kg solicitados</label>
+        <input type="number" class="form-input" id="opEditKg" min="1" step="any" value="${op.kgSolicitados}" ${enProduccion?'disabled':''}>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha planeada de producción</label>
+        <input type="date" class="form-input" id="opEditFechaPrevista" value="${op.fechaPrevista||''}">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-textarea" id="opEditNotas" rows="3">${op.notas||''}</textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarEdicionOp('${opId}')">Guardar cambios</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  
+  showModal(html, true);
+}
+
+function guardarEdicionOp(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return;
+  
+  const enProduccion = op.estado !== 'nueva';
+  
+  if(!enProduccion){
+    const kg = parseFloat(document.getElementById('opEditKg').value);
+    if(!kg || kg <= 0){alert('kg inválidos'); return;}
+    op.kgSolicitados = kg;
+  }
+  op.fechaPrevista = document.getElementById('opEditFechaPrevista').value;
+  op.notas = document.getElementById('opEditNotas').value;
+  op.modificadoPor = currentUser.nombre;
+  op.fechaModificacion = new Date().toISOString();
+  saveState();
+  closeModal();
+  verOp(opId);
 }
 
 function enviarMailIngenieros(opId){
@@ -1913,13 +2458,15 @@ ${currentUser.nombre}`
 // =========================================================
 function renderBobinas(){
   let html = `<h1 class="page-title">Bobinas</h1>
-    <p class="page-subtitle">Trazabilidad de bobinas usadas en cada OP. Las bobinas son cargadas por el operario al ponerlas en máquina.</p>`;
+    <p class="page-subtitle">Trazabilidad de todas las bobinas registradas por turno (PET y PE entrantes, laminadas, refiladas).</p>`;
   
   html += `<div class="filters">
     <select class="filter-input" id="bobFiltroTipo" onchange="renderBobinasTable()">
       <option value="">Todos los tipos</option>
-      <option value="PET">PET</option>
-      <option value="PE">PE</option>
+      <option value="PET">PET (entrantes)</option>
+      <option value="PE">PE (entrantes)</option>
+      <option value="LAM">Laminadas (en proceso)</option>
+      <option value="REF">Refiladas (final)</option>
     </select>
   </div>`;
   
@@ -1930,28 +2477,44 @@ function renderBobinas(){
 
 function renderBobinasTable(){
   const tipo = document.getElementById('bobFiltroTipo')?.value || '';
-  let bobs = state.bobinas.filter(b=>!tipo || b.tipo === tipo);
-  bobs = bobs.sort((a,b)=>new Date(b.fechaIngreso)-new Date(a.fechaIngreso));
+  
+  // Construir lista global de bobinas desde turnos
+  let todasBobinas = [];
+  state.ops.forEach(op=>{
+    (op.turnosLaminado||[]).forEach(t=>{
+      (t.bobinasPet||[]).forEach(b=>todasBobinas.push({...b, tipoCat:'PET', opId:op.id, opNumero:op.numero, cliente:op.cliente, turnoOperario:t.operario, turnoFecha:t.fechaInicio}));
+      (t.bobinasPe||[]).forEach(b=>todasBobinas.push({...b, tipoCat:'PE', opId:op.id, opNumero:op.numero, cliente:op.cliente, turnoOperario:t.operario, turnoFecha:t.fechaInicio}));
+      (t.bobinasSalientes||[]).forEach(b=>todasBobinas.push({...b, tipoCat:'LAM', opId:op.id, opNumero:op.numero, cliente:op.cliente, turnoOperario:t.operario, turnoFecha:t.fechaInicio}));
+    });
+    (op.turnosRefilado||[]).forEach(t=>{
+      (t.bobinasRefiladas||[]).forEach(b=>todasBobinas.push({...b, tipoCat:'REF', opId:op.id, opNumero:op.numero, cliente:op.cliente, turnoOperario:t.operario, turnoFecha:t.fechaInicio}));
+    });
+  });
+  
+  if(tipo) todasBobinas = todasBobinas.filter(b=>b.tipoCat===tipo);
+  todasBobinas.sort((a,b)=>new Date(b.turnoFecha)-new Date(a.turnoFecha));
   
   let html;
-  if(bobs.length===0){
+  if(todasBobinas.length === 0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay bobinas registradas todavía.</p>';
   } else {
-    html = '<table class="table"><thead><tr><th>Código</th><th>Tipo</th><th>Espesor</th><th>Ancho</th><th class="num">Bruto</th><th class="num">Neto</th><th class="num">Desperd.</th><th class="num">Consumido</th><th>OP</th><th>Operario</th></tr></thead><tbody>';
-    bobs.forEach(b=>{
-      const op = b.opId ? state.ops.find(o=>o.id===b.opId) : null;
-      const consumido = b.pesoNeto - (b.desperdicio || 0);
+    html = '<table class="table"><thead><tr><th>Tipo</th><th>N° bobina</th><th>Partida</th><th class="num">Bruto</th><th class="num">Cono</th><th class="num">Neto</th><th class="num">Metros</th><th class="num">Scrap</th><th>OP</th><th>Cliente</th><th>Operario</th><th>Fecha</th></tr></thead><tbody>';
+    todasBobinas.forEach(b=>{
+      const tipoLabel = {'PET':'PET','PE':'PE','LAM':'Laminada','REF':'Refilada'}[b.tipoCat] || b.tipoCat;
+      const tipoBadge = {'PET':'badge-active','PE':'badge-success','LAM':'badge-warning','REF':'badge-orange'}[b.tipoCat] || 'badge-pending';
       html += `<tr>
-        <td><strong style="font-family:'Courier New',monospace">${b.codigo}</strong></td>
-        <td><span class="badge badge-${b.tipo==='PET'?'active':'success'}">${b.tipo}</span></td>
-        <td>${b.espesor}µm</td>
-        <td>${b.ancho}mm</td>
-        <td class="num">${b.pesoBruto.toFixed(1)} kg</td>
-        <td class="num">${b.pesoNeto.toFixed(1)} kg</td>
-        <td class="num">${(b.desperdicio||0)>0?(b.desperdicio.toFixed(1)+' kg'):'—'}</td>
-        <td class="num"><strong>${consumido.toFixed(1)} kg</strong></td>
-        <td>${op ? `<a onclick="verOp('${op.id}')" style="color:var(--navy);cursor:pointer;text-decoration:underline">${op.numero}</a>` : '—'}</td>
-        <td>${b.cargadaPor||'—'}</td>
+        <td><span class="badge ${tipoBadge}">${tipoLabel}</span></td>
+        <td><strong style="font-family:'Courier New',monospace">${b.numero||'—'}</strong></td>
+        <td>${b.partida||'—'}</td>
+        <td class="num">${(b.pesoBruto||0).toFixed(1)} kg</td>
+        <td class="num">${(b.cono||0).toFixed(1)} kg</td>
+        <td class="num"><strong>${(b.pesoNeto||0).toFixed(1)} kg</strong></td>
+        <td class="num">${b.metros?b.metros.toFixed(0)+' m':'—'}</td>
+        <td class="num">${(b.scrapKg||0)>0?b.scrapKg.toFixed(1)+' kg':'—'}</td>
+        <td><a onclick="verOp('${b.opId}')" style="color:var(--navy);cursor:pointer;text-decoration:underline">${b.opNumero}</a></td>
+        <td>${b.cliente}</td>
+        <td>${b.turnoOperario||'—'}</td>
+        <td>${fmtDate(b.turnoFecha)}</td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -1999,9 +2562,10 @@ function renderRemitosTable(){
 
 function nuevoRemito(){
   const opsDisponibles = state.ops.filter(op=>{
-    if(!op.refiladoReal) return false;
+    const cons = calcularConsumosOp(op);
+    if(cons.kgFinales <= 0) return false;
     const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
-    return op.refiladoReal.kgFinales > yaEntregado;
+    return cons.kgFinales > yaEntregado;
   });
   
   if(opsDisponibles.length === 0){
@@ -2059,9 +2623,11 @@ function actualizarOpsRemito(){
   }
   
   const opsCliente = state.ops.filter(op=>{
-    if(op.cliente !== cliente || !op.refiladoReal) return false;
+    if(op.cliente !== cliente) return false;
+    const cons = calcularConsumosOp(op);
+    if(cons.kgFinales <= 0) return false;
     const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
-    return op.refiladoReal.kgFinales > yaEntregado;
+    return cons.kgFinales > yaEntregado;
   });
   
   if(opsCliente.length === 0){
@@ -2071,8 +2637,9 @@ function actualizarOpsRemito(){
   
   let html = '<table class="table"><thead><tr><th><input type="checkbox" id="remTodas" onchange="toggleTodasOps()"></th><th>OP</th><th>Producto</th><th class="num">Disponible</th><th class="num">kg a remitir</th></tr></thead><tbody>';
   opsCliente.forEach(op=>{
+    const cons = calcularConsumosOp(op);
     const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
-    const disponible = op.refiladoReal.kgFinales - yaEntregado;
+    const disponible = cons.kgFinales - yaEntregado;
     html += `<tr>
       <td><input type="checkbox" class="rem-op-check" data-op-id="${op.id}" data-disponible="${disponible}"></td>
       <td>${op.numero}</td>
@@ -2178,20 +2745,33 @@ function eliminarRemito(id){
 // =========================================================
 function renderCatalogo(){
   let html = `<h1 class="page-title">Catálogo de productos</h1>
-    <p class="page-subtitle">Productos PET/PE laminados con sus medidas. Base para crear OCs y OPs.</p>
+    <p class="page-subtitle">Productos PET/PE laminados con sus medidas y pesos de cono. Base para crear OCs y OPs.</p>
     <div class="form-row" style="margin-bottom:18px">
       <button class="btn" onclick="nuevoProducto()">+ Nuevo producto</button>
     </div>
     <div class="card">
       <table class="table">
-        <thead><tr><th>Cliente</th><th>Medida</th><th class="num">A.PET</th><th class="num">E.PET</th><th class="num">A.PE</th><th class="num">E.PE</th><th class="num">Final</th><th class="num">Tiras</th><th></th></tr></thead>
+        <thead><tr>
+          <th>Cliente</th><th>Medida</th>
+          <th class="num">A.PET</th><th class="num">E.PET</th>
+          <th class="num">A.PE</th><th class="num">E.PE</th>
+          <th class="num">Final</th><th class="num">Tiras</th>
+          <th class="num">Cono PET</th><th class="num">Cono PE</th><th class="num">Cono Lam</th>
+          <th></th>
+        </tr></thead>
         <tbody>
         ${state.catalogo.map((p,i)=>`<tr>
           <td>${p.cliente}</td><td><strong>${p.medida}</strong></td>
           <td class="num">${p.anchoPet}mm</td><td class="num">${p.espPet}µm</td>
           <td class="num">${p.anchoPe}mm</td><td class="num">${p.espPe}µm</td>
           <td class="num">${p.anchoFinal}mm</td><td class="num">${p.tiras}</td>
-          <td><button class="btn-icon" onclick="eliminarProducto(${i})">×</button></td>
+          <td class="num">${p.conoPet||2}kg</td>
+          <td class="num">${p.conoPe||1}kg</td>
+          <td class="num">${p.conoLaminado||0.5}kg</td>
+          <td>
+            <button class="btn-icon" onclick="editarProducto(${i})" title="Editar">✎</button>
+            <button class="btn-icon" onclick="eliminarProducto(${i})" title="Eliminar">×</button>
+          </td>
         </tr>`).join('')}
         </tbody>
       </table>
@@ -2200,26 +2780,46 @@ function renderCatalogo(){
 }
 
 function nuevoProducto(){
+  productoFormModal(null);
+}
+
+function editarProducto(idx){
+  productoFormModal(idx);
+}
+
+function productoFormModal(idx){
+  const esEdicion = idx !== null;
+  const p = esEdicion ? state.catalogo[idx] : {cliente:'',medida:'',anchoPet:'',espPet:'',anchoPe:'',espPe:'',anchoFinal:'',tiras:1,conoPet:2,conoPe:1,conoLaminado:0.5};
+  
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Nuevo producto en catálogo</h2>
+    <h2>${esEdicion?'Editar':'Nuevo'} producto en catálogo</h2>
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-input" id="prodCliente"></div>
-      <div class="form-group"><label class="form-label">Medida</label><input type="text" class="form-input" id="prodMedida" placeholder="ej: 321x300"></div>
-      <div class="form-group"><label class="form-label">Ancho PET (mm)</label><input type="number" class="form-input" id="prodAnchoPet"></div>
-      <div class="form-group"><label class="form-label">Espesor PET (µm)</label><input type="number" class="form-input" id="prodEspPet"></div>
-      <div class="form-group"><label class="form-label">Ancho PE (mm)</label><input type="number" class="form-input" id="prodAnchoPe"></div>
-      <div class="form-group"><label class="form-label">Espesor PE (µm)</label><input type="number" class="form-input" id="prodEspPe"></div>
-      <div class="form-group"><label class="form-label">Ancho final (mm)</label><input type="number" class="form-input" id="prodAnchoFinal"></div>
-      <div class="form-group"><label class="form-label">Tiras</label><input type="number" class="form-input" id="prodTiras" value="1"></div>
+      <div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-input" id="prodCliente" value="${p.cliente||''}"></div>
+      <div class="form-group"><label class="form-label">Medida</label><input type="text" class="form-input" id="prodMedida" value="${p.medida||''}" placeholder="ej: 321x300"></div>
+      <div class="form-group"><label class="form-label">Ancho PET (mm)</label><input type="number" class="form-input" id="prodAnchoPet" value="${p.anchoPet||''}"></div>
+      <div class="form-group"><label class="form-label">Espesor PET (µm)</label><input type="number" class="form-input" id="prodEspPet" value="${p.espPet||''}"></div>
+      <div class="form-group"><label class="form-label">Ancho PE (mm)</label><input type="number" class="form-input" id="prodAnchoPe" value="${p.anchoPe||''}"></div>
+      <div class="form-group"><label class="form-label">Espesor PE (µm)</label><input type="number" class="form-input" id="prodEspPe" value="${p.espPe||''}"></div>
+      <div class="form-group"><label class="form-label">Ancho final (mm)</label><input type="number" class="form-input" id="prodAnchoFinal" value="${p.anchoFinal||''}"></div>
+      <div class="form-group"><label class="form-label">Tiras</label><input type="number" class="form-input" id="prodTiras" value="${p.tiras||1}"></div>
     </div>
+    
+    <div class="card-title" style="margin-top:14px">Pesos de cono (kg)</div>
+    <p class="form-help" style="margin-bottom:8px">Pesos por defecto si no tenés los exactos: PET 2 kg, PE 1 kg, Laminado 0,5 kg.</p>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Cono PET (kg)</label><input type="number" class="form-input" id="prodConoPet" value="${p.conoPet||2}" step="any"></div>
+      <div class="form-group"><label class="form-label">Cono PE (kg)</label><input type="number" class="form-input" id="prodConoPe" value="${p.conoPe||1}" step="any"></div>
+      <div class="form-group"><label class="form-label">Cono Laminado (kg)</label><input type="number" class="form-input" id="prodConoLaminado" value="${p.conoLaminado||0.5}" step="any"></div>
+    </div>
+    
     <div class="form-row">
-      <button class="btn" onclick="guardarProducto()">Guardar</button>
+      <button class="btn" onclick="guardarProducto(${idx===null?'null':idx})">${esEdicion?'Guardar cambios':'Crear producto'}</button>
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     </div>`;
   showModal(html);
 }
 
-function guardarProducto(){
+function guardarProducto(idx){
   const p = {
     cliente: document.getElementById('prodCliente').value,
     medida: document.getElementById('prodMedida').value,
@@ -2228,10 +2828,17 @@ function guardarProducto(){
     anchoPe: parseFloat(document.getElementById('prodAnchoPe').value),
     espPe: parseFloat(document.getElementById('prodEspPe').value),
     anchoFinal: parseFloat(document.getElementById('prodAnchoFinal').value),
-    tiras: parseInt(document.getElementById('prodTiras').value)||1
+    tiras: parseInt(document.getElementById('prodTiras').value)||1,
+    conoPet: parseFloat(document.getElementById('prodConoPet').value)||2,
+    conoPe: parseFloat(document.getElementById('prodConoPe').value)||1,
+    conoLaminado: parseFloat(document.getElementById('prodConoLaminado').value)||0.5,
   };
   if(!p.cliente || !p.medida || !p.anchoPet){alert('Faltan datos'); return;}
-  state.catalogo.push(p);
+  if(idx === null){
+    state.catalogo.push(p);
+  } else {
+    state.catalogo[idx] = p;
+  }
   saveState();
   closeModal();
   navigateTo('catalogo');
@@ -2406,7 +3013,7 @@ function renderConfig(){
     <div class="card" style="margin-top:18px">
       <div class="card-title">Datos del sistema</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-        OCs: ${state.ocs.length} · OPs: ${state.ops.length} · Bobinas: ${state.bobinas.length} · Remitos: ${state.remitos.length}
+        OCs: ${state.ocs.length} · OPs: ${state.ops.length} · Bobinas registradas: ${contarBobinasTotales()} · Remitos: ${state.remitos.length}
       </p>
       <div class="form-row">
         <button class="btn btn-secondary" onclick="exportarBackup()">Exportar backup JSON</button>

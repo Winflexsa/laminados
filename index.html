@@ -244,6 +244,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="user-box">
       <div class="user" id="userName">—</div>
       <div class="role" id="userRole">—</div>
+      <span id="cambioModoGestion"></span>
       <a class="logout" onclick="logout()">Cerrar sesión</a>
     </div>
   </aside>
@@ -258,6 +259,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     </div>
     <div class="op-user">
       <span class="name" id="opUserName">—</span>
+      <span id="opCambioModo"></span>
       · <a onclick="logout()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Salir</a>
     </div>
   </header>
@@ -293,8 +295,8 @@ const DEFAULT_STATE = {
   },
   pins: {
     // Gestión
-    '1540': {nombre:'Matías Persico',rol:'Owner',modo:'gestion'},
-    '3080': {nombre:'Jonathan Stancato',rol:'Engineering Lanús',modo:'gestion'},
+    '1540': {nombre:'Matías Persico',rol:'Owner',modo:'ambos'},
+    '3080': {nombre:'Jonathan Stancato',rol:'Engineering Lanús',modo:'ambos'},
     '0104': {nombre:'Mirta Cucinotta',rol:'Administración',modo:'gestion'},
     '2571': {nombre:'Agustín Ruiz Guiñazú',rol:'Engineering Chivilcoy',modo:'gestion'},
     // Operarios
@@ -375,19 +377,94 @@ function handleLogin(){
     return;
   }
   currentUser = {pin, ...user};
+  
+  // Si tiene acceso a ambos modos, mostrar selector
+  if(user.modo === 'ambos'){
+    mostrarSelectorModo();
+    return;
+  }
+  
+  // Modo único: entrar directo
+  ingresarConModo(user.modo);
+}
+
+function ingresarConModo(modo){
+  // Guardar modo activo en la sesión
+  currentUser.modoActivo = modo;
   sessionStorage.setItem('winflex_op_user', JSON.stringify(currentUser));
   document.getElementById('loginScreen').style.display = 'none';
   
-  if(user.modo === 'operario'){
+  // Configurar botones de cambio si el usuario tiene acceso a ambos modos
+  const tieneDualAccess = currentUser.modo === 'ambos';
+  
+  if(modo === 'operario'){
+    document.getElementById('appMain').classList.remove('active');
     document.getElementById('appOperario').classList.add('active');
-    document.getElementById('opUserName').textContent = user.nombre;
+    document.getElementById('opUserName').textContent = currentUser.nombre;
+    document.getElementById('opCambioModo').innerHTML = tieneDualAccess
+      ? ' · <a onclick="cambiarModo()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Ir a Gestión 🖥️</a>'
+      : '';
     renderOperarioHome();
   } else {
+    document.getElementById('appOperario').classList.remove('active');
     document.getElementById('appMain').classList.add('active');
-    document.getElementById('userName').textContent = user.nombre;
-    document.getElementById('userRole').textContent = user.rol;
+    document.getElementById('userName').textContent = currentUser.nombre;
+    document.getElementById('userRole').textContent = currentUser.rol;
+    document.getElementById('cambioModoGestion').innerHTML = tieneDualAccess
+      ? '<a class="logout" onclick="cambiarModo()" style="color:var(--orange-bg)">Ir a modo Operario 🏭</a>'
+      : '';
     navigateTo('dashboard');
   }
+}
+
+function mostrarSelectorModo(){
+  // Pantalla intermedia para elegir modo
+  const screen = document.getElementById('loginScreen');
+  screen.innerHTML = `<div class="login-box" style="max-width:440px">
+    <h1>Hola, ${currentUser.nombre}</h1>
+    <div class="subtitle">¿En qué modo querés entrar?</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px">
+      <button class="btn-login" onclick="ingresarConModo('gestion')" style="background:var(--navy)">
+        🖥️ Modo Gestión
+        <div style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;margin-top:4px;opacity:0.85">OCs, OPs, reportes, configuración</div>
+      </button>
+      <button class="btn-login" onclick="ingresarConModo('operario')" style="background:var(--orange)">
+        🏭 Modo Operario
+        <div style="font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;margin-top:4px;opacity:0.85">Cargar laminado o refilado en planta</div>
+      </button>
+    </div>
+    <div class="login-link" style="margin-top:18px">
+      <a onclick="resetLoginScreen()">← Cambiar de usuario</a>
+    </div>
+  </div>`;
+}
+
+function resetLoginScreen(){
+  currentUser = null;
+  document.getElementById('loginScreen').innerHTML = `<div class="login-box">
+    <h1>Winflex</h1>
+    <div class="subtitle">OPs Laminado PET/PE</div>
+    <input type="password" maxlength="4" inputmode="numeric" pattern="[0-9]*" class="pin-input" id="pinInput" placeholder="••••" autocomplete="off">
+    <button class="btn-login" onclick="handleLogin()">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-link">
+      <a onclick="mostrarAgregarOperario()">+ Agregar nuevo operario</a>
+    </div>
+  </div>`;
+  document.getElementById('pinInput').addEventListener('keypress', e=>{
+    if(e.key === 'Enter') handleLogin();
+  });
+  document.getElementById('pinInput').focus();
+}
+
+function cambiarModo(){
+  // Para usuarios con acceso a ambos modos
+  if(currentUser.modo !== 'ambos'){
+    alert('No tenés acceso al otro modo.');
+    return;
+  }
+  const otroModo = currentUser.modoActivo === 'gestion' ? 'operario' : 'gestion';
+  ingresarConModo(otroModo);
 }
 
 function showLoginError(msg){
@@ -402,7 +479,7 @@ function logout(){
   document.getElementById('appMain').classList.remove('active');
   document.getElementById('appOperario').classList.remove('active');
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('pinInput').value = '';
+  resetLoginScreen();
 }
 
 document.getElementById('pinInput').addEventListener('keypress', e=>{
@@ -414,17 +491,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
   if(saved){
     try{
       currentUser = JSON.parse(saved);
-      document.getElementById('loginScreen').style.display = 'none';
-      if(currentUser.modo === 'operario'){
-        document.getElementById('appOperario').classList.add('active');
-        document.getElementById('opUserName').textContent = currentUser.nombre;
-        renderOperarioHome();
-      } else {
-        document.getElementById('appMain').classList.add('active');
-        document.getElementById('userName').textContent = currentUser.nombre;
-        document.getElementById('userRole').textContent = currentUser.rol;
-        navigateTo('dashboard');
+      // Determinar modo activo (legacy: si no tiene modoActivo, usar el modo)
+      const modoActivo = currentUser.modoActivo || (currentUser.modo === 'ambos' ? null : currentUser.modo);
+      if(!modoActivo){
+        // Usuario con acceso a ambos pero no eligió modo, mostrar selector
+        document.getElementById('loginScreen').style.display = 'flex';
+        mostrarSelectorModo();
+        return;
       }
+      // Usar ingresarConModo para que también configure los botones de cambio
+      ingresarConModo(modoActivo);
     }catch(e){logout()}
   }
 });

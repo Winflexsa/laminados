@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winflex — OPs Laminado PET/PE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --navy:#1F3A5F;--navy-2:#2A4D7C;
+  --bg:#F5F4EE;--bg-2:#FAF9F4;--card:#FFFFFF;
+  --text:#1A1A1A;--muted:#6B6B6B;--line:#E5E1D6;
+  --accent:#C8A97E;--accent-2:#A88857;
+  --green:#5C8A6B;--green-bg:#E8F0E9;
+  --red:#B94A48;--red-bg:#FBEAEA;
+  --yellow:#C9A35B;--yellow-bg:#FAF1DC;
+  --blue:#3B6AA0;--blue-bg:#E5EDF5;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:'Helvetica Neue',Arial,sans-serif;color:var(--text);background:var(--bg);font-size:14px;line-height:1.5}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* Login */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--navy),#0F2747)}
+.login-box{background:var(--card);padding:40px;border-radius:8px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-box h1{font-size:22px;color:var(--navy);text-align:center;margin-bottom:6px;letter-spacing:0.3px}
+.login-box .subtitle{text-align:center;color:var(--muted);font-size:12px;margin-bottom:30px;letter-spacing:1px;text-transform:uppercase}
+.pin-input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:6px;font-size:18px;text-align:center;letter-spacing:8px;background:var(--bg-2)}
+.pin-input:focus{outline:none;border-color:var(--navy)}
+.btn-login{width:100%;padding:14px;background:var(--navy);color:white;border-radius:6px;margin-top:14px;font-size:14px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;transition:background 0.2s}
+.btn-login:hover{background:var(--navy-2)}
+.login-error{color:var(--red);text-align:center;margin-top:10px;font-size:12px;min-height:16px}
+
+/* Layout principal */
+.app{display:none;min-height:100vh}
+.app.active{display:flex}
+.sidebar{width:220px;background:var(--navy);color:white;padding:24px 0;position:fixed;height:100vh;overflow-y:auto}
+.brand{padding:0 22px 24px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.brand h1{font-size:16px;font-weight:600;letter-spacing:1px}
+.brand .tag{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.nav{padding:18px 0}
+.nav a{display:flex;align-items:center;padding:11px 22px;color:rgba(255,255,255,0.75);font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s}
+.nav a:hover{background:rgba(255,255,255,0.05);color:white}
+.nav a.active{background:rgba(255,255,255,0.1);color:white;border-left-color:var(--accent)}
+.nav .nav-icon{width:18px;margin-right:10px;font-size:14px}
+.user-box{position:absolute;bottom:0;left:0;right:0;padding:18px 22px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;background:rgba(0,0,0,0.2)}
+.user-box .user{font-weight:600;margin-bottom:2px}
+.user-box .logout{color:var(--accent);cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-top:6px;display:inline-block}
+.user-box .logout:hover{color:white}
+
+.main{flex:1;margin-left:220px;padding:32px 40px;max-width:1500px}
+.page-title{font-size:24px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.page-subtitle{color:var(--muted);margin-bottom:28px;font-size:13px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:22px;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--card);padding:20px;border-radius:8px;border:1px solid var(--line);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.kpi.green::before{background:var(--green)}
+.kpi.red::before{background:var(--red)}
+.kpi.blue::before{background:var(--blue)}
+.kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:600;color:var(--navy)}
+.kpi-extra{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Botones */
+.btn{padding:9px 16px;background:var(--navy);color:white;border-radius:5px;font-size:13px;cursor:pointer;font-weight:500;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn:hover{background:var(--navy-2)}
+.btn-secondary{background:white;color:var(--navy);border:1px solid var(--line)}
+.btn-secondary:hover{background:var(--bg-2);border-color:var(--navy)}
+.btn-accent{background:var(--accent);color:white}
+.btn-accent:hover{background:var(--accent-2)}
+.btn-danger{background:var(--red);color:white}
+.btn-danger:hover{background:#8a3735}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-icon{padding:5px 8px;background:transparent;color:var(--muted);font-size:13px;border:1px solid var(--line);border-radius:4px}
+.btn-icon:hover{color:var(--navy);border-color:var(--navy)}
+
+/* Tablas */
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{background:var(--bg-2);padding:10px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:2px solid var(--line)}
+.table td{padding:10px 12px;border-bottom:1px solid var(--line)}
+.table tr:hover{background:var(--bg-2)}
+.table tr.row-clickable{cursor:pointer}
+.table .num{text-align:right;font-variant-numeric:tabular-nums}
+.table .center{text-align:center}
+
+/* Estados / Badges */
+.badge{display:inline-block;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.badge-pending{background:var(--bg-2);color:var(--muted)}
+.badge-active{background:var(--blue-bg);color:var(--blue)}
+.badge-warning{background:var(--yellow-bg);color:var(--yellow)}
+.badge-success{background:var(--green-bg);color:var(--green)}
+.badge-danger{background:var(--red-bg);color:var(--red)}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column}
+.form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;font-weight:600}
+.form-input,.form-select,.form-textarea{padding:9px 12px;border:1px solid var(--line);border-radius:5px;background:white;font-size:13px;width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--navy)}
+.form-textarea{resize:vertical;min-height:60px;font-family:inherit}
+.form-help{font-size:11px;color:var(--muted);margin-top:3px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.active{display:flex}
+.modal{background:white;border-radius:8px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:24px}
+.modal-large{max-width:1100px}
+.modal h2{font-size:18px;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.modal-close{float:right;background:none;font-size:20px;color:var(--muted);cursor:pointer;border:none}
+
+/* Detail rows */
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px}
+.detail-item{padding:12px;background:var(--bg-2);border-radius:5px;border-left:3px solid var(--accent)}
+.detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.detail-value{font-size:14px;font-weight:600;color:var(--navy)}
+
+/* Alerts */
+.alert{padding:12px 16px;border-radius:5px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:10px}
+.alert-warning{background:var(--yellow-bg);color:var(--yellow);border-left:3px solid var(--yellow)}
+.alert-danger{background:var(--red-bg);color:var(--red);border-left:3px solid var(--red)}
+.alert-info{background:var(--blue-bg);color:var(--blue);border-left:3px solid var(--blue)}
+.alert-success{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green)}
+
+/* Filters */
+.filters{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.filter-input{padding:8px 12px;border:1px solid var(--line);border-radius:5px;font-size:13px;background:white}
+
+/* Stages indicator */
+.stages{display:flex;align-items:center;gap:8px;margin:14px 0}
+.stage{flex:1;padding:10px;background:var(--bg-2);border:1px solid var(--line);border-radius:5px;text-align:center;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.stage.done{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.stage.active{background:var(--blue-bg);color:var(--blue);border-color:var(--blue);font-weight:600}
+
+/* Lists */
+.bobina-item{padding:10px 12px;background:var(--bg-2);border-radius:5px;margin-bottom:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.bobina-item .code{font-family:'Courier New',monospace;font-weight:600;color:var(--navy)}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tab{padding:10px 18px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+.tab:hover{color:var(--navy)}
+.tab.active{color:var(--navy);border-bottom-color:var(--accent);font-weight:600}
+
+/* Result analysis */
+.deviation-good{color:var(--green);font-weight:600}
+.deviation-bad{color:var(--red);font-weight:600}
+.deviation-neutral{color:var(--muted)}
+
+@media (max-width:900px){
+  .sidebar{width:60px}
+  .nav a span:not(.nav-icon){display:none}
+  .brand h1,.brand .tag,.user-box{display:none}
+  .main{margin-left:60px;padding:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>Winflex</h1>
+    <div class="subtitle">OPs Laminado PET/PE</div>
+    <input type="password" maxlength="4" inputmode="numeric" pattern="[0-9]*" class="pin-input" id="pinInput" placeholder="••••">
+    <button class="btn-login" onclick="handleLogin()">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP MAIN -->
+<div class="app" id="appMain">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>WINFLEX</h1>
+      <div class="tag">OPs Laminado</div>
+    </div>
+    <nav class="nav" id="nav">
+      <a data-page="dashboard" class="active"><span class="nav-icon">▦</span><span>Dashboard</span></a>
+      <a data-page="ocs"><span class="nav-icon">≡</span><span>Órdenes de Compra</span></a>
+      <a data-page="ops"><span class="nav-icon">⚙</span><span>OPs Producción</span></a>
+      <a data-page="bobinas"><span class="nav-icon">○</span><span>Bobinas</span></a>
+      <a data-page="remitos"><span class="nav-icon">▤</span><span>Remitos</span></a>
+      <a data-page="catalogo"><span class="nav-icon">≣</span><span>Catálogo</span></a>
+      <a data-page="reportes"><span class="nav-icon">▲</span><span>Reportes</span></a>
+      <a data-page="config"><span class="nav-icon">✱</span><span>Config</span></a>
+    </nav>
+    <div class="user-box">
+      <div class="user" id="userName">—</div>
+      <a class="logout" onclick="logout()">Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <main class="main" id="content">
+    <!-- Contenido dinámico -->
+  </main>
+</div>
+
+<!-- Modales globales -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// =========================================================
+// ESTADO Y PERSISTENCIA
+// =========================================================
+const STORE_KEY = 'winflex_op_v1';
+
+const DEFAULT_STATE = {
+  config: {
+    tc: 1440,
+    costoPet: 1.48,        // USD/kg con flete
+    costoPe: 3.83,         // USD/kg
+    costoProceso: 0.3599,  // USD/kg laminado+refilado
+    capacidadLaminadora: 110, // kg/h
+    capacidadRefiladora: 83.3, // kg/h
+    densidadPet: 1.35,
+    densidadPe: 0.92,
+    mailAgustin: 'agustin.ruizg@winflex.com.ar',
+    mailJonathan: 'jonathan.stancato@winflex.com.ar',
+    diasAlertaOp: 5,
+    pctAlertaDesviacion: 0.15
+  },
+  pins: {
+    '1540': {nombre:'Matías Persico',rol:'Owner'},
+    '3080': {nombre:'Jonathan Stancato',rol:'Engineering Lanús'},
+    '0104': {nombre:'Mirta Cucinotta',rol:'Administración'},
+    '2571': {nombre:'Agustín Ruiz Guiñazú',rol:'Engineering Chivilcoy'},
+  },
+  catalogo: [
+    // 17 productos PET/PE del Excel
+    {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1},
+    {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1},
+    {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
+    {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
+    {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
+    {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1},
+    {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1},
+    {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1},
+    {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1},
+    {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1},
+    {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2},
+    {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1},
+    {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
+    {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1},
+    {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:50, anchoFinal:422, tiras:1},
+    {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1},
+    {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2},
+  ],
+  ocs: [],
+  ops: [],
+  bobinas: [],
+  remitos: [],
+  pdfs: {} // mapeo ocId -> base64 (truncado para no llenar localStorage)
+};
+
+let state = loadState();
+let currentUser = null;
+let currentPage = 'dashboard';
+
+function loadState(){
+  try{
+    const saved = localStorage.getItem(STORE_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      // Merge con defaults para no perder configuraciones nuevas
+      return {
+        config: {...DEFAULT_STATE.config, ...parsed.config},
+        pins: parsed.pins || DEFAULT_STATE.pins,
+        catalogo: parsed.catalogo || DEFAULT_STATE.catalogo,
+        ocs: parsed.ocs || [],
+        ops: parsed.ops || [],
+        bobinas: parsed.bobinas || [],
+        remitos: parsed.remitos || [],
+        pdfs: parsed.pdfs || {}
+      };
+    }
+  }catch(e){console.error('Error loading state',e)}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }catch(e){
+    alert('Error guardando datos: '+e.message);
+  }
+}
+
+// =========================================================
+// LOGIN / LOGOUT
+// =========================================================
+function handleLogin(){
+  const pin = document.getElementById('pinInput').value;
+  if(!pin || pin.length !== 4){
+    showLoginError('PIN debe tener 4 dígitos');
+    return;
+  }
+  const user = state.pins[pin];
+  if(!user){
+    showLoginError('PIN incorrecto');
+    return;
+  }
+  currentUser = {pin, ...user};
+  sessionStorage.setItem('winflex_op_user', JSON.stringify(currentUser));
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appMain').classList.add('active');
+  document.getElementById('userName').textContent = user.nombre;
+  navigateTo('dashboard');
+}
+
+function showLoginError(msg){
+  document.getElementById('loginError').textContent = msg;
+  setTimeout(()=>document.getElementById('loginError').textContent = '', 3000);
+}
+
+function logout(){
+  sessionStorage.removeItem('winflex_op_user');
+  currentUser = null;
+  document.getElementById('appMain').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pinInput').value = '';
+}
+
+document.getElementById('pinInput').addEventListener('keypress', e=>{
+  if(e.key === 'Enter') handleLogin();
+});
+
+// Restaurar sesión
+window.addEventListener('DOMContentLoaded', ()=>{
+  const saved = sessionStorage.getItem('winflex_op_user');
+  if(saved){
+    try{
+      currentUser = JSON.parse(saved);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appMain').classList.add('active');
+      document.getElementById('userName').textContent = currentUser.nombre;
+      navigateTo('dashboard');
+    }catch(e){logout()}
+  }
+});
+
+// =========================================================
+// NAVEGACIÓN
+// =========================================================
+document.getElementById('nav').addEventListener('click', e=>{
+  const link = e.target.closest('a[data-page]');
+  if(link) navigateTo(link.dataset.page);
+});
+
+function navigateTo(page){
+  currentPage = page;
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active', a.dataset.page===page));
+  const renderers = {
+    dashboard: renderDashboard,
+    ocs: renderOcs,
+    ops: renderOps,
+    bobinas: renderBobinas,
+    remitos: renderRemitos,
+    catalogo: renderCatalogo,
+    reportes: renderReportes,
+    config: renderConfig
+  };
+  if(renderers[page]) renderers[page]();
+}
+
+// =========================================================
+// HELPERS
+// =========================================================
+function uid(prefix){return prefix+'-'+Date.now()+'-'+Math.random().toString(36).substr(2,5)}
+function fmtUsd(n){return n==null?'—':'USD '+(+n).toFixed(4)}
+function fmtUsdShort(n){return n==null?'—':'USD '+(+n).toFixed(2)}
+function fmtArs(n){return n==null?'—':'$ '+(+n).toLocaleString('es-AR',{maximumFractionDigits:0})}
+function fmtKg(n){return n==null?'—':(+n).toLocaleString('es-AR',{maximumFractionDigits:1})+' kg'}
+function fmtPct(n){return n==null?'—':((+n)*100).toFixed(1)+'%'}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d);return dt.toLocaleDateString('es-AR')}
+function fmtDateTime(d){if(!d)return'—';const dt=new Date(d);return dt.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function daysSince(d){if(!d)return 0;const ms = Date.now()-new Date(d).getTime();return Math.floor(ms/(1000*60*60*24))}
+
+function showModal(html, large=false){
+  const box = document.getElementById('modalBox');
+  box.className = 'modal'+(large?' modal-large':'');
+  box.innerHTML = html;
+  document.getElementById('modalBg').classList.add('active');
+}
+
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('active');
+}
+
+document.getElementById('modalBg').addEventListener('click', e=>{
+  if(e.target.id === 'modalBg') closeModal();
+});
+
+// =========================================================
+// CÁLCULOS DE COSTOS Y NECESIDADES
+// =========================================================
+function calcularNecesidades(producto, kgFinales){
+  const c = state.config;
+  // Gramaje
+  const gPet = producto.espPet * c.densidadPet;
+  const gPe = producto.espPe * c.densidadPe;
+  const gTotal = gPet + gPe;
+  // Yields
+  const yieldPet = (producto.anchoFinal * producto.tiras) / producto.anchoPet;
+  const yieldPe = (producto.anchoFinal * producto.tiras) / producto.anchoPe;
+  // % por peso
+  const pctPet = gPet / gTotal;
+  const pctPe = gPe / gTotal;
+  // kg brutos por kg producto
+  const kgPetPorKg = pctPet / yieldPet;
+  const kgPePorKg = pctPe / yieldPe;
+  const kgTotalProceso = kgPetPorKg + kgPePorKg;
+  // Necesidades absolutas
+  const kgPetTotal = kgPetPorKg * kgFinales;
+  const kgPeTotal = kgPePorKg * kgFinales;
+  const kgProcesoTotal = kgTotalProceso * kgFinales;
+  // Costos por kg producto
+  const costoPetKg = kgPetPorKg * c.costoPet;
+  const costoPeKg = kgPePorKg * c.costoPe;
+  const costoProcesoKg = kgTotalProceso * c.costoProceso;
+  const costoTotalKg = costoPetKg + costoPeKg + costoProcesoKg;
+  // Tiempos estimados
+  const horasLaminado = kgProcesoTotal / c.capacidadLaminadora;
+  const horasRefilado = kgProcesoTotal / c.capacidadRefiladora;
+  
+  return {
+    gPet, gPe, gTotal,
+    yieldPet, yieldPe,
+    pctPet, pctPe,
+    kgPetPorKg, kgPePorKg, kgTotalProceso,
+    kgPetTotal, kgPeTotal, kgProcesoTotal,
+    costoPetKg, costoPeKg, costoProcesoKg, costoTotalKg,
+    costoPetTotal: costoPetKg * kgFinales,
+    costoPeTotal: costoPeKg * kgFinales,
+    costoProcesoTotal: costoProcesoKg * kgFinales,
+    costoTotal: costoTotalKg * kgFinales,
+    horasLaminado, horasRefilado
+  };
+}
+
+function calcularReal(op){
+  // Calcula resultado real basado en datos cargados
+  const c = state.config;
+  if(!op.laminadoReal || !op.refiladoReal) return null;
+  
+  const kgPetUsado = op.laminadoReal.kgPetUsado || 0;
+  const kgPeUsado = op.laminadoReal.kgPeUsado || 0;
+  const kgLaminados = op.laminadoReal.kgLaminados || 0;
+  const kgFinales = op.refiladoReal.kgFinales || 0;
+  const kgScrapRefilado = op.refiladoReal.kgScrap || 0;
+  
+  const costoPetReal = kgPetUsado * c.costoPet;
+  const costoPeReal = kgPeUsado * c.costoPe;
+  const costoProcesoReal = kgLaminados * c.costoProceso; // se cobra sobre lo que pasó por proceso
+  const costoTotalReal = costoPetReal + costoPeReal + costoProcesoReal;
+  const costoUnitarioReal = kgFinales > 0 ? costoTotalReal / kgFinales : 0;
+  
+  // Mermas
+  const mermaLaminado = (kgPetUsado + kgPeUsado) - kgLaminados;
+  const pctMermaLaminado = (kgPetUsado + kgPeUsado) > 0 ? mermaLaminado / (kgPetUsado + kgPeUsado) : 0;
+  const yieldRefilado = kgLaminados > 0 ? kgFinales / kgLaminados : 0;
+  
+  return {
+    kgPetUsado, kgPeUsado, kgLaminados, kgFinales, kgScrapRefilado,
+    costoPetReal, costoPeReal, costoProcesoReal, costoTotalReal, costoUnitarioReal,
+    mermaLaminado, pctMermaLaminado, yieldRefilado
+  };
+}
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+function renderDashboard(){
+  const opsActivas = state.ops.filter(op=>op.estado!=='cerrada');
+  const opsCerradas = state.ops.filter(op=>op.estado==='cerrada');
+  const opsMes = opsCerradas.filter(op=>{
+    const d = new Date(op.fechaCierre);
+    const now = new Date();
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  });
+  
+  const kgMes = opsMes.reduce((s,op)=>s+(op.refiladoReal?.kgFinales||0),0);
+  const kgActivos = opsActivas.reduce((s,op)=>s+(op.kgSolicitados||0),0);
+  
+  // Margen real promedio del mes
+  let margenPromedio = null;
+  if(opsMes.length){
+    const margenes = opsMes.map(op=>{
+      const real = calcularReal(op);
+      if(!real || !op.precioUsdKg || real.kgFinales===0) return null;
+      return (op.precioUsdKg - real.costoUnitarioReal) / op.precioUsdKg;
+    }).filter(m=>m!==null);
+    if(margenes.length) margenPromedio = margenes.reduce((s,m)=>s+m,0) / margenes.length;
+  }
+  
+  // Stock total
+  const stockPet = state.bobinas.filter(b=>b.tipo==='PET' && b.estado==='disponible').reduce((s,b)=>s+(+b.pesoNeto||0),0);
+  const stockPe = state.bobinas.filter(b=>b.tipo==='PE' && b.estado==='disponible').reduce((s,b)=>s+(+b.pesoNeto||0),0);
+  
+  // Alertas
+  const alertas = [];
+  // OPs paradas hace mucho
+  state.ops.forEach(op=>{
+    if(op.estado!=='cerrada'){
+      const dias = daysSince(op.fechaUltimoCambio || op.fechaCreacion);
+      if(dias > state.config.diasAlertaOp){
+        alertas.push({tipo:'warning', msg:`OP ${op.numero} (${op.cliente}) sin avanzar hace ${dias} días`});
+      }
+    }
+  });
+  // Stock bajo (menos de 100 kg por tipo de bobina principal)
+  if(stockPet < 200) alertas.push({tipo:'warning', msg:`Stock PET bajo: ${stockPet.toFixed(0)} kg disponibles`});
+  if(stockPe < 50) alertas.push({tipo:'warning', msg:`Stock PE bajo: ${stockPe.toFixed(0)} kg disponibles`});
+  // OPs con desviación grande
+  opsCerradas.slice(-10).forEach(op=>{
+    const real = calcularReal(op);
+    if(real && Math.abs(real.pctMermaLaminado) > state.config.pctAlertaDesviacion){
+      alertas.push({tipo:'danger', msg:`OP ${op.numero}: desviación de merma ${fmtPct(real.pctMermaLaminado)}`});
+    }
+  });
+  
+  let html = `<h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Bienvenido, ${currentUser.nombre}. Vista general de operaciones.</p>`;
+  
+  // Alertas
+  if(alertas.length){
+    html += '<div class="card"><div class="card-title">Alertas activas</div>';
+    alertas.slice(0,5).forEach(a=>{
+      html += `<div class="alert alert-${a.tipo}">⚠ ${a.msg}</div>`;
+    });
+    html += '</div>';
+  }
+  
+  // KPIs
+  html += `<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">OPs activas</div><div class="kpi-value">${opsActivas.length}</div><div class="kpi-extra">${kgActivos.toFixed(0)} kg comprometidos</div></div>
+    <div class="kpi green"><div class="kpi-label">Producido del mes</div><div class="kpi-value">${kgMes.toFixed(0)} kg</div><div class="kpi-extra">${opsMes.length} OPs cerradas</div></div>
+    <div class="kpi blue"><div class="kpi-label">Margen real promedio</div><div class="kpi-value">${margenPromedio!==null?fmtPct(margenPromedio):'—'}</div><div class="kpi-extra">Mes en curso</div></div>
+    <div class="kpi"><div class="kpi-label">Stock PET</div><div class="kpi-value">${stockPet.toFixed(0)} kg</div><div class="kpi-extra">${state.bobinas.filter(b=>b.tipo==='PET'&&b.estado==='disponible').length} bobinas</div></div>
+    <div class="kpi"><div class="kpi-label">Stock PE</div><div class="kpi-value">${stockPe.toFixed(0)} kg</div><div class="kpi-extra">${state.bobinas.filter(b=>b.tipo==='PE'&&b.estado==='disponible').length} bobinas</div></div>
+  </div>`;
+  
+  // OPs activas
+  html += '<div class="card"><div class="card-title">OPs en curso</div>';
+  if(opsActivas.length===0){
+    html += '<p style="color:var(--muted);text-align:center;padding:24px">No hay OPs activas. Generá una desde una OC.</p>';
+  } else {
+    html += '<table class="table"><thead><tr><th>OP</th><th>Cliente</th><th>Producto</th><th class="num">kg</th><th>Estado</th><th>Días</th><th></th></tr></thead><tbody>';
+    opsActivas.forEach(op=>{
+      const dias = daysSince(op.fechaUltimoCambio || op.fechaCreacion);
+      const badgeClass = dias > state.config.diasAlertaOp ? 'badge-warning' : 'badge-active';
+      html += `<tr class="row-clickable" onclick="verOp('${op.id}')">
+        <td><strong>${op.numero}</strong></td>
+        <td>${op.cliente}</td>
+        <td>${op.medida}</td>
+        <td class="num">${(+op.kgSolicitados).toFixed(0)}</td>
+        <td><span class="badge ${badgeClass}">${getEstadoLabel(op.estado)}</span></td>
+        <td>${dias} días</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOp('${op.id}')">Ver</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  
+  document.getElementById('content').innerHTML = html;
+}
+
+function getEstadoLabel(estado){
+  const labels = {
+    'nueva': 'Nueva',
+    'laminado': 'En laminado',
+    'refilado': 'En refilado',
+    'cerrada': 'Cerrada'
+  };
+  return labels[estado] || estado;
+}
+
+// =========================================================
+// OCs
+// =========================================================
+function renderOcs(){
+  let html = `<h1 class="page-title">Órdenes de Compra</h1>
+    <p class="page-subtitle">Cargá las OCs que envían los clientes. Después generás la OP de producción.</p>
+    <div class="form-row" style="margin-bottom:18px">
+      <button class="btn" onclick="nuevaOc()">+ Nueva OC</button>
+    </div>`;
+  
+  // Filtros
+  html += `<div class="filters">
+    <input type="text" class="filter-input" placeholder="Buscar cliente..." id="ocFiltroCliente" oninput="renderOcsTable()">
+    <select class="filter-input" id="ocFiltroEstado" onchange="renderOcsTable()">
+      <option value="">Todos los estados</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="parcial">Con OPs parciales</option>
+      <option value="completada">Completadas</option>
+    </select>
+  </div>`;
+  
+  html += '<div class="card" id="ocsTableWrap"></div>';
+  document.getElementById('content').innerHTML = html;
+  renderOcsTable();
+}
+
+function renderOcsTable(){
+  const filtroCliente = document.getElementById('ocFiltroCliente')?.value.toLowerCase() || '';
+  const filtroEstado = document.getElementById('ocFiltroEstado')?.value || '';
+  
+  let ocs = state.ocs.filter(oc=>{
+    if(filtroCliente && !oc.cliente.toLowerCase().includes(filtroCliente)) return false;
+    if(filtroEstado){
+      const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
+      const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+      const completada = kgEnOp >= oc.kgSolicitados;
+      if(filtroEstado==='pendiente' && opsAsoc.length>0) return false;
+      if(filtroEstado==='parcial' && (opsAsoc.length===0 || completada)) return false;
+      if(filtroEstado==='completada' && !completada) return false;
+    }
+    return true;
+  });
+  
+  ocs = ocs.sort((a,b)=>new Date(b.fechaCreacion)-new Date(a.fechaCreacion));
+  
+  let html;
+  if(ocs.length===0){
+    html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay OCs. <a onclick="nuevaOc()" style="color:var(--navy);cursor:pointer;text-decoration:underline">Cargá la primera</a>.</p>';
+  } else {
+    html = '<table class="table"><thead><tr><th>OC #</th><th>Cliente</th><th>Producto</th><th class="num">kg solicitados</th><th class="num">kg en OPs</th><th>Entrega</th><th>Estado</th><th></th></tr></thead><tbody>';
+    ocs.forEach(oc=>{
+      const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
+      const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+      const pctCubierto = oc.kgSolicitados > 0 ? kgEnOp/oc.kgSolicitados : 0;
+      const estadoBadge = pctCubierto >= 1 ? 'badge-success' : pctCubierto > 0 ? 'badge-warning' : 'badge-pending';
+      const estadoText = pctCubierto >= 1 ? 'Cubierta' : pctCubierto > 0 ? 'Parcial' : 'Pendiente';
+      
+      html += `<tr class="row-clickable" onclick="verOc('${oc.id}')">
+        <td><strong>${oc.numero}</strong></td>
+        <td>${oc.cliente}</td>
+        <td>${oc.medida}</td>
+        <td class="num">${(+oc.kgSolicitados).toFixed(0)}</td>
+        <td class="num">${kgEnOp.toFixed(0)}</td>
+        <td>${fmtDate(oc.fechaEntrega)}</td>
+        <td><span class="badge ${estadoBadge}">${estadoText}</span></td>
+        <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOc('${oc.id}')">Ver</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('ocsTableWrap').innerHTML = html;
+}
+
+function nuevaOc(){
+  // Selector de cliente desde catálogo
+  const clientesUnicos = [...new Set(state.catalogo.map(p=>p.cliente))];
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Nueva Orden de Compra</h2>
+    
+    <div class="alert alert-info">
+      Subí el PDF de la OC del cliente. El sistema intentará extraer datos automáticamente. Después podés corregir cualquier campo.
+    </div>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">PDF de la OC (opcional)</label>
+        <input type="file" accept=".pdf" id="ocPdf" class="form-input" onchange="leerPdf(event)">
+        <div class="form-help" id="pdfStatus"></div>
+      </div>
+    </div>
+    
+    <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)">
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <select class="form-select" id="ocCliente" onchange="actualizarMedidasOc()">
+          <option value="">— Seleccionar —</option>
+          ${clientesUnicos.map(c=>`<option value="${c}">${c}</option>`).join('')}
+          <option value="__nuevo__">+ Cliente nuevo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Producto / Medida</label>
+        <select class="form-select" id="ocMedida">
+          <option value="">— Seleccionar cliente primero —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número OC del cliente</label>
+        <input type="text" class="form-input" id="ocNumero" placeholder="OC-12345">
+      </div>
+      <div class="form-group">
+        <label class="form-label">kg solicitados</label>
+        <input type="number" class="form-input" id="ocKg" min="1" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio USD/kg</label>
+        <input type="number" class="form-input" id="ocPrecio" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de entrega</label>
+        <input type="date" class="form-input" id="ocFechaEntrega">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Modalidad</label>
+        <select class="form-select" id="ocModalidad">
+          <option value="con_flete">Con flete (entregamos)</option>
+          <option value="sin_flete">Sin flete (cliente retira)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Plazo de pago</label>
+        <input type="text" class="form-input" id="ocPlazoPago" placeholder="30 / 60 / 90 días">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Notas / observaciones</label>
+      <textarea class="form-textarea" id="ocNotas" rows="2" placeholder="Lote, requisitos especiales, etc."></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarOc()">Guardar OC</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  
+  showModal(html, true);
+}
+
+function actualizarMedidasOc(){
+  const cliente = document.getElementById('ocCliente').value;
+  const select = document.getElementById('ocMedida');
+  if(cliente === '__nuevo__'){
+    select.innerHTML = '<option value="__nuevo__">+ Producto nuevo (cargar en Catálogo)</option>';
+    return;
+  }
+  const productos = state.catalogo.filter(p=>p.cliente===cliente);
+  if(productos.length===0){
+    select.innerHTML = '<option value="">No hay productos para este cliente</option>';
+  } else {
+    select.innerHTML = '<option value="">— Seleccionar —</option>'+
+      productos.map(p=>`<option value="${p.medida}">${p.medida} (final ${p.anchoFinal}mm)</option>`).join('');
+  }
+}
+
+async function leerPdf(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('pdfStatus');
+  status.innerHTML = '⏳ Procesando PDF...';
+  
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    let fullText = '';
+    for(let i=1; i<=pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(it=>it.str).join(' ')+'\n';
+    }
+    
+    if(fullText.trim().length < 20){
+      status.innerHTML = '⚠ PDF sin texto extraíble (probablemente escaneado). Cargá los datos manualmente.';
+      return;
+    }
+    
+    // Intento de extraer datos
+    const extracted = extraerDatosOc(fullText);
+    let extracted_count = 0;
+    
+    if(extracted.numero){document.getElementById('ocNumero').value = extracted.numero; extracted_count++}
+    if(extracted.kg){document.getElementById('ocKg').value = extracted.kg; extracted_count++}
+    if(extracted.precio){document.getElementById('ocPrecio').value = extracted.precio; extracted_count++}
+    if(extracted.fecha){document.getElementById('ocFechaEntrega').value = extracted.fecha; extracted_count++}
+    if(extracted.cliente){
+      const sel = document.getElementById('ocCliente');
+      // Buscar match en clientes
+      const clientesEnSelect = [...sel.options].map(o=>o.value);
+      const match = clientesEnSelect.find(c=>c.toLowerCase().includes(extracted.cliente.toLowerCase()) || extracted.cliente.toLowerCase().includes(c.toLowerCase()));
+      if(match){
+        sel.value = match;
+        actualizarMedidasOc();
+        extracted_count++;
+      }
+    }
+    
+    if(extracted_count > 0){
+      status.innerHTML = `✓ ${extracted_count} dato(s) extraído(s) automáticamente. Revisá y completá lo que falte.`;
+    } else {
+      status.innerHTML = '⚠ No se pudieron extraer datos automáticamente. Cargá manualmente.';
+    }
+    
+    // Guardar nombre del archivo para referencia
+    window._lastPdfName = file.name;
+  } catch(e) {
+    console.error(e);
+    status.innerHTML = '⚠ Error procesando PDF: '+e.message;
+  }
+}
+
+function extraerDatosOc(texto){
+  const t = texto.toLowerCase();
+  const result = {};
+  
+  // Buscar OC/orden número (patrones comunes)
+  const numMatch = texto.match(/(?:OC|orden(?:\s+de\s+compra)?|N[°º]?|número)[\s.:#-]*([A-Z0-9-]{4,20})/i);
+  if(numMatch) result.numero = numMatch[1];
+  
+  // kg
+  const kgMatch = texto.match(/(\d{3,7}(?:[.,]\d+)?)\s*(?:kg|kilos|kilo)/i);
+  if(kgMatch) result.kg = parseFloat(kgMatch[1].replace(',','.'));
+  
+  // Precio USD
+  const precioMatch = texto.match(/(?:USD|U\$D|usd|\$)\s*(\d+[.,]\d{2,4})\s*(?:\/kg|x kg|por kg)/i);
+  if(precioMatch) result.precio = parseFloat(precioMatch[1].replace(',','.'));
+  
+  // Fecha
+  const fechaMatch = texto.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+  if(fechaMatch){
+    const d = fechaMatch[1].padStart(2,'0');
+    const m = fechaMatch[2].padStart(2,'0');
+    let y = fechaMatch[3];
+    if(y.length===2) y = '20'+y;
+    result.fecha = `${y}-${m}-${d}`;
+  }
+  
+  // Cliente (más complejo - intentar identificar uno conocido)
+  const clientesConocidos = [...new Set(state.catalogo.map(p=>p.cliente))];
+  for(const c of clientesConocidos){
+    if(texto.toLowerCase().includes(c.toLowerCase())){
+      result.cliente = c;
+      break;
+    }
+  }
+  
+  return result;
+}
+
+function guardarOc(){
+  let cliente = document.getElementById('ocCliente').value;
+  let medida = document.getElementById('ocMedida').value;
+  const numero = document.getElementById('ocNumero').value.trim();
+  const kg = parseFloat(document.getElementById('ocKg').value);
+  const precio = parseFloat(document.getElementById('ocPrecio').value);
+  const fechaEntrega = document.getElementById('ocFechaEntrega').value;
+  const modalidad = document.getElementById('ocModalidad').value;
+  const plazoPago = document.getElementById('ocPlazoPago').value;
+  const notas = document.getElementById('ocNotas').value;
+  
+  if(cliente === '__nuevo__'){
+    cliente = prompt('Nombre del cliente nuevo:');
+    if(!cliente) return;
+  }
+  if(medida === '__nuevo__' || !medida){
+    alert('Para cargar un producto nuevo, agregalo primero en Catálogo.');
+    return;
+  }
+  if(!cliente || !medida || !numero || !kg || !precio || !fechaEntrega){
+    alert('Faltan campos obligatorios: cliente, medida, número OC, kg, precio y fecha de entrega.');
+    return;
+  }
+  
+  const oc = {
+    id: uid('OC'),
+    numero, cliente, medida,
+    kgSolicitados: kg,
+    precioUsdKg: precio,
+    fechaEntrega,
+    modalidad,
+    plazoPago,
+    notas,
+    pdfNombre: window._lastPdfName || null,
+    fechaCreacion: new Date().toISOString(),
+    creadoPor: currentUser.nombre
+  };
+  
+  state.ocs.push(oc);
+  saveState();
+  closeModal();
+  window._lastPdfName = null;
+  navigateTo('ocs');
+  alert(`OC ${numero} guardada correctamente.`);
+}
+
+function verOc(id){
+  const oc = state.ocs.find(o=>o.id===id);
+  if(!oc) return;
+  const opsAsoc = state.ops.filter(op=>op.ocId===id);
+  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+  const kgDisponibles = oc.kgSolicitados - kgEnOp;
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>OC ${oc.numero} — ${oc.cliente}</h2>
+    
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value">${oc.cliente}</div></div>
+      <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value">${oc.medida}</div></div>
+      <div class="detail-item"><div class="detail-label">kg solicitados</div><div class="detail-value">${oc.kgSolicitados.toFixed(0)} kg</div></div>
+      <div class="detail-item"><div class="detail-label">Entrega</div><div class="detail-value">${fmtDate(oc.fechaEntrega)}</div></div>
+      <div class="detail-item"><div class="detail-label">Modalidad</div><div class="detail-value">${oc.modalidad==='con_flete'?'Con flete':'Sin flete'}</div></div>
+      <div class="detail-item"><div class="detail-label">Plazo pago</div><div class="detail-value">${oc.plazoPago||'—'}</div></div>
+    </div>
+    
+    ${oc.notas ? `<div class="alert alert-info"><strong>Notas:</strong> ${oc.notas}</div>` : ''}
+    
+    <div class="card-title" style="margin-top:20px">OPs vinculadas</div>`;
+  
+  if(opsAsoc.length===0){
+    html += '<p style="color:var(--muted)">No hay OPs creadas para esta OC todavía.</p>';
+  } else {
+    html += '<table class="table"><thead><tr><th>OP</th><th class="num">kg</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
+    opsAsoc.forEach(op=>{
+      html += `<tr class="row-clickable" onclick="closeModal();verOp('${op.id}')">
+        <td>${op.numero}</td>
+        <td class="num">${op.kgSolicitados.toFixed(0)}</td>
+        <td><span class="badge badge-${op.estado==='cerrada'?'success':'active'}">${getEstadoLabel(op.estado)}</span></td>
+        <td>${fmtDate(op.fechaCreacion)}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  
+  html += `<div class="alert ${kgDisponibles>0?'alert-info':'alert-success'}" style="margin-top:14px">
+    ${kgDisponibles>0 ? `Faltan generar OPs por ${kgDisponibles.toFixed(0)} kg de los ${oc.kgSolicitados.toFixed(0)} solicitados.` : `OC totalmente cubierta por OPs (${kgEnOp.toFixed(0)} kg).`}
+  </div>`;
+  
+  html += `<div class="form-row">
+    ${kgDisponibles>0 ? `<button class="btn" onclick="closeModal();nuevaOpDesdeOc('${oc.id}')">+ Generar OP</button>` : ''}
+    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-danger" onclick="eliminarOc('${oc.id}')" style="margin-left:auto">Eliminar OC</button>
+  </div>`;
+  
+  showModal(html, true);
+}
+
+function eliminarOc(id){
+  if(!confirm('¿Eliminar esta OC? Las OPs asociadas no se borran pero quedarán huérfanas.')) return;
+  state.ocs = state.ocs.filter(o=>o.id!==id);
+  saveState();
+  closeModal();
+  navigateTo('ocs');
+}
+
+// =========================================================
+// OPs (Órdenes de Producción)
+// =========================================================
+function renderOps(){
+  let html = `<h1 class="page-title">Órdenes de Producción</h1>
+    <p class="page-subtitle">Cada OP corresponde a una corrida de laminado + refilado. Pueden ser entregas parciales de una OC.</p>`;
+  
+  html += `<div class="filters">
+    <select class="filter-input" id="opFiltroEstado" onchange="renderOpsTable()">
+      <option value="">Todos los estados</option>
+      <option value="nueva">Nuevas</option>
+      <option value="laminado">En laminado</option>
+      <option value="refilado">En refilado</option>
+      <option value="cerrada">Cerradas</option>
+    </select>
+    <input type="text" class="filter-input" placeholder="Buscar cliente..." id="opFiltroCliente" oninput="renderOpsTable()">
+  </div>`;
+  
+  html += '<div class="card" id="opsTableWrap"></div>';
+  document.getElementById('content').innerHTML = html;
+  renderOpsTable();
+}
+
+function renderOpsTable(){
+  const filtroEstado = document.getElementById('opFiltroEstado')?.value || '';
+  const filtroCliente = document.getElementById('opFiltroCliente')?.value.toLowerCase() || '';
+  
+  let ops = state.ops.filter(op=>{
+    if(filtroEstado && op.estado !== filtroEstado) return false;
+    if(filtroCliente && !op.cliente.toLowerCase().includes(filtroCliente)) return false;
+    return true;
+  });
+  ops = ops.sort((a,b)=>new Date(b.fechaCreacion)-new Date(a.fechaCreacion));
+  
+  let html;
+  if(ops.length===0){
+    html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay OPs. Generá una desde una OC.</p>';
+  } else {
+    html = '<table class="table"><thead><tr><th>OP</th><th>OC</th><th>Cliente</th><th>Producto</th><th class="num">kg</th><th>Estado</th><th>Creada</th><th></th></tr></thead><tbody>';
+    ops.forEach(op=>{
+      const oc = state.ocs.find(o=>o.id===op.ocId);
+      html += `<tr class="row-clickable" onclick="verOp('${op.id}')">
+        <td><strong>${op.numero}</strong></td>
+        <td>${oc?oc.numero:'—'}</td>
+        <td>${op.cliente}</td>
+        <td>${op.medida}</td>
+        <td class="num">${(+op.kgSolicitados).toFixed(0)}</td>
+        <td><span class="badge badge-${op.estado==='cerrada'?'success':op.estado==='nueva'?'pending':'active'}">${getEstadoLabel(op.estado)}</span></td>
+        <td>${fmtDate(op.fechaCreacion)}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOp('${op.id}')">Ver</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('opsTableWrap').innerHTML = html;
+}
+
+function nuevaOpDesdeOc(ocId){
+  const oc = state.ocs.find(o=>o.id===ocId);
+  if(!oc) return;
+  const opsAsoc = state.ops.filter(op=>op.ocId===ocId);
+  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+  const kgDisponibles = oc.kgSolicitados - kgEnOp;
+  
+  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===oc.medida);
+  if(!producto){
+    alert('Producto no encontrado en catálogo.');
+    return;
+  }
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Nueva OP — ${oc.numero}</h2>
+    
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value">${oc.cliente}</div></div>
+      <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value">${oc.medida}</div></div>
+      <div class="detail-item"><div class="detail-label">kg disponibles</div><div class="detail-value">${kgDisponibles.toFixed(0)} kg</div></div>
+    </div>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">kg para esta OP</label>
+        <input type="number" class="form-input" id="opKg" min="1" max="${kgDisponibles}" value="${kgDisponibles}" step="any">
+        <div class="form-help">Si es entrega parcial, ingresá los kg de esta corrida.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha producción prevista</label>
+        <input type="date" class="form-input" id="opFechaPrevista" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Notas para producción</label>
+      <textarea class="form-textarea" id="opNotas" rows="2" placeholder="Algo que ingenieros tienen que saber"></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarOp('${ocId}')">Crear OP</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  
+  showModal(html, true);
+}
+
+function guardarOp(ocId){
+  const oc = state.ocs.find(o=>o.id===ocId);
+  const kg = parseFloat(document.getElementById('opKg').value);
+  const fechaPrevista = document.getElementById('opFechaPrevista').value;
+  const notas = document.getElementById('opNotas').value;
+  
+  if(!kg || kg <= 0){alert('kg inválidos'); return;}
+  
+  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===oc.medida);
+  const numero = 'OP-'+(state.ops.length+1).toString().padStart(4,'0');
+  
+  const op = {
+    id: uid('OP'),
+    numero,
+    ocId,
+    cliente: oc.cliente,
+    medida: oc.medida,
+    producto: producto, // snapshot
+    kgSolicitados: kg,
+    precioUsdKg: oc.precioUsdKg,
+    fechaPrevista,
+    notas,
+    estado: 'nueva',
+    fechaCreacion: new Date().toISOString(),
+    fechaUltimoCambio: new Date().toISOString(),
+    creadoPor: currentUser.nombre,
+    laminadoReal: null,
+    refiladoReal: null,
+    bobinasUsadas: [], // ids de bobinas usadas
+  };
+  
+  state.ops.push(op);
+  saveState();
+  closeModal();
+  navigateTo('ops');
+  
+  // Mostrar opción de mandar mail a ingenieros
+  setTimeout(()=>verOp(op.id), 100);
+}
+
+function verOp(id){
+  const op = state.ops.find(o=>o.id===id);
+  if(!op) return;
+  const oc = state.ocs.find(o=>o.id===op.ocId);
+  const necesidades = calcularNecesidades(op.producto, op.kgSolicitados);
+  const real = calcularReal(op);
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>${op.numero} — ${op.cliente} ${op.medida}</h2>`;
+  
+  // Stages
+  const estados = ['nueva','laminado','refilado','cerrada'];
+  const idxActual = estados.indexOf(op.estado);
+  html += '<div class="stages">';
+  estados.forEach((est, i)=>{
+    const cls = i < idxActual ? 'done' : i === idxActual ? 'active' : '';
+    html += `<div class="stage ${cls}">${getEstadoLabel(est)}</div>`;
+  });
+  html += '</div>';
+  
+  // Datos generales
+  html += `<div class="detail-grid">
+    <div class="detail-item"><div class="detail-label">OC asociada</div><div class="detail-value">${oc?oc.numero:'—'}</div></div>
+    <div class="detail-item"><div class="detail-label">kg solicitados</div><div class="detail-value">${op.kgSolicitados.toFixed(0)} kg</div></div>
+    <div class="detail-item"><div class="detail-label">Precio venta</div><div class="detail-value">${fmtUsdShort(op.precioUsdKg)}/kg</div></div>
+    <div class="detail-item"><div class="detail-label">Fecha prevista</div><div class="detail-value">${fmtDate(op.fechaPrevista)}</div></div>
+  </div>`;
+  
+  // Tabs según estado
+  html += `<div class="tabs">
+    <div class="tab ${currentOpTab==='necesidades'?'active':''}" onclick="setOpTab('necesidades','${op.id}')">Necesidades teóricas</div>
+    <div class="tab ${currentOpTab==='laminado'?'active':''}" onclick="setOpTab('laminado','${op.id}')">Laminado</div>
+    <div class="tab ${currentOpTab==='refilado'?'active':''}" onclick="setOpTab('refilado','${op.id}')">Refilado</div>
+    ${op.estado==='cerrada' ? `<div class="tab ${currentOpTab==='resultado'?'active':''}" onclick="setOpTab('resultado','${op.id}')">Resultado</div>` : ''}
+  </div>`;
+  
+  html += '<div id="opTabContent">'+renderOpTabContent(op, necesidades, real)+'</div>';
+  
+  // Acciones globales
+  html += '<div class="form-row" style="margin-top:18px">';
+  if(op.estado === 'nueva'){
+    html += `<button class="btn btn-accent" onclick="enviarMailIngenieros('${op.id}')">📧 Enviar mail a ingenieros</button>`;
+    html += `<button class="btn" onclick="iniciarLaminado('${op.id}')">Iniciar laminado</button>`;
+  }
+  if(op.estado !== 'cerrada'){
+    html += `<button class="btn btn-danger" onclick="eliminarOp('${op.id}')" style="margin-left:auto">Eliminar OP</button>`;
+  }
+  html += '</div>';
+  
+  showModal(html, true);
+}
+
+let currentOpTab = 'necesidades';
+function setOpTab(tab, opId){
+  currentOpTab = tab;
+  verOp(opId);
+}
+
+function renderOpTabContent(op, nec, real){
+  if(currentOpTab === 'necesidades'){
+    return `<div class="card-title" style="margin-top:6px">Necesidades calculadas</div>
+      <table class="table">
+        <tr><td>Gramaje PET</td><td class="num">${nec.gPet.toFixed(1)} g/m²</td></tr>
+        <tr><td>Gramaje PE</td><td class="num">${nec.gPe.toFixed(1)} g/m²</td></tr>
+        <tr><td>Yield ancho PET</td><td class="num">${fmtPct(nec.yieldPet)}</td></tr>
+        <tr><td>Yield ancho PE</td><td class="num">${fmtPct(nec.yieldPe)}</td></tr>
+        <tr style="background:var(--blue-bg)"><td><strong>kg PET necesarios</strong></td><td class="num"><strong>${nec.kgPetTotal.toFixed(1)} kg</strong></td></tr>
+        <tr style="background:var(--blue-bg)"><td><strong>kg PE necesarios</strong></td><td class="num"><strong>${nec.kgPeTotal.toFixed(1)} kg</strong></td></tr>
+        <tr><td>kg total que pasan por proceso</td><td class="num">${nec.kgProcesoTotal.toFixed(1)} kg</td></tr>
+        <tr><td>Tiempo estimado laminado</td><td class="num">${nec.horasLaminado.toFixed(1)} hs (${(nec.horasLaminado*60).toFixed(0)} min)</td></tr>
+        <tr><td>Tiempo estimado refilado</td><td class="num">${nec.horasRefilado.toFixed(1)} hs</td></tr>
+      </table>
+      <div class="card-title" style="margin-top:18px">Costo y margen teórico</div>
+      <table class="table">
+        <tr><td>Costo PET</td><td class="num">${fmtUsd(nec.costoPetTotal)} (${fmtUsd(nec.costoPetKg)}/kg)</td></tr>
+        <tr><td>Costo PE</td><td class="num">${fmtUsd(nec.costoPeTotal)} (${fmtUsd(nec.costoPeKg)}/kg)</td></tr>
+        <tr><td>Costo proceso (laminado+refilado)</td><td class="num">${fmtUsd(nec.costoProcesoTotal)} (${fmtUsd(nec.costoProcesoKg)}/kg)</td></tr>
+        <tr style="background:var(--bg-2)"><td><strong>Costo total teórico</strong></td><td class="num"><strong>${fmtUsd(nec.costoTotal)} (${fmtUsd(nec.costoTotalKg)}/kg)</strong></td></tr>
+        <tr><td>Precio venta total</td><td class="num">${fmtUsd(op.precioUsdKg * op.kgSolicitados)}</td></tr>
+        <tr style="background:var(--green-bg)"><td><strong>Margen bruto teórico</strong></td><td class="num"><strong>${fmtUsd((op.precioUsdKg - nec.costoTotalKg) * op.kgSolicitados)} (${fmtPct((op.precioUsdKg - nec.costoTotalKg) / op.precioUsdKg)})</strong></td></tr>
+      </table>`;
+  }
+  
+  if(currentOpTab === 'laminado'){
+    if(op.laminadoReal){
+      return renderLaminadoLeido(op);
+    }
+    if(op.estado === 'nueva'){
+      return '<div class="alert alert-info">Iniciá el laminado primero (botón abajo).</div>';
+    }
+    return renderLaminadoForm(op, nec);
+  }
+  
+  if(currentOpTab === 'refilado'){
+    if(op.refiladoReal){
+      return renderRefiladoLeido(op);
+    }
+    if(!op.laminadoReal){
+      return '<div class="alert alert-info">Cargá primero el laminado.</div>';
+    }
+    return renderRefiladoForm(op);
+  }
+  
+  if(currentOpTab === 'resultado' && op.estado === 'cerrada'){
+    return renderResultado(op, nec, real);
+  }
+  
+  return '';
+}
+
+function iniciarLaminado(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  op.estado = 'laminado';
+  op.fechaUltimoCambio = new Date().toISOString();
+  saveState();
+  currentOpTab = 'laminado';
+  verOp(opId);
+}
+
+function renderLaminadoForm(op, nec){
+  const bobinasPet = state.bobinas.filter(b=>b.tipo==='PET' && b.estado==='disponible');
+  const bobinasPe = state.bobinas.filter(b=>b.tipo==='PE' && b.estado==='disponible');
+  
+  return `<div class="card-title" style="margin-top:6px">Cargar producción de laminado</div>
+    <p class="form-help" style="margin-bottom:12px">Datos reales de la corrida de laminado. El sistema compara contra el teórico.</p>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">kg PET usados</label>
+        <input type="number" class="form-input" id="lamKgPet" step="any" placeholder="Teórico: ${nec.kgPetTotal.toFixed(1)}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">kg PE usados</label>
+        <input type="number" class="form-input" id="lamKgPe" step="any" placeholder="Teórico: ${nec.kgPeTotal.toFixed(1)}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">kg laminados producidos</label>
+        <input type="number" class="form-input" id="lamKgLaminados" step="any" placeholder="Antes de refilar">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tiempo real (horas)</label>
+        <input type="number" class="form-input" id="lamHoras" step="any" placeholder="Teórico: ${nec.horasLaminado.toFixed(1)}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operario</label>
+        <input type="text" class="form-input" id="lamOperario">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Turno</label>
+        <select class="form-select" id="lamTurno">
+          <option>Mañana</option>
+          <option>Tarde</option>
+          <option>Noche</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="card-title" style="margin-top:14px">Bobinas usadas (trazabilidad)</div>
+    <p class="form-help" style="margin-bottom:8px">Marcá las bobinas que usaste. Su peso se descuenta del stock.</p>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div>
+        <strong style="font-size:12px;color:var(--muted)">Bobinas PET disponibles (${bobinasPet.length})</strong>
+        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--line);padding:8px;border-radius:5px;margin-top:6px">
+          ${bobinasPet.length===0 ? '<p style="font-size:12px;color:var(--muted)">No hay bobinas PET en stock.</p>' :
+            bobinasPet.map(b=>`<label class="bobina-item" style="cursor:pointer">
+              <span><input type="checkbox" class="bobina-pet-check" value="${b.id}" style="margin-right:6px"><span class="code">${b.codigo}</span></span>
+              <span>${(+b.pesoNeto).toFixed(1)} kg · ${b.espesor}µm</span>
+            </label>`).join('')}
+        </div>
+      </div>
+      <div>
+        <strong style="font-size:12px;color:var(--muted)">Bobinas PE disponibles (${bobinasPe.length})</strong>
+        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--line);padding:8px;border-radius:5px;margin-top:6px">
+          ${bobinasPe.length===0 ? '<p style="font-size:12px;color:var(--muted)">No hay bobinas PE en stock.</p>' :
+            bobinasPe.map(b=>`<label class="bobina-item" style="cursor:pointer">
+              <span><input type="checkbox" class="bobina-pe-check" value="${b.id}" style="margin-right:6px"><span class="code">${b.codigo}</span></span>
+              <span>${(+b.pesoNeto).toFixed(1)} kg · ${b.espesor}µm</span>
+            </label>`).join('')}
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group" style="margin-top:14px">
+      <label class="form-label">Notas (paradas, defectos, etc)</label>
+      <textarea class="form-textarea" id="lamNotas" rows="2"></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarLaminado('${op.id}')">Guardar laminado</button>
+    </div>`;
+}
+
+function guardarLaminado(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  const kgPet = parseFloat(document.getElementById('lamKgPet').value);
+  const kgPe = parseFloat(document.getElementById('lamKgPe').value);
+  const kgLaminados = parseFloat(document.getElementById('lamKgLaminados').value);
+  const horas = parseFloat(document.getElementById('lamHoras').value);
+  const operario = document.getElementById('lamOperario').value;
+  const turno = document.getElementById('lamTurno').value;
+  const notas = document.getElementById('lamNotas').value;
+  
+  if(!kgPet || !kgPe || !kgLaminados){
+    alert('Faltan kg PET, kg PE o kg laminados.');
+    return;
+  }
+  
+  // Bobinas usadas
+  const bobinasPetIds = [...document.querySelectorAll('.bobina-pet-check:checked')].map(c=>c.value);
+  const bobinasPeIds = [...document.querySelectorAll('.bobina-pe-check:checked')].map(c=>c.value);
+  
+  op.laminadoReal = {
+    kgPetUsado: kgPet,
+    kgPeUsado: kgPe,
+    kgLaminados: kgLaminados,
+    horas, operario, turno, notas,
+    fecha: new Date().toISOString()
+  };
+  op.bobinasUsadas = [...bobinasPetIds, ...bobinasPeIds];
+  
+  // Marcar bobinas como usadas (por simplicidad, marcamos todas como agotadas)
+  // En una versión más sofisticada se podría descontar peso parcial
+  [...bobinasPetIds, ...bobinasPeIds].forEach(bid=>{
+    const b = state.bobinas.find(x=>x.id===bid);
+    if(b){
+      b.estado = 'usada';
+      b.opUsada = opId;
+    }
+  });
+  
+  op.estado = 'refilado';
+  op.fechaUltimoCambio = new Date().toISOString();
+  saveState();
+  currentOpTab = 'refilado';
+  verOp(opId);
+}
+
+function renderLaminadoLeido(op){
+  const lr = op.laminadoReal;
+  const bobs = op.bobinasUsadas.map(id=>state.bobinas.find(b=>b.id===id)).filter(Boolean);
+  return `<div class="card-title" style="margin-top:6px">Laminado completado</div>
+    <table class="table">
+      <tr><td>Fecha</td><td>${fmtDateTime(lr.fecha)}</td></tr>
+      <tr><td>Operario / turno</td><td>${lr.operario||'—'} / ${lr.turno||'—'}</td></tr>
+      <tr><td>kg PET usados</td><td class="num">${lr.kgPetUsado.toFixed(1)} kg</td></tr>
+      <tr><td>kg PE usados</td><td class="num">${lr.kgPeUsado.toFixed(1)} kg</td></tr>
+      <tr><td>kg laminados producidos</td><td class="num">${lr.kgLaminados.toFixed(1)} kg</td></tr>
+      <tr><td>Merma laminado</td><td class="num">${(lr.kgPetUsado+lr.kgPeUsado-lr.kgLaminados).toFixed(1)} kg (${fmtPct((lr.kgPetUsado+lr.kgPeUsado-lr.kgLaminados)/(lr.kgPetUsado+lr.kgPeUsado))})</td></tr>
+      <tr><td>Tiempo</td><td class="num">${lr.horas?lr.horas.toFixed(1)+' hs':'—'}</td></tr>
+    </table>
+    ${bobs.length ? `<div style="margin-top:14px"><strong style="font-size:12px;color:var(--muted)">Bobinas usadas (${bobs.length})</strong>
+      ${bobs.map(b=>`<div class="bobina-item"><span class="code">${b.codigo}</span><span>${b.tipo} · ${b.espesor}µm · ${b.pesoNeto.toFixed(1)} kg</span></div>`).join('')}
+    </div>` : ''}
+    ${lr.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${lr.notas}</div>` : ''}`;
+}
+
+function renderRefiladoForm(op){
+  const lr = op.laminadoReal;
+  return `<div class="card-title" style="margin-top:6px">Cargar producción de refilado</div>
+    <p class="form-help" style="margin-bottom:12px">El refilado parte de los ${lr.kgLaminados.toFixed(1)} kg laminados.</p>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">kg producto final</label>
+        <input type="number" class="form-input" id="refKgFinal" step="any" placeholder="Después de refilar">
+      </div>
+      <div class="form-group">
+        <label class="form-label">kg de scrap (refile)</label>
+        <input type="number" class="form-input" id="refKgScrap" step="any" placeholder="Bordes descartados">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tiempo real (horas)</label>
+        <input type="number" class="form-input" id="refHoras" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operario</label>
+        <input type="text" class="form-input" id="refOperario">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-textarea" id="refNotas" rows="2"></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarRefilado('${op.id}')">Cerrar OP</button>
+    </div>`;
+}
+
+function guardarRefilado(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  const kgFinales = parseFloat(document.getElementById('refKgFinal').value);
+  const kgScrap = parseFloat(document.getElementById('refKgScrap').value);
+  const horas = parseFloat(document.getElementById('refHoras').value);
+  const operario = document.getElementById('refOperario').value;
+  const notas = document.getElementById('refNotas').value;
+  
+  if(!kgFinales){alert('Faltan kg finales'); return;}
+  
+  op.refiladoReal = {
+    kgFinales, kgScrap: kgScrap || 0, horas, operario, notas,
+    fecha: new Date().toISOString()
+  };
+  op.estado = 'cerrada';
+  op.fechaCierre = new Date().toISOString();
+  op.fechaUltimoCambio = new Date().toISOString();
+  saveState();
+  currentOpTab = 'resultado';
+  verOp(opId);
+}
+
+function renderRefiladoLeido(op){
+  const rr = op.refiladoReal;
+  return `<div class="card-title" style="margin-top:6px">Refilado completado</div>
+    <table class="table">
+      <tr><td>Fecha</td><td>${fmtDateTime(rr.fecha)}</td></tr>
+      <tr><td>Operario</td><td>${rr.operario||'—'}</td></tr>
+      <tr><td>kg producto final</td><td class="num"><strong>${rr.kgFinales.toFixed(1)} kg</strong></td></tr>
+      <tr><td>kg scrap (refile)</td><td class="num">${rr.kgScrap.toFixed(1)} kg</td></tr>
+      <tr><td>Yield refilado</td><td class="num">${fmtPct(rr.kgFinales/op.laminadoReal.kgLaminados)}</td></tr>
+      <tr><td>Tiempo</td><td class="num">${rr.horas?rr.horas.toFixed(1)+' hs':'—'}</td></tr>
+    </table>
+    ${rr.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${rr.notas}</div>` : ''}`;
+}
+
+function renderResultado(op, nec, real){
+  if(!real) return '<p>Cálculo de resultado no disponible.</p>';
+  
+  const ingresoReal = real.kgFinales * op.precioUsdKg;
+  const margenBruto = ingresoReal - real.costoTotalReal;
+  const margenPct = ingresoReal > 0 ? margenBruto / ingresoReal : 0;
+  
+  // Comparativas teórico vs real
+  const cmpKgPet = ((real.kgPetUsado / nec.kgPetTotal) - 1);
+  const cmpKgPe = ((real.kgPeUsado / nec.kgPeTotal) - 1);
+  const cmpCosto = ((real.costoUnitarioReal / nec.costoTotalKg) - 1);
+  
+  const cmpClass = (v, inverse=false) => {
+    if(Math.abs(v) < 0.02) return 'deviation-neutral';
+    return (inverse ? v<0 : v>0) ? 'deviation-bad' : 'deviation-good';
+  };
+  
+  return `<div class="card-title" style="margin-top:6px">Resultado de la OP</div>
+    
+    <div class="kpi-grid" style="margin-bottom:18px">
+      <div class="kpi green"><div class="kpi-label">Producido final</div><div class="kpi-value">${real.kgFinales.toFixed(0)} kg</div><div class="kpi-extra">vs ${op.kgSolicitados.toFixed(0)} solicitados</div></div>
+      <div class="kpi blue"><div class="kpi-label">Costo real /kg</div><div class="kpi-value">${fmtUsdShort(real.costoUnitarioReal)}</div><div class="kpi-extra">teórico ${fmtUsdShort(nec.costoTotalKg)}</div></div>
+      <div class="kpi ${margenPct>=0.30?'green':margenPct>=0.15?'':'red'}"><div class="kpi-label">Margen bruto real</div><div class="kpi-value">${fmtPct(margenPct)}</div><div class="kpi-extra">${fmtUsdShort(margenBruto)} total</div></div>
+    </div>
+    
+    <table class="table">
+      <thead><tr><th>Concepto</th><th class="num">Teórico</th><th class="num">Real</th><th class="num">Δ</th></tr></thead>
+      <tbody>
+        <tr><td>kg PET</td><td class="num">${nec.kgPetTotal.toFixed(1)}</td><td class="num">${real.kgPetUsado.toFixed(1)}</td><td class="num ${cmpClass(cmpKgPet,true)}">${(cmpKgPet*100).toFixed(1)}%</td></tr>
+        <tr><td>kg PE</td><td class="num">${nec.kgPeTotal.toFixed(1)}</td><td class="num">${real.kgPeUsado.toFixed(1)}</td><td class="num ${cmpClass(cmpKgPe,true)}">${(cmpKgPe*100).toFixed(1)}%</td></tr>
+        <tr><td>Costo PET</td><td class="num">${fmtUsd(nec.costoPetTotal)}</td><td class="num">${fmtUsd(real.costoPetReal)}</td><td class="num">${(((real.costoPetReal/nec.costoPetTotal)-1)*100).toFixed(1)}%</td></tr>
+        <tr><td>Costo PE</td><td class="num">${fmtUsd(nec.costoPeTotal)}</td><td class="num">${fmtUsd(real.costoPeReal)}</td><td class="num">${(((real.costoPeReal/nec.costoPeTotal)-1)*100).toFixed(1)}%</td></tr>
+        <tr><td>Costo proceso</td><td class="num">${fmtUsd(nec.costoProcesoTotal)}</td><td class="num">${fmtUsd(real.costoProcesoReal)}</td><td class="num">${(((real.costoProcesoReal/nec.costoProcesoTotal)-1)*100).toFixed(1)}%</td></tr>
+        <tr style="background:var(--bg-2)"><td><strong>Costo total</strong></td><td class="num"><strong>${fmtUsd(nec.costoTotal)}</strong></td><td class="num"><strong>${fmtUsd(real.costoTotalReal)}</strong></td><td class="num ${cmpClass(cmpCosto,true)}"><strong>${(cmpCosto*100).toFixed(1)}%</strong></td></tr>
+        <tr style="background:var(--blue-bg)"><td><strong>Costo por kg producido</strong></td><td class="num"><strong>${fmtUsd(nec.costoTotalKg)}</strong></td><td class="num"><strong>${fmtUsd(real.costoUnitarioReal)}</strong></td><td class="num ${cmpClass(cmpCosto,true)}"><strong>${(cmpCosto*100).toFixed(1)}%</strong></td></tr>
+      </tbody>
+    </table>
+    
+    <div class="alert ${margenPct>=0.30?'alert-success':margenPct>=0.15?'alert-warning':'alert-danger'}" style="margin-top:14px">
+      ${margenPct>=0.30 ? '✓ OP cerrada con margen bueno (≥30%).' :
+        margenPct>=0.15 ? '⚠ OP con margen aceptable pero por debajo del objetivo.' :
+        '✗ OP cerrada con margen bajo. Revisar desviaciones.'}
+    </div>`;
+}
+
+function eliminarOp(opId){
+  if(!confirm('¿Eliminar esta OP? Esta acción no se puede deshacer.')) return;
+  const op = state.ops.find(o=>o.id===opId);
+  // Liberar bobinas usadas
+  if(op.bobinasUsadas){
+    op.bobinasUsadas.forEach(bid=>{
+      const b = state.bobinas.find(x=>x.id===bid);
+      if(b && b.opUsada === opId){
+        b.estado = 'disponible';
+        b.opUsada = null;
+      }
+    });
+  }
+  state.ops = state.ops.filter(o=>o.id!==opId);
+  saveState();
+  closeModal();
+  navigateTo('ops');
+}
+
+function enviarMailIngenieros(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  const nec = calcularNecesidades(op.producto, op.kgSolicitados);
+  const c = state.config;
+  
+  const subject = encodeURIComponent(`OP ${op.numero} — ${op.cliente} ${op.medida} — ${op.kgSolicitados.toFixed(0)} kg`);
+  const body = encodeURIComponent(
+`Hola Agustín y Jonathan,
+
+Se generó la OP ${op.numero} para ${op.cliente}.
+
+DATOS DEL PEDIDO:
+- Producto: ${op.medida}
+- kg finales: ${op.kgSolicitados.toFixed(0)}
+- Fecha prevista: ${fmtDate(op.fechaPrevista)}
+
+ESPECIFICACIONES:
+- Lámina PET: ${op.producto.anchoPet}mm de ancho, ${op.producto.espPet}µm
+- Lámina PE: ${op.producto.anchoPe}mm de ancho, ${op.producto.espPe}µm
+- Ancho final: ${op.producto.anchoFinal}mm (${op.producto.tiras} tira${op.producto.tiras>1?'s':''})
+
+NECESIDADES DE PRODUCCIÓN:
+- PET necesarios: ${nec.kgPetTotal.toFixed(1)} kg (${nec.kgPetTotal.toFixed(1)} kg para sacar ${op.kgSolicitados.toFixed(0)} kg de producto)
+- PE necesarios: ${nec.kgPeTotal.toFixed(1)} kg
+- Tiempo estimado laminado: ${nec.horasLaminado.toFixed(1)} hs
+- Tiempo estimado refilado: ${nec.horasRefilado.toFixed(1)} hs
+
+${op.notas ? 'NOTAS:\n'+op.notas : ''}
+
+Saludos,
+${currentUser.nombre}`
+  );
+  
+  const url = `mailto:${c.mailAgustin},${c.mailJonathan}?subject=${subject}&body=${body}`;
+  window.location.href = url;
+}
+
+// =========================================================
+// BOBINAS
+// =========================================================
+function renderBobinas(){
+  let html = `<h1 class="page-title">Stock de Bobinas</h1>
+    <p class="page-subtitle">Cargá las bobinas que entran al depósito. Después se asignan a las OPs.</p>
+    <div class="form-row" style="margin-bottom:18px">
+      <button class="btn" onclick="nuevaBobina()">+ Ingresar bobina</button>
+    </div>`;
+  
+  html += `<div class="filters">
+    <select class="filter-input" id="bobFiltroTipo" onchange="renderBobinasTable()">
+      <option value="">Todos los tipos</option>
+      <option value="PET">PET</option>
+      <option value="PE">PE</option>
+    </select>
+    <select class="filter-input" id="bobFiltroEstado" onchange="renderBobinasTable()">
+      <option value="disponible" selected>Disponibles</option>
+      <option value="usada">Usadas</option>
+      <option value="">Todas</option>
+    </select>
+  </div>`;
+  
+  html += '<div class="card" id="bobsTableWrap"></div>';
+  document.getElementById('content').innerHTML = html;
+  renderBobinasTable();
+}
+
+function renderBobinasTable(){
+  const tipo = document.getElementById('bobFiltroTipo')?.value || '';
+  const estado = document.getElementById('bobFiltroEstado')?.value;
+  
+  let bobs = state.bobinas.filter(b=>{
+    if(tipo && b.tipo !== tipo) return false;
+    if(estado !== '' && estado !== undefined && b.estado !== estado) return false;
+    return true;
+  });
+  bobs = bobs.sort((a,b)=>new Date(b.fechaIngreso)-new Date(a.fechaIngreso));
+  
+  let html;
+  if(bobs.length===0){
+    html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay bobinas para mostrar.</p>';
+  } else {
+    html = '<table class="table"><thead><tr><th>Código</th><th>Tipo</th><th>Espesor</th><th>Ancho</th><th class="num">Peso neto</th><th>Ingreso</th><th>Estado</th><th>OP</th></tr></thead><tbody>';
+    bobs.forEach(b=>{
+      const op = b.opUsada ? state.ops.find(o=>o.id===b.opUsada) : null;
+      html += `<tr>
+        <td><strong class="code" style="font-family:'Courier New',monospace">${b.codigo}</strong></td>
+        <td><span class="badge badge-${b.tipo==='PET'?'active':'success'}">${b.tipo}</span></td>
+        <td>${b.espesor}µm</td>
+        <td>${b.ancho}mm</td>
+        <td class="num">${b.pesoNeto.toFixed(1)} kg</td>
+        <td>${fmtDate(b.fechaIngreso)}</td>
+        <td><span class="badge badge-${b.estado==='disponible'?'success':'pending'}">${b.estado}</span></td>
+        <td>${op ? op.numero : '—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('bobsTableWrap').innerHTML = html;
+}
+
+function nuevaBobina(){
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Ingresar bobina al stock</h2>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="bobTipo">
+          <option value="PET">PET</option>
+          <option value="PE">PE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Espesor (µm)</label>
+        <input type="number" class="form-input" id="bobEspesor" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ancho (mm)</label>
+        <input type="number" class="form-input" id="bobAncho" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Peso bruto (kg)</label>
+        <input type="number" class="form-input" id="bobPesoBruto" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Peso del cono (kg)</label>
+        <input type="number" class="form-input" id="bobPesoCono" value="2" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha ingreso</label>
+        <input type="date" class="form-input" id="bobFecha" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-textarea" id="bobNotas" rows="2"></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarBobina()">Guardar bobina</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  showModal(html);
+}
+
+function guardarBobina(){
+  const tipo = document.getElementById('bobTipo').value;
+  const espesor = parseFloat(document.getElementById('bobEspesor').value);
+  const ancho = parseFloat(document.getElementById('bobAncho').value);
+  const pesoBruto = parseFloat(document.getElementById('bobPesoBruto').value);
+  const pesoCono = parseFloat(document.getElementById('bobPesoCono').value) || 0;
+  const fecha = document.getElementById('bobFecha').value;
+  const notas = document.getElementById('bobNotas').value;
+  
+  if(!tipo || !espesor || !ancho || !pesoBruto){alert('Faltan datos'); return;}
+  
+  // Generar código
+  const numCount = state.bobinas.filter(b=>b.tipo===tipo).length + 1;
+  const fechaStr = new Date(fecha).toISOString().split('T')[0].replace(/-/g,'').slice(2);
+  const codigo = `${tipo}-${fechaStr}-${numCount.toString().padStart(4,'0')}`;
+  
+  state.bobinas.push({
+    id: uid('BOB'),
+    codigo, tipo, espesor, ancho,
+    pesoBruto, pesoCono, pesoNeto: pesoBruto - pesoCono,
+    fechaIngreso: fecha,
+    estado: 'disponible',
+    notas,
+    creadoPor: currentUser.nombre,
+    opUsada: null
+  });
+  saveState();
+  closeModal();
+  navigateTo('bobinas');
+}
+
+// =========================================================
+// REMITOS
+// =========================================================
+function renderRemitos(){
+  let html = `<h1 class="page-title">Remitos</h1>
+    <p class="page-subtitle">Generá remitos de entrega contra OPs cerradas o parcialmente cerradas.</p>
+    <div class="form-row" style="margin-bottom:18px">
+      <button class="btn" onclick="nuevoRemito()">+ Nuevo remito</button>
+    </div>
+    <div class="card" id="remitosTableWrap"></div>`;
+  document.getElementById('content').innerHTML = html;
+  renderRemitosTable();
+}
+
+function renderRemitosTable(){
+  const remitos = state.remitos.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  let html;
+  if(remitos.length===0){
+    html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay remitos generados.</p>';
+  } else {
+    html = '<table class="table"><thead><tr><th>Remito</th><th>Cliente</th><th>OPs incluidas</th><th class="num">kg</th><th>Fecha</th><th></th></tr></thead><tbody>';
+    remitos.forEach(r=>{
+      const opsIncluidas = r.lineas.length;
+      const kgTotal = r.lineas.reduce((s,l)=>s+l.kg,0);
+      html += `<tr class="row-clickable" onclick="verRemito('${r.id}')">
+        <td><strong>${r.numero}</strong></td>
+        <td>${r.cliente}</td>
+        <td>${opsIncluidas}</td>
+        <td class="num">${kgTotal.toFixed(0)}</td>
+        <td>${fmtDate(r.fecha)}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verRemito('${r.id}')">Ver</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('remitosTableWrap').innerHTML = html;
+}
+
+function nuevoRemito(){
+  // Listar OPs que tienen producto disponible para entregar (cerradas o con kg producidos sin entregar todavía)
+  const opsDisponibles = state.ops.filter(op=>{
+    if(!op.refiladoReal) return false;
+    const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
+    return op.refiladoReal.kgFinales > yaEntregado;
+  });
+  
+  if(opsDisponibles.length === 0){
+    alert('No hay OPs con producto disponible para remitir. Cerrá una OP primero.');
+    return;
+  }
+  
+  const clientes = [...new Set(opsDisponibles.map(op=>op.cliente))];
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Nuevo remito</h2>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <select class="form-select" id="remCliente" onchange="actualizarOpsRemito()">
+          <option value="">— Seleccionar —</option>
+          ${clientes.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número de remito</label>
+        <input type="text" class="form-input" id="remNumero" placeholder="0001-00000123">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input type="date" class="form-input" id="remFecha" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+    </div>
+    
+    <div class="card-title" style="margin-top:14px">Productos a remitir</div>
+    <div id="remOpsLista" style="margin-bottom:14px">
+      <p style="color:var(--muted);font-size:13px">Seleccioná un cliente para ver sus OPs disponibles.</p>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Observaciones</label>
+      <textarea class="form-textarea" id="remNotas" rows="2"></textarea>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarRemito()">Guardar remito</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  
+  showModal(html, true);
+}
+
+function actualizarOpsRemito(){
+  const cliente = document.getElementById('remCliente').value;
+  const div = document.getElementById('remOpsLista');
+  if(!cliente){
+    div.innerHTML = '<p style="color:var(--muted);font-size:13px">Seleccioná un cliente.</p>';
+    return;
+  }
+  
+  const opsCliente = state.ops.filter(op=>{
+    if(op.cliente !== cliente || !op.refiladoReal) return false;
+    const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
+    return op.refiladoReal.kgFinales > yaEntregado;
+  });
+  
+  if(opsCliente.length === 0){
+    div.innerHTML = '<p style="color:var(--muted);font-size:13px">No hay OPs disponibles para este cliente.</p>';
+    return;
+  }
+  
+  let html = '<table class="table"><thead><tr><th><input type="checkbox" id="remTodas" onchange="toggleTodasOps()"></th><th>OP</th><th>Producto</th><th class="num">Disponible</th><th class="num">kg a remitir</th></tr></thead><tbody>';
+  opsCliente.forEach(op=>{
+    const yaEntregado = state.remitos.flatMap(r=>r.lineas).filter(l=>l.opId===op.id).reduce((s,l)=>s+l.kg,0);
+    const disponible = op.refiladoReal.kgFinales - yaEntregado;
+    html += `<tr>
+      <td><input type="checkbox" class="rem-op-check" data-op-id="${op.id}" data-disponible="${disponible}"></td>
+      <td>${op.numero}</td>
+      <td>${op.medida}</td>
+      <td class="num">${disponible.toFixed(1)} kg</td>
+      <td class="num"><input type="number" class="form-input rem-op-kg" data-op-id="${op.id}" max="${disponible}" step="any" placeholder="${disponible.toFixed(1)}" style="width:100px;padding:4px 6px"></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  div.innerHTML = html;
+}
+
+function toggleTodasOps(){
+  const checked = document.getElementById('remTodas').checked;
+  document.querySelectorAll('.rem-op-check').forEach(c=>{
+    c.checked = checked;
+    if(checked){
+      const opId = c.dataset.opId;
+      const disp = c.dataset.disponible;
+      const kgInput = document.querySelector(`.rem-op-kg[data-op-id="${opId}"]`);
+      if(kgInput && !kgInput.value) kgInput.value = disp;
+    }
+  });
+}
+
+function guardarRemito(){
+  const cliente = document.getElementById('remCliente').value;
+  const numero = document.getElementById('remNumero').value.trim();
+  const fecha = document.getElementById('remFecha').value;
+  const notas = document.getElementById('remNotas').value;
+  
+  if(!cliente || !numero || !fecha){alert('Faltan datos'); return;}
+  
+  const lineas = [];
+  document.querySelectorAll('.rem-op-check:checked').forEach(c=>{
+    const opId = c.dataset.opId;
+    const kgInput = document.querySelector(`.rem-op-kg[data-op-id="${opId}"]`);
+    const kg = parseFloat(kgInput.value);
+    if(kg && kg > 0){
+      const op = state.ops.find(o=>o.id===opId);
+      lineas.push({
+        opId, opNumero: op.numero, medida: op.medida, kg, precioUsd: op.precioUsdKg
+      });
+    }
+  });
+  
+  if(lineas.length === 0){alert('Seleccioná al menos una OP con kg.'); return;}
+  
+  state.remitos.push({
+    id: uid('REM'),
+    numero, cliente, fecha, lineas, notas,
+    creadoPor: currentUser.nombre,
+    fechaCreacion: new Date().toISOString()
+  });
+  saveState();
+  closeModal();
+  navigateTo('remitos');
+}
+
+function verRemito(id){
+  const rem = state.remitos.find(r=>r.id===id);
+  if(!rem) return;
+  
+  const kgTotal = rem.lineas.reduce((s,l)=>s+l.kg,0);
+  const usdTotal = rem.lineas.reduce((s,l)=>s+l.kg*l.precioUsd,0);
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Remito ${rem.numero} — ${rem.cliente}</h2>
+    
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Fecha</div><div class="detail-value">${fmtDate(rem.fecha)}</div></div>
+      <div class="detail-item"><div class="detail-label">kg total</div><div class="detail-value">${kgTotal.toFixed(1)} kg</div></div>
+      <div class="detail-item"><div class="detail-label">USD total</div><div class="detail-value">${fmtUsdShort(usdTotal)}</div></div>
+    </div>
+    
+    <div class="card-title" style="margin-top:14px">Productos</div>
+    <table class="table">
+      <thead><tr><th>OP</th><th>Producto</th><th class="num">kg</th><th class="num">USD/kg</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        ${rem.lineas.map(l=>`<tr><td>${l.opNumero}</td><td>${l.medida}</td><td class="num">${l.kg.toFixed(1)}</td><td class="num">${fmtUsdShort(l.precioUsd)}</td><td class="num">${fmtUsdShort(l.kg*l.precioUsd)}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    
+    ${rem.notas ? `<div class="alert alert-info" style="margin-top:10px"><strong>Notas:</strong> ${rem.notas}</div>` : ''}
+    
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn" onclick="window.print()">Imprimir</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-danger" onclick="eliminarRemito('${rem.id}')" style="margin-left:auto">Eliminar</button>
+    </div>`;
+  
+  showModal(html, true);
+}
+
+function eliminarRemito(id){
+  if(!confirm('¿Eliminar este remito?')) return;
+  state.remitos = state.remitos.filter(r=>r.id!==id);
+  saveState();
+  closeModal();
+  navigateTo('remitos');
+}
+
+// =========================================================
+// CATÁLOGO
+// =========================================================
+function renderCatalogo(){
+  let html = `<h1 class="page-title">Catálogo de productos</h1>
+    <p class="page-subtitle">Productos PET/PE laminados con sus medidas. Esta es la base para crear OCs y OPs.</p>
+    <div class="form-row" style="margin-bottom:18px">
+      <button class="btn" onclick="nuevoProducto()">+ Nuevo producto</button>
+    </div>
+    <div class="card">
+      <table class="table">
+        <thead><tr><th>Cliente</th><th>Medida</th><th class="num">Ancho PET</th><th class="num">Esp PET</th><th class="num">Ancho PE</th><th class="num">Esp PE</th><th class="num">Final</th><th class="num">Tiras</th><th></th></tr></thead>
+        <tbody>
+        ${state.catalogo.map((p,i)=>`<tr>
+          <td>${p.cliente}</td><td><strong>${p.medida}</strong></td>
+          <td class="num">${p.anchoPet}mm</td><td class="num">${p.espPet}µm</td>
+          <td class="num">${p.anchoPe}mm</td><td class="num">${p.espPe}µm</td>
+          <td class="num">${p.anchoFinal}mm</td><td class="num">${p.tiras}</td>
+          <td><button class="btn-icon" onclick="eliminarProducto(${i})">×</button></td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function nuevoProducto(){
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Nuevo producto en catálogo</h2>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-input" id="prodCliente"></div>
+      <div class="form-group"><label class="form-label">Medida (descripción)</label><input type="text" class="form-input" id="prodMedida" placeholder="ej: 321x300"></div>
+      <div class="form-group"><label class="form-label">Ancho PET (mm)</label><input type="number" class="form-input" id="prodAnchoPet"></div>
+      <div class="form-group"><label class="form-label">Espesor PET (µm)</label><input type="number" class="form-input" id="prodEspPet"></div>
+      <div class="form-group"><label class="form-label">Ancho PE (mm)</label><input type="number" class="form-input" id="prodAnchoPe"></div>
+      <div class="form-group"><label class="form-label">Espesor PE (µm)</label><input type="number" class="form-input" id="prodEspPe"></div>
+      <div class="form-group"><label class="form-label">Ancho final (mm)</label><input type="number" class="form-input" id="prodAnchoFinal"></div>
+      <div class="form-group"><label class="form-label">Tiras</label><input type="number" class="form-input" id="prodTiras" value="1"></div>
+    </div>
+    <div class="form-row">
+      <button class="btn" onclick="guardarProducto()">Guardar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  showModal(html);
+}
+
+function guardarProducto(){
+  const p = {
+    cliente: document.getElementById('prodCliente').value,
+    medida: document.getElementById('prodMedida').value,
+    anchoPet: parseFloat(document.getElementById('prodAnchoPet').value),
+    espPet: parseFloat(document.getElementById('prodEspPet').value),
+    anchoPe: parseFloat(document.getElementById('prodAnchoPe').value),
+    espPe: parseFloat(document.getElementById('prodEspPe').value),
+    anchoFinal: parseFloat(document.getElementById('prodAnchoFinal').value),
+    tiras: parseInt(document.getElementById('prodTiras').value)||1
+  };
+  if(!p.cliente || !p.medida || !p.anchoPet){alert('Faltan datos'); return;}
+  state.catalogo.push(p);
+  saveState();
+  closeModal();
+  navigateTo('catalogo');
+}
+
+function eliminarProducto(idx){
+  if(!confirm('¿Eliminar este producto del catálogo?')) return;
+  state.catalogo.splice(idx, 1);
+  saveState();
+  navigateTo('catalogo');
+}
+
+// =========================================================
+// REPORTES
+// =========================================================
+function renderReportes(){
+  const opsCerradas = state.ops.filter(op=>op.estado==='cerrada');
+  
+  let html = `<h1 class="page-title">Reportes</h1>
+    <p class="page-subtitle">OPs cerradas con análisis de margen real vs teórico.</p>`;
+  
+  if(opsCerradas.length === 0){
+    html += '<div class="card"><p style="color:var(--muted);text-align:center;padding:30px">No hay OPs cerradas todavía.</p></div>';
+    document.getElementById('content').innerHTML = html;
+    return;
+  }
+  
+  // Stats globales
+  let totalKg = 0, totalCostoReal = 0, totalIngreso = 0;
+  const data = opsCerradas.map(op=>{
+    const nec = calcularNecesidades(op.producto, op.kgSolicitados);
+    const real = calcularReal(op);
+    if(!real) return null;
+    const ingreso = real.kgFinales * op.precioUsdKg;
+    totalKg += real.kgFinales;
+    totalCostoReal += real.costoTotalReal;
+    totalIngreso += ingreso;
+    return {
+      op, nec, real, ingreso,
+      margenReal: ingreso > 0 ? (ingreso - real.costoTotalReal) / ingreso : 0,
+      margenTeorico: (op.precioUsdKg - nec.costoTotalKg) / op.precioUsdKg,
+      desvCosto: (real.costoUnitarioReal / nec.costoTotalKg) - 1,
+      desvKg: (real.kgFinales / op.kgSolicitados) - 1
+    };
+  }).filter(d=>d);
+  
+  const margenPromedio = totalIngreso > 0 ? (totalIngreso - totalCostoReal) / totalIngreso : 0;
+  
+  html += `<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">OPs cerradas</div><div class="kpi-value">${opsCerradas.length}</div></div>
+    <div class="kpi"><div class="kpi-label">kg producidos</div><div class="kpi-value">${totalKg.toFixed(0)}</div></div>
+    <div class="kpi green"><div class="kpi-label">Ingreso total</div><div class="kpi-value">${fmtUsdShort(totalIngreso)}</div></div>
+    <div class="kpi blue"><div class="kpi-label">Margen real promedio</div><div class="kpi-value">${fmtPct(margenPromedio)}</div></div>
+  </div>`;
+  
+  html += `<div class="form-row" style="margin-bottom:14px">
+    <button class="btn btn-secondary" onclick="exportarCsv()">Exportar CSV</button>
+  </div>`;
+  
+  html += `<div class="card">
+    <div class="card-title">Detalle de OPs cerradas</div>
+    <table class="table">
+      <thead><tr>
+        <th>OP</th><th>Cliente</th><th>Producto</th>
+        <th class="num">kg</th>
+        <th class="num">Costo teórico</th><th class="num">Costo real</th><th class="num">Δ Costo</th>
+        <th class="num">Margen teórico</th><th class="num">Margen real</th>
+      </tr></thead>
+      <tbody>
+        ${data.sort((a,b)=>new Date(b.op.fechaCierre)-new Date(a.op.fechaCierre)).map(d=>{
+          const cls_costo = d.desvCosto > 0.05 ? 'deviation-bad' : d.desvCosto < -0.05 ? 'deviation-good' : 'deviation-neutral';
+          const cls_margen = d.margenReal < d.margenTeorico - 0.03 ? 'deviation-bad' : d.margenReal > d.margenTeorico + 0.03 ? 'deviation-good' : 'deviation-neutral';
+          return `<tr class="row-clickable" onclick="verOp('${d.op.id}')">
+            <td><strong>${d.op.numero}</strong></td>
+            <td>${d.op.cliente}</td>
+            <td>${d.op.medida}</td>
+            <td class="num">${d.real.kgFinales.toFixed(0)}</td>
+            <td class="num">${fmtUsd(d.nec.costoTotalKg)}</td>
+            <td class="num">${fmtUsd(d.real.costoUnitarioReal)}</td>
+            <td class="num ${cls_costo}">${(d.desvCosto*100).toFixed(1)}%</td>
+            <td class="num">${fmtPct(d.margenTeorico)}</td>
+            <td class="num ${cls_margen}"><strong>${fmtPct(d.margenReal)}</strong></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+  
+  document.getElementById('content').innerHTML = html;
+}
+
+function exportarCsv(){
+  const opsCerradas = state.ops.filter(op=>op.estado==='cerrada');
+  let csv = 'OP;Cliente;Producto;Fecha cierre;kg solicitados;kg finales;Costo PET teorico;Costo PET real;Costo PE teorico;Costo PE real;Costo total teorico;Costo total real;Costo /kg teorico;Costo /kg real;Precio venta /kg;Margen teorico;Margen real\n';
+  opsCerradas.forEach(op=>{
+    const nec = calcularNecesidades(op.producto, op.kgSolicitados);
+    const real = calcularReal(op);
+    if(!real) return;
+    const ingreso = real.kgFinales * op.precioUsdKg;
+    const margenReal = ingreso > 0 ? (ingreso - real.costoTotalReal) / ingreso : 0;
+    const margenTeorico = (op.precioUsdKg - nec.costoTotalKg) / op.precioUsdKg;
+    csv += `${op.numero};${op.cliente};${op.medida};${fmtDate(op.fechaCierre)};${op.kgSolicitados};${real.kgFinales};${nec.costoPetTotal.toFixed(2)};${real.costoPetReal.toFixed(2)};${nec.costoPeTotal.toFixed(2)};${real.costoPeReal.toFixed(2)};${nec.costoTotal.toFixed(2)};${real.costoTotalReal.toFixed(2)};${nec.costoTotalKg.toFixed(4)};${real.costoUnitarioReal.toFixed(4)};${op.precioUsdKg};${(margenTeorico*100).toFixed(1)}%;${(margenReal*100).toFixed(1)}%\n`;
+  });
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `winflex_ops_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// =========================================================
+// CONFIG
+// =========================================================
+function renderConfig(){
+  const c = state.config;
+  let html = `<h1 class="page-title">Configuración</h1>
+    <p class="page-subtitle">Parámetros del sistema. Editables.</p>
+    
+    <div class="card">
+      <div class="card-title">Costos base</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Tipo de cambio (ARS/USD)</label><input type="number" class="form-input" id="cfgTc" value="${c.tc}" step="any"></div>
+        <div class="form-group"><label class="form-label">Costo PET con flete (USD/kg)</label><input type="number" class="form-input" id="cfgCostoPet" value="${c.costoPet}" step="any"></div>
+        <div class="form-group"><label class="form-label">Costo PE (USD/kg)</label><input type="number" class="form-input" id="cfgCostoPe" value="${c.costoPe}" step="any"></div>
+        <div class="form-group"><label class="form-label">Costo proceso lam+ref (USD/kg)</label><input type="number" class="form-input" id="cfgCostoProc" value="${c.costoProceso}" step="any"></div>
+        <div class="form-group"><label class="form-label">Capacidad laminadora (kg/h)</label><input type="number" class="form-input" id="cfgCapLam" value="${c.capacidadLaminadora}" step="any"></div>
+        <div class="form-group"><label class="form-label">Capacidad refiladora (kg/h)</label><input type="number" class="form-input" id="cfgCapRef" value="${c.capacidadRefiladora}" step="any"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Mails</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Mail Agustín</label><input type="email" class="form-input" id="cfgMailAg" value="${c.mailAgustin}"></div>
+        <div class="form-group"><label class="form-label">Mail Jonathan</label><input type="email" class="form-input" id="cfgMailJo" value="${c.mailJonathan}"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Alertas</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Días sin avance para alertar OP</label><input type="number" class="form-input" id="cfgDiasAlerta" value="${c.diasAlertaOp}"></div>
+        <div class="form-group"><label class="form-label">% desviación para alertar (0-1)</label><input type="number" class="form-input" id="cfgPctAlerta" value="${c.pctAlertaDesviacion}" step="0.01"></div>
+      </div>
+    </div>
+    
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn" onclick="guardarConfig()">Guardar configuración</button>
+    </div>
+    
+    <div class="card" style="margin-top:24px">
+      <div class="card-title">Datos del sistema</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        OCs: ${state.ocs.length} · OPs: ${state.ops.length} · Bobinas: ${state.bobinas.length} · Remitos: ${state.remitos.length}
+      </p>
+      <div class="form-row">
+        <button class="btn btn-secondary" onclick="exportarBackup()">Exportar backup JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Importar backup</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarBackup(event)">
+        <button class="btn btn-danger" onclick="resetearDatos()" style="margin-left:auto">Resetear todo</button>
+      </div>
+    </div>`;
+  
+  document.getElementById('content').innerHTML = html;
+}
+
+function guardarConfig(){
+  state.config.tc = parseFloat(document.getElementById('cfgTc').value);
+  state.config.costoPet = parseFloat(document.getElementById('cfgCostoPet').value);
+  state.config.costoPe = parseFloat(document.getElementById('cfgCostoPe').value);
+  state.config.costoProceso = parseFloat(document.getElementById('cfgCostoProc').value);
+  state.config.capacidadLaminadora = parseFloat(document.getElementById('cfgCapLam').value);
+  state.config.capacidadRefiladora = parseFloat(document.getElementById('cfgCapRef').value);
+  state.config.mailAgustin = document.getElementById('cfgMailAg').value;
+  state.config.mailJonathan = document.getElementById('cfgMailJo').value;
+  state.config.diasAlertaOp = parseInt(document.getElementById('cfgDiasAlerta').value);
+  state.config.pctAlertaDesviacion = parseFloat(document.getElementById('cfgPctAlerta').value);
+  saveState();
+  alert('Configuración guardada.');
+}
+
+function exportarBackup(){
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `winflex_op_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importarBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('¿Reemplazar todos los datos actuales? Esta acción no se puede deshacer.')) return;
+      state = data;
+      saveState();
+      alert('Datos importados correctamente.');
+      navigateTo('dashboard');
+    }catch(err){
+      alert('Error: archivo inválido. '+err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetearDatos(){
+  if(!confirm('¿Borrar TODOS los datos? Esta acción no se puede deshacer.')) return;
+  if(!confirm('Última oportunidad. ¿Confirmás borrar todo?')) return;
+  localStorage.removeItem(STORE_KEY);
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  saveState();
+  alert('Datos reseteados.');
+  navigateTo('dashboard');
+}
+
+</script>
+</body>
+</html>

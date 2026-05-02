@@ -1730,15 +1730,59 @@ function renderOcs(){
       <option value="pendiente">Pendientes (sin OP)</option>
       <option value="parcial">Parcial (OPs incompletas)</option>
       <option value="completada">OPs completas</option>
+      <option value="por_entregar">Entregando (parcial)</option>
+      <option value="entregada">Entregadas</option>
     </select>
-    <span style="font-size:11px;color:var(--muted);margin-left:8px">
-      <strong>Pendiente</strong>: sin OP creada · <strong>Parcial</strong>: OPs no cubren los kg · <strong>OPs completas</strong>: OPs cubren todos los kg
-    </span>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+    <strong>Pendiente</strong>: sin OP creada · 
+    <strong>Parcial</strong>: OPs no cubren los kg · 
+    <strong>OPs completas</strong>: OPs cubren todos los kg · 
+    <strong>Entregando</strong>: ya hay remitos pero falta entregar · 
+    <strong>Entregada</strong>: todos los kg fueron entregados al cliente
   </div>`;
   
   html += '<div class="card" id="ocsTableWrap"></div>';
   document.getElementById('content').innerHTML = html;
   renderOcsTable();
+}
+
+function calcularDatosOc(oc){
+  // OPs asociadas a esta OC
+  const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
+  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+  
+  // kg producidos: suma de los kg refilados de todas las OPs de esta OC
+  let kgProducido = 0;
+  opsAsoc.forEach(op=>{
+    const cons = calcularConsumosOp(op);
+    kgProducido += cons.kgFinales || 0;
+  });
+  
+  // kg entregados: suma de remitos cuyas líneas pertenecen a OPs de esta OC
+  let kgEntregado = 0;
+  state.remitos.forEach(r=>{
+    r.lineas.forEach(l=>{
+      const op = state.ops.find(o=>o.id===l.opId);
+      if(op && op.ocId===oc.id){
+        kgEntregado += l.kg;
+      }
+    });
+  });
+  
+  const kgPendienteEntregar = oc.kgSolicitados - kgEntregado;
+  const kgEnStock = kgProducido - kgEntregado; // producido pero todavía no entregado
+  
+  return {
+    opsAsoc,
+    kgEnOp,
+    kgProducido,
+    kgEntregado,
+    kgPendienteEntregar,
+    kgEnStock,
+    pctCubierto: oc.kgSolicitados > 0 ? kgEnOp / oc.kgSolicitados : 0,
+    pctEntregado: oc.kgSolicitados > 0 ? kgEntregado / oc.kgSolicitados : 0,
+  };
 }
 
 function renderOcsTable(){
@@ -1748,12 +1792,14 @@ function renderOcsTable(){
   let ocs = state.ocs.filter(oc=>{
     if(filtroCliente && !oc.cliente.toLowerCase().includes(filtroCliente)) return false;
     if(filtroEstado){
-      const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
-      const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
-      const completada = kgEnOp >= oc.kgSolicitados;
-      if(filtroEstado==='pendiente' && opsAsoc.length>0) return false;
-      if(filtroEstado==='parcial' && (opsAsoc.length===0 || completada)) return false;
+      const datos = calcularDatosOc(oc);
+      const completada = datos.kgEnOp >= oc.kgSolicitados;
+      const entregadoTotal = datos.kgEntregado >= oc.kgSolicitados;
+      if(filtroEstado==='pendiente' && datos.opsAsoc.length>0) return false;
+      if(filtroEstado==='parcial' && (datos.opsAsoc.length===0 || completada)) return false;
       if(filtroEstado==='completada' && !completada) return false;
+      if(filtroEstado==='entregada' && !entregadoTotal) return false;
+      if(filtroEstado==='por_entregar' && (entregadoTotal || datos.kgEntregado === 0)) return false;
     }
     return true;
   });
@@ -1764,22 +1810,63 @@ function renderOcsTable(){
   if(ocs.length===0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay OCs.</p>';
   } else {
-    html = '<table class="table"><thead><tr><th>OC #</th><th>Cliente</th><th>Producto</th><th class="num">kg</th><th class="num">en OPs</th><th>Entrega</th><th>Estado</th><th></th></tr></thead><tbody>';
+    html = `<table class="table">
+      <thead><tr>
+        <th>OC #</th><th>Cliente</th><th>Producto</th>
+        <th class="num">Solicitado</th>
+        <th class="num">En OPs</th>
+        <th class="num">Producido</th>
+        <th class="num">Entregado</th>
+        <th class="num">Pendiente</th>
+        <th>Avance entrega</th>
+        <th>Entrega</th><th>Estado</th><th></th>
+      </tr></thead><tbody>`;
     ocs.forEach(oc=>{
-      const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
-      const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
-      const pctCubierto = oc.kgSolicitados > 0 ? kgEnOp/oc.kgSolicitados : 0;
-      const estadoBadge = pctCubierto >= 1 ? 'badge-success' : pctCubierto > 0 ? 'badge-warning' : 'badge-pending';
+      const d = calcularDatosOc(oc);
       const numDisplay = oc.esNumeroInterno ? `<em style="color:var(--muted)">${oc.numero}</em>` : oc.numero;
-      const tooltipEstado = pctCubierto >= 1 ? 'OPs creadas cubren todos los kg solicitados' : pctCubierto > 0 ? 'Hay OPs creadas pero no cubren todos los kg' : 'No se generaron OPs todavía';
-      const estadoText = pctCubierto >= 1 ? 'OPs completas' : pctCubierto > 0 ? 'Parcial' : 'Pendiente';
+      const entregadoTotal = d.kgEntregado >= oc.kgSolicitados;
+      
+      // Estado dinámico
+      let estadoText, estadoBadge, tooltipEstado;
+      if(entregadoTotal){
+        estadoText = 'Entregada';
+        estadoBadge = 'badge-success';
+        tooltipEstado = 'Todos los kg fueron entregados al cliente';
+      } else if(d.kgEntregado > 0){
+        estadoText = 'Entregando';
+        estadoBadge = 'badge-active';
+        tooltipEstado = `Faltan ${d.kgPendienteEntregar.toFixed(1)} kg por entregar`;
+      } else if(d.pctCubierto >= 1){
+        estadoText = 'OPs completas';
+        estadoBadge = 'badge-warning';
+        tooltipEstado = 'OPs creadas cubren todos los kg, sin entregar todavía';
+      } else if(d.opsAsoc.length > 0){
+        estadoText = 'Parcial';
+        estadoBadge = 'badge-warning';
+        tooltipEstado = 'Hay OPs creadas pero no cubren todos los kg';
+      } else {
+        estadoText = 'Pendiente';
+        estadoBadge = 'badge-pending';
+        tooltipEstado = 'No se generaron OPs todavía';
+      }
+      
+      const pctEntregaVisual = Math.min(100, d.pctEntregado * 100);
       
       html += `<tr class="row-clickable" onclick="verOc('${oc.id}')">
         <td><strong>${numDisplay}</strong></td>
         <td>${oc.cliente}</td>
         <td>${oc.medida}</td>
         <td class="num">${(+oc.kgSolicitados).toFixed(0)}</td>
-        <td class="num">${kgEnOp.toFixed(0)}</td>
+        <td class="num">${d.kgEnOp.toFixed(0)}</td>
+        <td class="num">${d.kgProducido.toFixed(1)}</td>
+        <td class="num">${d.kgEntregado.toFixed(1)}</td>
+        <td class="num"><strong style="color:${d.kgPendienteEntregar>0?'var(--orange)':'var(--green)'}">${d.kgPendienteEntregar.toFixed(1)}</strong></td>
+        <td>
+          <div style="background:var(--bg-2);border-radius:3px;height:6px;width:60px;overflow:hidden;border:1px solid var(--line);display:inline-block;vertical-align:middle">
+            <div style="background:var(--green);width:${pctEntregaVisual}%;height:100%"></div>
+          </div>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px">${pctEntregaVisual.toFixed(0)}%</span>
+        </td>
         <td>${fmtDate(oc.fechaEntrega)}</td>
         <td><span class="badge ${estadoBadge}" title="${tooltipEstado}">${estadoText}</span></td>
         <td>
@@ -1986,9 +2073,23 @@ function guardarOc(idEditar){
 function verOc(id){
   const oc = state.ocs.find(o=>o.id===id);
   if(!oc) return;
-  const opsAsoc = state.ops.filter(op=>op.ocId===id);
-  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
-  const kgDisponibles = oc.kgSolicitados - kgEnOp;
+  const d = calcularDatosOc(oc);
+  const kgDisponibles = oc.kgSolicitados - d.kgEnOp;
+  
+  // Buscar todos los remitos que tienen líneas de OPs de esta OC
+  const remitosOc = [];
+  state.remitos.forEach(r=>{
+    const lineasOc = r.lineas.filter(l=>{
+      const op = state.ops.find(o=>o.id===l.opId);
+      return op && op.ocId === oc.id;
+    });
+    if(lineasOc.length > 0){
+      remitosOc.push({remito:r, lineas:lineasOc, kgTotal:lineasOc.reduce((s,l)=>s+l.kg,0)});
+    }
+  });
+  
+  const pctEntregaVisual = Math.min(100, d.pctEntregado * 100);
+  const pctProducidoVisual = oc.kgSolicitados > 0 ? Math.min(100, (d.kgProducido / oc.kgSolicitados) * 100) : 0;
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>OC ${oc.numero} ${oc.esNumeroInterno?'(interno)':''} — ${oc.cliente}</h2>
@@ -2004,26 +2105,104 @@ function verOc(id){
     
     ${oc.notas ? `<div class="alert alert-info"><strong>Notas:</strong> ${oc.notas}</div>` : ''}
     
-    <div class="card-title" style="margin-top:20px">OPs vinculadas</div>`;
+    <div class="card" style="margin-top:14px;background:var(--bg-2)">
+      <div class="card-title" style="margin-bottom:10px;border:none;padding:0">Avance de la OC</div>
+      
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+          <span>Producido: <strong style="color:var(--blue)">${d.kgProducido.toFixed(1)} kg</strong> de ${oc.kgSolicitados.toFixed(0)} kg</span>
+          <span><strong>${pctProducidoVisual.toFixed(1)}%</strong></span>
+        </div>
+        <div style="background:white;border-radius:4px;height:10px;overflow:hidden;border:1px solid var(--line)">
+          <div style="background:var(--blue);width:${pctProducidoVisual}%;height:100%"></div>
+        </div>
+      </div>
+      
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+          <span>Entregado: <strong style="color:var(--green)">${d.kgEntregado.toFixed(1)} kg</strong> de ${oc.kgSolicitados.toFixed(0)} kg</span>
+          <span><strong>${pctEntregaVisual.toFixed(1)}%</strong></span>
+        </div>
+        <div style="background:white;border-radius:4px;height:10px;overflow:hidden;border:1px solid var(--line)">
+          <div style="background:var(--green);width:${pctEntregaVisual}%;height:100%"></div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;font-size:12px">
+        <div style="text-align:center;padding:8px;background:white;border-radius:5px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase">En OPs</div>
+          <div style="font-weight:600;color:var(--navy)">${d.kgEnOp.toFixed(0)} kg</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:white;border-radius:5px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Producido</div>
+          <div style="font-weight:600;color:var(--blue)">${d.kgProducido.toFixed(1)} kg</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:white;border-radius:5px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase">En stock (sin entregar)</div>
+          <div style="font-weight:600;color:${d.kgEnStock>0?'var(--orange)':'var(--muted)'}">${d.kgEnStock.toFixed(1)} kg</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:white;border-radius:5px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Pendiente entregar</div>
+          <div style="font-weight:600;color:${d.kgPendienteEntregar>0?'var(--orange)':'var(--green)'}">${d.kgPendienteEntregar.toFixed(1)} kg</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-title" style="margin-top:20px">OPs vinculadas (${d.opsAsoc.length})</div>`;
   
-  if(opsAsoc.length===0){
+  if(d.opsAsoc.length===0){
     html += '<p style="color:var(--muted)">No hay OPs creadas para esta OC todavía.</p>';
   } else {
-    html += '<table class="table"><thead><tr><th>OP</th><th class="num">kg</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
-    opsAsoc.forEach(op=>{
+    html += '<table class="table"><thead><tr><th>OP</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
+    d.opsAsoc.forEach(op=>{
+      const consOp = calcularConsumosOp(op);
+      const estadoOp = getEstadoOp(op);
       html += `<tr class="row-clickable" onclick="closeModal();verOp('${op.id}')">
         <td>${op.numero}</td>
-        <td class="num">${op.kgSolicitados.toFixed(0)}</td>
-        <td><span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></td>
+        <td class="num">${op.kgSolicitados.toFixed(0)} kg</td>
+        <td class="num">${consOp.kgFinales.toFixed(1)} kg</td>
+        <td><span class="badge ${getEstadoBadge(estadoOp)}">${getEstadoLabel(estadoOp)}</span></td>
         <td>${fmtDate(op.fechaCreacion)}</td>
       </tr>`;
     });
     html += '</tbody></table>';
   }
   
-  html += `<div class="alert ${kgDisponibles>0?'alert-info':'alert-success'}" style="margin-top:14px">
-    ${kgDisponibles>0 ? `Faltan generar OPs por ${kgDisponibles.toFixed(0)} kg de los ${oc.kgSolicitados.toFixed(0)} solicitados.` : `OC totalmente cubierta por OPs (${kgEnOp.toFixed(0)} kg).`}
-  </div>`;
+  // Remitos asociados
+  html += `<div class="card-title" style="margin-top:20px">Remitos emitidos (${remitosOc.length})</div>`;
+  
+  if(remitosOc.length === 0){
+    html += '<p style="color:var(--muted)">No hay remitos emitidos para esta OC.</p>';
+  } else {
+    html += '<table class="table"><thead><tr><th>Remito</th><th>Fecha</th><th>OPs</th><th class="num">kg</th></tr></thead><tbody>';
+    remitosOc.forEach(item=>{
+      const opsLista = item.lineas.map(l=>l.opNumero).join(', ');
+      html += `<tr class="row-clickable" onclick="closeModal();verRemito('${item.remito.id}')">
+        <td><strong>${item.remito.numero}</strong></td>
+        <td>${fmtDate(item.remito.fecha)}</td>
+        <td style="font-size:12px">${opsLista}</td>
+        <td class="num"><strong>${item.kgTotal.toFixed(1)}</strong></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  
+  // Mensaje resumen
+  let mensaje, alertClass;
+  if(d.kgEntregado >= oc.kgSolicitados){
+    mensaje = `OC totalmente entregada. ${d.kgEntregado.toFixed(1)} de ${oc.kgSolicitados.toFixed(0)} kg.`;
+    alertClass = 'alert-success';
+  } else if(d.kgEntregado > 0){
+    mensaje = `Entregado parcial: ${d.kgEntregado.toFixed(1)} kg. Faltan ${d.kgPendienteEntregar.toFixed(1)} kg por entregar.`;
+    alertClass = 'alert-warning';
+  } else if(kgDisponibles > 0){
+    mensaje = `Faltan generar OPs por ${kgDisponibles.toFixed(0)} kg de los ${oc.kgSolicitados.toFixed(0)} solicitados.`;
+    alertClass = 'alert-info';
+  } else {
+    mensaje = `OC totalmente cubierta por OPs. Pendiente producir y entregar.`;
+    alertClass = 'alert-info';
+  }
+  html += `<div class="alert ${alertClass}" style="margin-top:14px">${mensaje}</div>`;
   
   html += `<div class="form-row">
     ${kgDisponibles>0 ? `<button class="btn" onclick="closeModal();nuevaOpDesdeOc('${oc.id}')">+ Generar OP</button>` : ''}

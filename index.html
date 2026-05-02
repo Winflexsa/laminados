@@ -306,23 +306,69 @@ const DEFAULT_STATE = {
     '5104': {nombre:'Juan Brest',rol:'Operario',modo:'operario'},
   },
   catalogo: [
-    {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:50, anchoFinal:422, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5},
-    {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5},
+    // PDF Don Yeyo: PET 92kg/762m, PE 26kg/1550m, Final 35kg, Cilindro 340
+    {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:762, pesoBobinaPe:26, metrosBobinaPe:1550, pesoBobinaFinal:35, cilindroLaminador:340},
+    // PDF Molinos 472x235: PET 80kg/592m, PE 32kg/1900m, Final 40kg, Cilindro 490
+    {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:80, metrosBobinaPet:592, pesoBobinaPe:32, metrosBobinaPe:1900, pesoBobinaFinal:40, cilindroLaminador:490},
+    // PDF Molinos 421x500: PET 102kg/373m, PE 35.26kg/1600m, Final 25kg, Cilindro 440
+    {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:102, metrosBobinaPet:373, pesoBobinaPe:35.26, metrosBobinaPe:1600, pesoBobinaFinal:25, cilindroLaminador:440},
+    // PDF Molinos 421x300: pesos pendientes (??), Final 35kg, Cilindro 440
+    {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:35, cilindroLaminador:440},
+    // PDF Molinos 421x400: pesos pendientes (??), Final 30kg, Cilindro 440
+    {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:30, cilindroLaminador:440},
+    // MFA 323x330 - no estaba en el PDF, mantengo datos actuales
+    {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+    // MFA 461x300 - no estaba en PDF, mantengo
+    {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+    // PDF Dantelli 357: PET 92kg/597m, PE 33.72kg/1800m, Final 30kg, Cilindro 370
+    {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, cilindroLaminador:370},
+    // PDF Dantelli 357 NEGRO: igual al cristal
+    {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, cilindroLaminador:370},
+    // PDF Dantelli 323: PET 92kg/649m, PE 34.64kg/2000m, Final 30kg, Cilindro 340
+    {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:649, pesoBobinaPe:34.64, metrosBobinaPe:2000, pesoBobinaFinal:30, cilindroLaminador:340},
+    // PDF Huertas: PET 100kg/430m, PE 38.09kg/1800m, Final 25kg, Cilindro 420
+    {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:100, metrosBobinaPet:430, pesoBobinaPe:38.09, metrosBobinaPe:1800, pesoBobinaFinal:25, cilindroLaminador:420},
+    // PDF Cadrinorte (BarielPack 400): PET 92kg/354m, PE 35.92kg/1500m, Final 31kg, Cilindro 540
+    {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:354, pesoBobinaPe:35.92, metrosBobinaPe:1500, pesoBobinaFinal:31, cilindroLaminador:540},
+    // PDF La italiana 500: PET 80kg/292m, PE 26.4kg/1228m, Final 80kg, Cilindro 440
+    {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:80, metrosBobinaPet:292, pesoBobinaPe:26.4, metrosBobinaPe:1228, pesoBobinaFinal:80, cilindroLaminador:440},
+    // PDF La italiana 350: PET 80kg/439m, PE 30kg/1380m, Final 80kg, Cilindro 440
+    {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:80, metrosBobinaPet:439, pesoBobinaPe:30, metrosBobinaPe:1380, pesoBobinaFinal:80, cilindroLaminador:440},
+    // El Artesano: mantengo espPet 200 + espPe 35 según indicación. PDF: PET 77kg/507m, PE 33kg/1530m, Final 25kg, Cilindro 440
+    {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:35, anchoFinal:422, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:77, metrosBobinaPet:507, pesoBobinaPe:33, metrosBobinaPe:1530, pesoBobinaFinal:25, cilindroLaminador:440},
+    // PDF Mendia: PET 92kg/728m, PE 27.73kg/1600m, Final 31kg, Cilindro 340
+    {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:728, pesoBobinaPe:27.73, metrosBobinaPe:1600, pesoBobinaFinal:31, cilindroLaminador:340},
+    // Smams - no estaba en PDF, mantengo
+    {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+    // PDF Villa D Agri 423: PET 83kg/594m, PE 39.10kg/1800m, Final 83kg, Cilindro 440 (asumo)
+    {cliente:'Villa D Agri', medida:'423x280', anchoPet:450, espPet:230, anchoPe:470, espPe:50, anchoFinal:423, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:83, metrosBobinaPet:594, pesoBobinaPe:39.10, metrosBobinaPe:1800, pesoBobinaFinal:83, cilindroLaminador:440},
+    // PDF Villa D Agri 323: PET 70kg/644m, PE 34.50kg/2000m, Final 35kg, Cilindro 340
+    {cliente:'Villa D Agri', medida:'323x280', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:70, metrosBobinaPet:644, pesoBobinaPe:34.50, metrosBobinaPe:2000, pesoBobinaFinal:35, cilindroLaminador:340},
+    // PDF BarielPack 350: PET 92kg/413m, PE 37.92kg/1700m, Final 31kg, Cilindro 540
+    {cliente:'BarielPack', medida:'520x350', anchoPet:550, espPet:300, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:413, pesoBobinaPe:37.92, metrosBobinaPe:1700, pesoBobinaFinal:31, cilindroLaminador:540},
+    // PDF BarielPack 600: PET 92kg/226m, PE 24.6kg/946m, Final 45kg, Cilindro 540
+    {cliente:'BarielPack', medida:'520x600', anchoPet:550, espPet:550, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
+     pesoBobinaPet:92, metrosBobinaPet:226, pesoBobinaPe:24.6, metrosBobinaPe:946, pesoBobinaFinal:45, cilindroLaminador:540},
   ],
   ocs: [],
   ops: [],
@@ -334,6 +380,7 @@ let state = loadState();
 let currentUser = null;
 let currentPage = 'dashboard';
 let currentOpTab = 'necesidades';
+let currentCatTab = 'medidas';
 
 function loadState(){
   try{
@@ -949,6 +996,8 @@ function opAbrirTurnoLaminado(opId, turnoId){
       <div><div class="label">PE</div><div class="value">${op.producto.anchoPe}mm × ${op.producto.espPe}µm</div></div>
       <div><div class="label">Cono PET</div><div class="value">${op.producto.conoPet||2} kg</div></div>
       <div><div class="label">Cono PE</div><div class="value">${op.producto.conoPe||1} kg</div></div>
+      ${op.producto.cilindroLaminador ? `<div><div class="label">🔧 Cilindro laminador</div><div class="value" style="color:var(--accent-2);font-weight:700">${op.producto.cilindroLaminador} mm</div></div>` : ''}
+      ${op.producto.pesoBobinaFinal ? `<div><div class="label">Peso bobina laminada (ref)</div><div class="value">~${op.producto.pesoBobinaFinal} kg</div></div>` : ''}
     </div>
     ${op.notas ? `<div class="alert alert-info" style="margin-top:10px;font-size:12px">${op.notas}</div>` : ''}
   </div>
@@ -1075,9 +1124,27 @@ function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
   
   const conoDefault = tipo === 'PET' ? (op.producto.conoPet||2) : (op.producto.conoPe||1);
   
+  // Pesos de referencia del catálogo
+  const pesoRefKey = tipo === 'PET' ? 'pesoBobinaPet' : 'pesoBobinaPe';
+  const metrosRefKey = tipo === 'PET' ? 'metrosBobinaPet' : 'metrosBobinaPe';
+  const pesoRef = op.producto[pesoRefKey];
+  const metrosRef = op.producto[metrosRefKey];
+  
+  let referenciasHtml = '';
+  if(pesoRef || metrosRef){
+    referenciasHtml = `<div class="alert alert-info" style="margin-bottom:10px;font-size:12px">
+      <strong>Referencia ${tipo}:</strong>
+      ${pesoRef ? `Peso bobina típico ~${pesoRef} kg` : ''}
+      ${pesoRef && metrosRef ? ' · ' : ''}
+      ${metrosRef ? `Metros típicos ~${metrosRef} m` : ''}
+    </div>`;
+  }
+  
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${esEdicion?'Editar':'Cargar'} bobina ${tipo} entrante</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Datos de la bobina al ponerla en máquina.</p>
+    
+    ${referenciasHtml}
     
     <div class="form-tablet">
       <div class="form-grid">
@@ -1090,8 +1157,9 @@ function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
           <input type="text" class="form-input" id="bobPartida" value="${bob?(bob.partida||''):''}" placeholder="ej: 0489">
         </div>
         <div class="form-group">
-          <label class="form-label">Peso BRUTO (kg)</label>
-          <input type="number" class="form-input" id="bobPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoEntrante(${conoDefault})">
+          <label class="form-label">Peso BRUTO (kg)${pesoRef?` <span style="color:var(--muted);font-weight:400">(ref ~${pesoRef} kg)</span>`:''}</label>
+          <input type="number" class="form-input" id="bobPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoEntrante(${conoDefault}); validarPesoRef(${pesoRef||0}, ${conoDefault})">
+          <div id="bobPesoAlerta" style="font-size:11px;margin-top:4px"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Peso del cono (kg)</label>
@@ -1102,8 +1170,9 @@ function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
           <input type="number" class="form-input" id="bobPesoNeto" value="${bob?bob.pesoNeto.toFixed(2):''}" step="any" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
         </div>
         <div class="form-group">
-          <label class="form-label">Metros lineales</label>
-          <input type="number" class="form-input" id="bobMetros" value="${bob?bob.metros:''}" step="any" inputmode="decimal">
+          <label class="form-label">Metros lineales${metrosRef?` <span style="color:var(--muted);font-weight:400">(ref ~${metrosRef} m)</span>`:''}</label>
+          <input type="number" class="form-input" id="bobMetros" value="${bob?bob.metros:''}" step="any" inputmode="decimal" oninput="validarMetrosRef(${metrosRef||0})">
+          <div id="bobMetrosAlerta" style="font-size:11px;margin-top:4px"></div>
         </div>
       </div>
       
@@ -1134,6 +1203,40 @@ function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
       <button class="btn btn-secondary btn-lg" onclick="closeModal()">Cancelar</button>
     </div>`;
   showModal(html);
+}
+
+function validarPesoRef(pesoRef, conoDefault){
+  if(!pesoRef) return;
+  const bruto = parseFloat(document.getElementById('bobPesoBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('bobCono').value) || conoDefault;
+  const neto = bruto - cono;
+  const alertaEl = document.getElementById('bobPesoAlerta');
+  if(neto <= 0){alertaEl.innerHTML = ''; return;}
+  
+  const desv = Math.abs(neto - pesoRef) / pesoRef;
+  if(desv > 0.20){
+    alertaEl.innerHTML = `<span style="color:var(--red)">⚠ Diferencia >20% con referencia (${pesoRef} kg). Verificar.</span>`;
+  } else if(desv > 0.10){
+    alertaEl.innerHTML = `<span style="color:var(--orange)">⚠ Diferencia ~${(desv*100).toFixed(0)}% con referencia (${pesoRef} kg).</span>`;
+  } else {
+    alertaEl.innerHTML = `<span style="color:var(--green)">✓ Dentro de rango normal.</span>`;
+  }
+}
+
+function validarMetrosRef(metrosRef){
+  if(!metrosRef) return;
+  const metros = parseFloat(document.getElementById('bobMetros').value) || 0;
+  const alertaEl = document.getElementById('bobMetrosAlerta');
+  if(metros <= 0){alertaEl.innerHTML = ''; return;}
+  
+  const desv = Math.abs(metros - metrosRef) / metrosRef;
+  if(desv > 0.20){
+    alertaEl.innerHTML = `<span style="color:var(--red)">⚠ Diferencia >20% con referencia (${metrosRef} m).</span>`;
+  } else if(desv > 0.10){
+    alertaEl.innerHTML = `<span style="color:var(--orange)">⚠ Diferencia ~${(desv*100).toFixed(0)}% con referencia.</span>`;
+  } else {
+    alertaEl.innerHTML = `<span style="color:var(--green)">✓ Dentro de rango normal.</span>`;
+  }
 }
 
 function calcularNetoEntrante(conoDefault){
@@ -1230,10 +1333,15 @@ function bobinaSalienteFormModal(opId, turnoId, bobId){
   
   const conoDefault = op.producto.conoLaminado || 0.5;
   const numeroSugerido = `L-${op.numero}-${(turno.bobinasSalientes.length+1).toString().padStart(2,'0')}`;
+  const pesoRefFinal = op.producto.pesoBobinaFinal;
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${esEdicion?'Editar':'Cargar'} bobina LAMINADA saliente</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Esta bobina es producto en proceso (todavía falta refilar).</p>
+    
+    ${pesoRefFinal ? `<div class="alert alert-info" style="margin-bottom:10px;font-size:12px">
+      <strong>Referencia:</strong> peso bobina laminada típico ~${pesoRefFinal} kg
+    </div>` : ''}
     
     <div class="form-tablet">
       <div class="form-grid">
@@ -1243,8 +1351,9 @@ function bobinaSalienteFormModal(opId, turnoId, bobId){
           <div class="form-help">Sugerido automático, podés cambiarlo.</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Peso BRUTO (kg)</label>
-          <input type="number" class="form-input" id="lamPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoSaliente(${conoDefault})">
+          <label class="form-label">Peso BRUTO (kg)${pesoRefFinal?` <span style="color:var(--muted);font-weight:400">(ref ~${pesoRefFinal} kg)</span>`:''}</label>
+          <input type="number" class="form-input" id="lamPesoBruto" value="${bob?bob.pesoBruto:''}" step="any" inputmode="decimal" oninput="calcularNetoSaliente(${conoDefault}); validarPesoSalienteRef(${pesoRefFinal||0}, ${conoDefault})">
+          <div id="lamPesoAlerta" style="font-size:11px;margin-top:4px"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Peso del cono (kg)</label>
@@ -1314,6 +1423,25 @@ function calcularNetoSaliente(conoDefault){
   const cono = parseFloat(document.getElementById('lamCono').value) || conoDefault;
   const neto = bruto - cono;
   document.getElementById('lamPesoNeto').value = neto > 0 ? neto.toFixed(2) : '';
+}
+
+function validarPesoSalienteRef(pesoRef, conoDefault){
+  if(!pesoRef) return;
+  const bruto = parseFloat(document.getElementById('lamPesoBruto').value) || 0;
+  const cono = parseFloat(document.getElementById('lamCono').value) || conoDefault;
+  const neto = bruto - cono;
+  const alertaEl = document.getElementById('lamPesoAlerta');
+  if(!alertaEl) return;
+  if(neto <= 0){alertaEl.innerHTML = ''; return;}
+  
+  const desv = Math.abs(neto - pesoRef) / pesoRef;
+  if(desv > 0.20){
+    alertaEl.innerHTML = `<span style="color:var(--red)">⚠ Diferencia >20% con referencia (${pesoRef} kg). Verificar.</span>`;
+  } else if(desv > 0.10){
+    alertaEl.innerHTML = `<span style="color:var(--orange)">⚠ Diferencia ~${(desv*100).toFixed(0)}% con referencia.</span>`;
+  } else {
+    alertaEl.innerHTML = `<span style="color:var(--green)">✓ Dentro de rango normal.</span>`;
+  }
 }
 
 function opGuardarBobinaSaliente(opId, turnoId, bobId){
@@ -3438,38 +3566,88 @@ function eliminarRemito(id){
 // =========================================================
 function renderCatalogo(){
   let html = `<h1 class="page-title">Catálogo de productos</h1>
-    <p class="page-subtitle">Productos PET/PE laminados con sus medidas y pesos de cono. Base para crear OCs y OPs.</p>
+    <p class="page-subtitle">Productos PET/PE laminados con sus medidas, conos y pesos de bobina de referencia.</p>
     <div class="form-row" style="margin-bottom:18px">
       <button class="btn" onclick="nuevoProducto()">+ Nuevo producto</button>
     </div>
+    
+    <div class="tabs">
+      <div class="tab ${currentCatTab==='medidas'?'active':''}" onclick="setCatTab('medidas')">Medidas</div>
+      <div class="tab ${currentCatTab==='bobinas'?'active':''}" onclick="setCatTab('bobinas')">Pesos de bobina</div>
+    </div>
+    
     <div class="card">
-      <table class="table">
-        <thead><tr>
-          <th>Cliente</th><th>Medida</th>
-          <th class="num">A.PET</th><th class="num">E.PET</th>
-          <th class="num">A.PE</th><th class="num">E.PE</th>
-          <th class="num">Final</th><th class="num">Tiras</th>
-          <th class="num">Cono PET</th><th class="num">Cono PE</th><th class="num">Cono Lam</th>
-          <th></th>
-        </tr></thead>
-        <tbody>
-        ${state.catalogo.map((p,i)=>`<tr>
-          <td>${p.cliente}</td><td><strong>${p.medida}</strong></td>
-          <td class="num">${p.anchoPet}mm</td><td class="num">${p.espPet}µm</td>
-          <td class="num">${p.anchoPe}mm</td><td class="num">${p.espPe}µm</td>
-          <td class="num">${p.anchoFinal}mm</td><td class="num">${p.tiras}</td>
-          <td class="num">${p.conoPet||2}kg</td>
-          <td class="num">${p.conoPe||1}kg</td>
-          <td class="num">${p.conoLaminado||0.5}kg</td>
-          <td>
-            <button class="btn-icon" onclick="editarProducto(${i})" title="Editar">✎</button>
-            <button class="btn-icon" onclick="eliminarProducto(${i})" title="Eliminar">×</button>
-          </td>
-        </tr>`).join('')}
-        </tbody>
-      </table>
+      ${currentCatTab==='bobinas' ? renderCatalogoBobinas() : renderCatalogoMedidas()}
     </div>`;
   document.getElementById('content').innerHTML = html;
+}
+
+function setCatTab(tab){
+  currentCatTab = tab;
+  renderCatalogo();
+}
+
+function renderCatalogoMedidas(){
+  return `<table class="table">
+    <thead><tr>
+      <th>Cliente</th><th>Medida</th>
+      <th class="num">A.PET</th><th class="num">E.PET</th>
+      <th class="num">A.PE</th><th class="num">E.PE</th>
+      <th class="num">Final</th><th class="num">Tiras</th>
+      <th class="num">Cono PET</th><th class="num">Cono PE</th><th class="num">Cono Lam</th>
+      <th class="num">Cilindro</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    ${state.catalogo.map((p,i)=>`<tr>
+      <td>${p.cliente}</td><td><strong>${p.medida}</strong></td>
+      <td class="num">${p.anchoPet}mm</td><td class="num">${p.espPet}µm</td>
+      <td class="num">${p.anchoPe}mm</td><td class="num">${p.espPe}µm</td>
+      <td class="num">${p.anchoFinal}mm</td><td class="num">${p.tiras}</td>
+      <td class="num">${p.conoPet||2}kg</td>
+      <td class="num">${p.conoPe||1}kg</td>
+      <td class="num">${p.conoLaminado||0.5}kg</td>
+      <td class="num">${p.cilindroLaminador||'—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editarProducto(${i})" title="Editar">✎</button>
+        <button class="btn-icon" onclick="eliminarProducto(${i})" title="Eliminar">×</button>
+      </td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderCatalogoBobinas(){
+  return `<p style="color:var(--muted);font-size:12px;margin-bottom:12px">
+    Pesos y metros de referencia para cada bobina. Sirven como guía al operario al cargar bobinas en planta. Si una bobina pesa muy distinto, hay que verificar.
+  </p>
+  <table class="table">
+    <thead><tr>
+      <th>Cliente</th><th>Medida</th>
+      <th class="num">Bobina PET</th>
+      <th class="num">Bobina PE</th>
+      <th class="num">Bobina Final</th>
+      <th class="num">Cilindro</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    ${state.catalogo.map((p,i)=>{
+      const petStr = p.pesoBobinaPet ? `${p.pesoBobinaPet} kg / ${p.metrosBobinaPet||'?'} m` : '—';
+      const peStr = p.pesoBobinaPe ? `${p.pesoBobinaPe} kg / ${p.metrosBobinaPe||'?'} m` : '—';
+      const finalStr = p.pesoBobinaFinal ? `${p.pesoBobinaFinal} kg` : '—';
+      return `<tr>
+      <td>${p.cliente}</td><td><strong>${p.medida}</strong></td>
+      <td class="num">${petStr}</td>
+      <td class="num">${peStr}</td>
+      <td class="num">${finalStr}</td>
+      <td class="num">${p.cilindroLaminador||'—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editarProducto(${i})" title="Editar">✎</button>
+      </td>
+    </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
 }
 
 function nuevoProducto(){
@@ -3482,10 +3660,16 @@ function editarProducto(idx){
 
 function productoFormModal(idx){
   const esEdicion = idx !== null;
-  const p = esEdicion ? state.catalogo[idx] : {cliente:'',medida:'',anchoPet:'',espPet:'',anchoPe:'',espPe:'',anchoFinal:'',tiras:1,conoPet:2,conoPe:1,conoLaminado:0.5};
+  const p = esEdicion ? state.catalogo[idx] : {
+    cliente:'',medida:'',anchoPet:'',espPet:'',anchoPe:'',espPe:'',anchoFinal:'',tiras:1,
+    conoPet:2,conoPe:1,conoLaminado:0.5,
+    pesoBobinaPet:'',metrosBobinaPet:'',pesoBobinaPe:'',metrosBobinaPe:'',pesoBobinaFinal:'',cilindroLaminador:''
+  };
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${esEdicion?'Editar':'Nuevo'} producto en catálogo</h2>
+    
+    <div class="card-title" style="margin-top:6px">Datos básicos</div>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-input" id="prodCliente" value="${p.cliente||''}"></div>
       <div class="form-group"><label class="form-label">Medida</label><input type="text" class="form-input" id="prodMedida" value="${p.medida||''}" placeholder="ej: 321x300"></div>
@@ -3498,11 +3682,22 @@ function productoFormModal(idx){
     </div>
     
     <div class="card-title" style="margin-top:14px">Pesos de cono (kg)</div>
-    <p class="form-help" style="margin-bottom:8px">Pesos por defecto si no tenés los exactos: PET 2 kg, PE 1 kg, Laminado 0,5 kg.</p>
+    <p class="form-help" style="margin-bottom:8px">Pesos por defecto: PET 2 kg, PE 1 kg, Laminado 0,5 kg.</p>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Cono PET (kg)</label><input type="number" class="form-input" id="prodConoPet" value="${p.conoPet||2}" step="any"></div>
       <div class="form-group"><label class="form-label">Cono PE (kg)</label><input type="number" class="form-input" id="prodConoPe" value="${p.conoPe||1}" step="any"></div>
       <div class="form-group"><label class="form-label">Cono Laminado (kg)</label><input type="number" class="form-input" id="prodConoLaminado" value="${p.conoLaminado||0.5}" step="any"></div>
+    </div>
+    
+    <div class="card-title" style="margin-top:14px">Pesos y metros de referencia (opcional)</div>
+    <p class="form-help" style="margin-bottom:8px">Pesos típicos para guiar al operario al cargar bobinas. Si están vacíos, el sistema no muestra alertas.</p>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Peso bobina PET (kg)</label><input type="number" class="form-input" id="prodPesoBobinaPet" value="${p.pesoBobinaPet||''}" step="any"></div>
+      <div class="form-group"><label class="form-label">Metros bobina PET</label><input type="number" class="form-input" id="prodMetrosBobinaPet" value="${p.metrosBobinaPet||''}" step="any"></div>
+      <div class="form-group"><label class="form-label">Peso bobina PE (kg)</label><input type="number" class="form-input" id="prodPesoBobinaPe" value="${p.pesoBobinaPe||''}" step="any"></div>
+      <div class="form-group"><label class="form-label">Metros bobina PE</label><input type="number" class="form-input" id="prodMetrosBobinaPe" value="${p.metrosBobinaPe||''}" step="any"></div>
+      <div class="form-group"><label class="form-label">Peso bobina final (kg)</label><input type="number" class="form-input" id="prodPesoBobinaFinal" value="${p.pesoBobinaFinal||''}" step="any"></div>
+      <div class="form-group"><label class="form-label">Cilindro laminador (mm)</label><input type="number" class="form-input" id="prodCilindro" value="${p.cilindroLaminador||''}"></div>
     </div>
     
     <div class="form-row">
@@ -3513,6 +3708,8 @@ function productoFormModal(idx){
 }
 
 function guardarProducto(idx){
+  const numOrNull = (id)=>{const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v;};
+  
   const p = {
     cliente: document.getElementById('prodCliente').value,
     medida: document.getElementById('prodMedida').value,
@@ -3525,8 +3722,14 @@ function guardarProducto(idx){
     conoPet: parseFloat(document.getElementById('prodConoPet').value)||2,
     conoPe: parseFloat(document.getElementById('prodConoPe').value)||1,
     conoLaminado: parseFloat(document.getElementById('prodConoLaminado').value)||0.5,
+    pesoBobinaPet: numOrNull('prodPesoBobinaPet'),
+    metrosBobinaPet: numOrNull('prodMetrosBobinaPet'),
+    pesoBobinaPe: numOrNull('prodPesoBobinaPe'),
+    metrosBobinaPe: numOrNull('prodMetrosBobinaPe'),
+    pesoBobinaFinal: numOrNull('prodPesoBobinaFinal'),
+    cilindroLaminador: numOrNull('prodCilindro'),
   };
-  if(!p.cliente || !p.medida || !p.anchoPet){alert('Faltan datos'); return;}
+  if(!p.cliente || !p.medida || !p.anchoPet){alert('Faltan datos básicos'); return;}
   if(idx === null){
     state.catalogo.push(p);
   } else {

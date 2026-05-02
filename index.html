@@ -275,7 +275,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 // =========================================================
 // ESTADO Y PERSISTENCIA
 // =========================================================
-const STORE_KEY = 'winflex_op_v3';
+const STORE_KEY = 'winflex_op_v4';
 
 const DEFAULT_STATE = {
   config: {
@@ -337,10 +337,22 @@ let currentOpTab = 'necesidades';
 
 function loadState(){
   try{
-    const saved = localStorage.getItem(STORE_KEY);
+    // Primero intentar cargar v4
+    let saved = localStorage.getItem(STORE_KEY);
+    let migrarDeV3 = false;
+    
+    // Si no hay v4, intentar cargar v3 y migrar
+    if(!saved){
+      const savedV3 = localStorage.getItem('winflex_op_v3');
+      if(savedV3){
+        saved = savedV3;
+        migrarDeV3 = true;
+      }
+    }
+    
     if(saved){
       const parsed = JSON.parse(saved);
-      return {
+      const result = {
         config: {...DEFAULT_STATE.config, ...parsed.config},
         pins: parsed.pins || DEFAULT_STATE.pins,
         catalogo: parsed.catalogo || DEFAULT_STATE.catalogo,
@@ -349,6 +361,38 @@ function loadState(){
         bobinas: parsed.bobinas || [],
         remitos: parsed.remitos || [],
       };
+      
+      // Migración: si las OCs tienen formato viejo (sin lineas), convertir
+      result.ocs.forEach(oc=>{
+        if(!oc.lineas){
+          // Crear línea única con los datos viejos
+          const lineaId = uid('OCL');
+          oc.lineas = [{
+            id: lineaId,
+            medida: oc.medida,
+            kgSolicitados: oc.kgSolicitados,
+            precioUsdKg: oc.precioUsdKg,
+            fechaEntrega: oc.fechaEntrega,
+            notas: ''
+          }];
+          // Asociar OPs existentes a esta línea
+          result.ops.forEach(op=>{
+            if(op.ocId === oc.id && !op.ocLineaId){
+              op.ocLineaId = lineaId;
+            }
+          });
+          // Limpiar campos viejos del nivel OC (los dejamos por si acaso pero no se usan)
+          // No los borramos para preservar info histórica
+        }
+      });
+      
+      if(migrarDeV3){
+        console.log('Datos migrados de v3 a v4');
+        // Guardar inmediatamente en v4
+        localStorage.setItem(STORE_KEY, JSON.stringify(result));
+      }
+      
+      return result;
     }
   }catch(e){console.error('Error loading state',e)}
   return JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -1729,17 +1773,17 @@ function renderOcs(){
       <option value="">Todos los estados</option>
       <option value="pendiente">Pendientes (sin OP)</option>
       <option value="parcial">Parcial (OPs incompletas)</option>
-      <option value="completada">OPs completas</option>
-      <option value="por_entregar">Entregando (parcial)</option>
+      <option value="ops_ok">OPs OK</option>
+      <option value="entregando">Entregando</option>
       <option value="entregada">Entregadas</option>
     </select>
   </div>
   <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6">
     <strong>Pendiente</strong>: sin OP creada · 
-    <strong>Parcial</strong>: OPs no cubren los kg · 
-    <strong>OPs completas</strong>: OPs cubren todos los kg · 
+    <strong>Parcial</strong>: alguna línea con OPs incompletas · 
+    <strong>OPs OK</strong>: todas las líneas con OPs completas · 
     <strong>Entregando</strong>: ya hay remitos pero falta entregar · 
-    <strong>Entregada</strong>: todos los kg fueron entregados al cliente
+    <strong>Entregada</strong>: todas las líneas entregadas al cliente
   </div>`;
   
   html += '<div class="card" id="ocsTableWrap"></div>';
@@ -1747,41 +1791,125 @@ function renderOcs(){
   renderOcsTable();
 }
 
-function calcularDatosOc(oc){
-  // OPs asociadas a esta OC
-  const opsAsoc = state.ops.filter(op=>op.ocId===oc.id);
-  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
+// Calcula datos de una línea específica de una OC
+function calcularDatosLineaOc(oc, linea){
+  // OPs asociadas a esta línea
+  const opsLinea = state.ops.filter(op=>op.ocId===oc.id && op.ocLineaId===linea.id);
+  const kgEnOp = opsLinea.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
   
-  // kg producidos: suma de los kg refilados de todas las OPs de esta OC
+  // kg producidos: suma de kg refilados de las OPs de esta línea
   let kgProducido = 0;
-  opsAsoc.forEach(op=>{
+  opsLinea.forEach(op=>{
     const cons = calcularConsumosOp(op);
     kgProducido += cons.kgFinales || 0;
   });
   
-  // kg entregados: suma de remitos cuyas líneas pertenecen a OPs de esta OC
+  // kg entregados: suma de remitos cuyas líneas tienen OPs de esta línea de OC
   let kgEntregado = 0;
   state.remitos.forEach(r=>{
     r.lineas.forEach(l=>{
       const op = state.ops.find(o=>o.id===l.opId);
-      if(op && op.ocId===oc.id){
+      if(op && op.ocId===oc.id && op.ocLineaId===linea.id){
         kgEntregado += l.kg;
       }
     });
   });
   
-  const kgPendienteEntregar = oc.kgSolicitados - kgEntregado;
-  const kgEnStock = kgProducido - kgEntregado; // producido pero todavía no entregado
+  const kgPendienteEntregar = linea.kgSolicitados - kgEntregado;
+  const kgEnStock = kgProducido - kgEntregado;
   
   return {
-    opsAsoc,
+    opsLinea, kgEnOp, kgProducido, kgEntregado, kgPendienteEntregar, kgEnStock,
+    pctCubierto: linea.kgSolicitados > 0 ? kgEnOp / linea.kgSolicitados : 0,
+    pctEntregado: linea.kgSolicitados > 0 ? kgEntregado / linea.kgSolicitados : 0,
+    pctProducido: linea.kgSolicitados > 0 ? kgProducido / linea.kgSolicitados : 0,
+  };
+}
+
+// Calcula estado de una línea
+function getEstadoLineaOc(oc, linea){
+  const d = calcularDatosLineaOc(oc, linea);
+  if(d.kgEntregado >= linea.kgSolicitados && linea.kgSolicitados > 0) return 'entregada';
+  if(d.kgEntregado > 0) return 'entregando';
+  if(d.kgEnOp >= linea.kgSolicitados && linea.kgSolicitados > 0) return 'ops_ok';
+  if(d.opsLinea.length > 0) return 'parcial';
+  return 'pendiente';
+}
+
+function getEstadoLineaLabel(estado){
+  const labels = {
+    'pendiente': 'Pendiente',
+    'parcial': 'Parcial',
+    'ops_ok': 'OPs OK',
+    'entregando': 'Entregando',
+    'entregada': 'Entregada'
+  };
+  return labels[estado] || estado;
+}
+
+function getEstadoLineaBadge(estado){
+  const map = {
+    'pendiente': 'badge-pending',
+    'parcial': 'badge-warning',
+    'ops_ok': 'badge-warning',
+    'entregando': 'badge-active',
+    'entregada': 'badge-success'
+  };
+  return map[estado] || 'badge-pending';
+}
+
+// Calcula datos consolidados de una OC (suma de todas las líneas)
+function calcularDatosOc(oc){
+  const lineas = oc.lineas || [];
+  let kgSolicitadoTotal = 0, kgEnOp = 0, kgProducido = 0, kgEntregado = 0;
+  let opsAsocTotal = [];
+  
+  lineas.forEach(linea=>{
+    const d = calcularDatosLineaOc(oc, linea);
+    kgSolicitadoTotal += linea.kgSolicitados || 0;
+    kgEnOp += d.kgEnOp;
+    kgProducido += d.kgProducido;
+    kgEntregado += d.kgEntregado;
+    opsAsocTotal = opsAsocTotal.concat(d.opsLinea);
+  });
+  
+  const kgPendienteEntregar = kgSolicitadoTotal - kgEntregado;
+  const kgEnStock = kgProducido - kgEntregado;
+  
+  // Estado consolidado: el "peor" estado de las líneas
+  const estadosLineas = lineas.map(l=>getEstadoLineaOc(oc, l));
+  let estadoConsolidado = 'pendiente';
+  if(lineas.length > 0){
+    if(estadosLineas.every(e=>e==='entregada')) estadoConsolidado = 'entregada';
+    else if(estadosLineas.some(e=>e==='entregando' || e==='entregada')) estadoConsolidado = 'entregando';
+    else if(estadosLineas.every(e=>e==='ops_ok' || e==='entregando' || e==='entregada')) estadoConsolidado = 'ops_ok';
+    else if(estadosLineas.some(e=>e==='parcial' || e==='ops_ok')) estadoConsolidado = 'parcial';
+    else estadoConsolidado = 'pendiente';
+  }
+  
+  // Próxima fecha de entrega: la más cercana de líneas no entregadas
+  let proximaEntrega = null;
+  lineas.forEach((l, idx)=>{
+    if(estadosLineas[idx] !== 'entregada' && l.fechaEntrega){
+      if(!proximaEntrega || l.fechaEntrega < proximaEntrega){
+        proximaEntrega = l.fechaEntrega;
+      }
+    }
+  });
+  
+  return {
+    opsAsoc: opsAsocTotal,
+    kgSolicitadoTotal,
     kgEnOp,
     kgProducido,
     kgEntregado,
     kgPendienteEntregar,
     kgEnStock,
-    pctCubierto: oc.kgSolicitados > 0 ? kgEnOp / oc.kgSolicitados : 0,
-    pctEntregado: oc.kgSolicitados > 0 ? kgEntregado / oc.kgSolicitados : 0,
+    pctCubierto: kgSolicitadoTotal > 0 ? kgEnOp / kgSolicitadoTotal : 0,
+    pctEntregado: kgSolicitadoTotal > 0 ? kgEntregado / kgSolicitadoTotal : 0,
+    pctProducido: kgSolicitadoTotal > 0 ? kgProducido / kgSolicitadoTotal : 0,
+    estadoConsolidado,
+    proximaEntrega
   };
 }
 
@@ -1793,13 +1921,7 @@ function renderOcsTable(){
     if(filtroCliente && !oc.cliente.toLowerCase().includes(filtroCliente)) return false;
     if(filtroEstado){
       const datos = calcularDatosOc(oc);
-      const completada = datos.kgEnOp >= oc.kgSolicitados;
-      const entregadoTotal = datos.kgEntregado >= oc.kgSolicitados;
-      if(filtroEstado==='pendiente' && datos.opsAsoc.length>0) return false;
-      if(filtroEstado==='parcial' && (datos.opsAsoc.length===0 || completada)) return false;
-      if(filtroEstado==='completada' && !completada) return false;
-      if(filtroEstado==='entregada' && !entregadoTotal) return false;
-      if(filtroEstado==='por_entregar' && (entregadoTotal || datos.kgEntregado === 0)) return false;
+      if(filtroEstado !== datos.estadoConsolidado) return false;
     }
     return true;
   });
@@ -1812,51 +1934,32 @@ function renderOcsTable(){
   } else {
     html = `<table class="table">
       <thead><tr>
-        <th>OC #</th><th>Cliente</th><th>Producto</th>
+        <th>OC #</th><th>Cliente</th>
+        <th class="center">Líneas</th>
         <th class="num">Solicitado</th>
         <th class="num">En OPs</th>
         <th class="num">Producido</th>
         <th class="num">Entregado</th>
         <th class="num">Pendiente</th>
         <th>Avance entrega</th>
-        <th>Entrega</th><th>Estado</th><th></th>
+        <th>Próx. entrega</th><th>Estado</th><th></th>
       </tr></thead><tbody>`;
     ocs.forEach(oc=>{
       const d = calcularDatosOc(oc);
       const numDisplay = oc.esNumeroInterno ? `<em style="color:var(--muted)">${oc.numero}</em>` : oc.numero;
-      const entregadoTotal = d.kgEntregado >= oc.kgSolicitados;
+      const lineas = oc.lineas || [];
       
-      // Estado dinámico
-      let estadoText, estadoBadge, tooltipEstado;
-      if(entregadoTotal){
-        estadoText = 'Entregada';
-        estadoBadge = 'badge-success';
-        tooltipEstado = 'Todos los kg fueron entregados al cliente';
-      } else if(d.kgEntregado > 0){
-        estadoText = 'Entregando';
-        estadoBadge = 'badge-active';
-        tooltipEstado = `Faltan ${d.kgPendienteEntregar.toFixed(1)} kg por entregar`;
-      } else if(d.pctCubierto >= 1){
-        estadoText = 'OPs completas';
-        estadoBadge = 'badge-warning';
-        tooltipEstado = 'OPs creadas cubren todos los kg, sin entregar todavía';
-      } else if(d.opsAsoc.length > 0){
-        estadoText = 'Parcial';
-        estadoBadge = 'badge-warning';
-        tooltipEstado = 'Hay OPs creadas pero no cubren todos los kg';
-      } else {
-        estadoText = 'Pendiente';
-        estadoBadge = 'badge-pending';
-        tooltipEstado = 'No se generaron OPs todavía';
-      }
+      const estadoBadge = getEstadoLineaBadge(d.estadoConsolidado);
+      const estadoText = getEstadoLineaLabel(d.estadoConsolidado);
+      const tooltipEstado = `${lineas.length} línea(s). ${d.kgEntregado.toFixed(1)} de ${d.kgSolicitadoTotal.toFixed(0)} kg entregados.`;
       
       const pctEntregaVisual = Math.min(100, d.pctEntregado * 100);
       
       html += `<tr class="row-clickable" onclick="verOc('${oc.id}')">
         <td><strong>${numDisplay}</strong></td>
         <td>${oc.cliente}</td>
-        <td>${oc.medida}</td>
-        <td class="num">${(+oc.kgSolicitados).toFixed(0)}</td>
+        <td class="center"><span class="badge badge-pending">${lineas.length}</span></td>
+        <td class="num">${d.kgSolicitadoTotal.toFixed(0)}</td>
         <td class="num">${d.kgEnOp.toFixed(0)}</td>
         <td class="num">${d.kgProducido.toFixed(1)}</td>
         <td class="num">${d.kgEntregado.toFixed(1)}</td>
@@ -1867,7 +1970,7 @@ function renderOcsTable(){
           </div>
           <span style="font-size:10px;color:var(--muted);margin-left:4px">${pctEntregaVisual.toFixed(0)}%</span>
         </td>
-        <td>${fmtDate(oc.fechaEntrega)}</td>
+        <td>${d.proximaEntrega ? fmtDate(d.proximaEntrega) : '—'}</td>
         <td><span class="badge ${estadoBadge}" title="${tooltipEstado}">${estadoText}</span></td>
         <td>
           <button class="btn-icon" onclick="event.stopPropagation();editarOc('${oc.id}')" title="Editar">✎</button>
@@ -1894,42 +1997,34 @@ function ocFormModal(idEditar){
   if(esEdicion && !oc){alert('OC no encontrada'); return;}
   
   const clientesUnicos = [...new Set(state.catalogo.map(p=>p.cliente))];
-  const fechaHoy = new Date().toISOString().split('T')[0];
+  
+  // Inicializar líneas: si edita, usa las existentes; si nueva, una línea vacía
+  const lineasIniciales = oc && oc.lineas ? JSON.parse(JSON.stringify(oc.lineas)) : [{
+    id: uid('OCL_TMP'),
+    medida: '', kgSolicitados: '', precioUsdKg: '', fechaEntrega: '', notas: ''
+  }];
+  
+  // Guardar en variable global temporal para manipular en el form
+  window._ocFormLineas = lineasIniciales;
+  window._ocFormCliente = oc ? oc.cliente : '';
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${esEdicion ? 'Editar OC '+oc.numero : 'Nueva Orden de Compra'}</h2>
     
+    <div class="card-title" style="margin-top:6px">Datos generales</div>
     <div class="form-grid">
       <div class="form-group">
         <label class="form-label">Cliente</label>
-        <select class="form-select" id="ocCliente" onchange="actualizarMedidasOc()">
+        <select class="form-select" id="ocCliente" onchange="cambiarClienteOc()">
           <option value="">— Seleccionar —</option>
           ${clientesUnicos.map(c=>`<option value="${c}" ${oc&&oc.cliente===c?'selected':''}>${c}</option>`).join('')}
           <option value="__nuevo__">+ Cliente nuevo</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Producto / Medida</label>
-        <select class="form-select" id="ocMedida">
-          <option value="">— Seleccionar cliente primero —</option>
-        </select>
-      </div>
-      <div class="form-group">
         <label class="form-label">Número OC del cliente (opcional)</label>
         <input type="text" class="form-input" id="ocNumero" placeholder="Dejar vacío si no hay" value="${esEdicion && !oc.esNumeroInterno ? oc.numero : ''}">
         <div class="form-help">Si no hay OC formal, el sistema asigna un código interno.</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">kg solicitados</label>
-        <input type="number" class="form-input" id="ocKg" min="1" step="any" value="${oc ? oc.kgSolicitados : ''}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Precio USD/kg</label>
-        <input type="number" class="form-input" id="ocPrecio" min="0" step="0.01" value="${oc ? oc.precioUsdKg : ''}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Fecha de entrega</label>
-        <input type="date" class="form-input" id="ocFechaEntrega" value="${oc ? oc.fechaEntrega : ''}">
       </div>
       <div class="form-group">
         <label class="form-label">Modalidad</label>
@@ -1949,6 +2044,13 @@ function ocFormModal(idEditar){
       <textarea class="form-textarea" id="ocNotas" rows="2" placeholder="Lote, requisitos especiales, etc.">${oc ? (oc.notas||'') : ''}</textarea>
     </div>
     
+    <div class="card-title" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center">
+      <span>Líneas de la OC <span style="color:var(--muted);font-weight:400" id="ocLineasCount">(${lineasIniciales.length})</span></span>
+      <button class="btn btn-sm btn-success" onclick="agregarLineaOc()">+ Agregar línea</button>
+    </div>
+    
+    <div id="ocLineasContainer"></div>
+    
     <div class="form-row">
       <button class="btn" onclick="guardarOc(${esEdicion?`'${idEditar}'`:'null'})">${esEdicion?'Guardar cambios':'Guardar OC'}</button>
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -1956,30 +2058,123 @@ function ocFormModal(idEditar){
   
   showModal(html, true);
   
-  // Si es edición, cargar las medidas del cliente actual
-  if(esEdicion){
-    setTimeout(()=>{
-      actualizarMedidasOc();
-      const select = document.getElementById('ocMedida');
-      if(select) select.value = oc.medida;
-    }, 50);
-  }
+  // Renderizar líneas iniciales
+  setTimeout(()=>renderLineasOcForm(), 50);
 }
 
-function actualizarMedidasOc(){
-  const cliente = document.getElementById('ocCliente').value;
-  const select = document.getElementById('ocMedida');
+function cambiarClienteOc(){
+  const sel = document.getElementById('ocCliente');
+  let cliente = sel.value;
   if(cliente === '__nuevo__'){
-    select.innerHTML = '<option value="__nuevo__">+ Producto nuevo (cargar en Catálogo)</option>';
+    cliente = prompt('Nombre del cliente nuevo:');
+    if(!cliente){
+      sel.value = window._ocFormCliente || '';
+      return;
+    }
+    // Agregar opción dinámicamente
+    const newOpt = document.createElement('option');
+    newOpt.value = cliente;
+    newOpt.textContent = cliente;
+    newOpt.selected = true;
+    sel.insertBefore(newOpt, sel.querySelector('option[value="__nuevo__"]'));
+  }
+  window._ocFormCliente = cliente;
+  // Re-renderizar líneas para actualizar las medidas disponibles
+  renderLineasOcForm();
+}
+
+function agregarLineaOc(){
+  if(!window._ocFormLineas) window._ocFormLineas = [];
+  // Capturar valores actuales antes de re-renderizar
+  capturarValoresLineas();
+  window._ocFormLineas.push({
+    id: uid('OCL_TMP'),
+    medida: '', kgSolicitados: '', precioUsdKg: '', fechaEntrega: '', notas: ''
+  });
+  renderLineasOcForm();
+}
+
+function eliminarLineaOc(idx){
+  if(window._ocFormLineas.length <= 1){
+    alert('La OC debe tener al menos una línea.');
     return;
   }
-  const productos = state.catalogo.filter(p=>p.cliente===cliente);
-  if(productos.length===0){
-    select.innerHTML = '<option value="">No hay productos para este cliente</option>';
-  } else {
-    select.innerHTML = '<option value="">— Seleccionar —</option>'+
-      productos.map(p=>`<option value="${p.medida}">${p.medida} (final ${p.anchoFinal}mm)</option>`).join('');
+  if(!confirm('¿Eliminar esta línea?')) return;
+  capturarValoresLineas();
+  window._ocFormLineas.splice(idx, 1);
+  renderLineasOcForm();
+}
+
+function capturarValoresLineas(){
+  // Lee los valores actuales del DOM y los guarda en window._ocFormLineas
+  if(!window._ocFormLineas) return;
+  window._ocFormLineas.forEach((linea, idx)=>{
+    const medidaEl = document.getElementById('ocLinea_'+idx+'_medida');
+    const kgEl = document.getElementById('ocLinea_'+idx+'_kg');
+    const precioEl = document.getElementById('ocLinea_'+idx+'_precio');
+    const fechaEl = document.getElementById('ocLinea_'+idx+'_fecha');
+    const notasEl = document.getElementById('ocLinea_'+idx+'_notas');
+    if(medidaEl) linea.medida = medidaEl.value;
+    if(kgEl) linea.kgSolicitados = kgEl.value;
+    if(precioEl) linea.precioUsdKg = precioEl.value;
+    if(fechaEl) linea.fechaEntrega = fechaEl.value;
+    if(notasEl) linea.notas = notasEl.value;
+  });
+}
+
+function renderLineasOcForm(){
+  const cliente = window._ocFormCliente;
+  const productosCliente = cliente ? state.catalogo.filter(p=>p.cliente===cliente) : [];
+  const container = document.getElementById('ocLineasContainer');
+  if(!container) return;
+  
+  const lineas = window._ocFormLineas || [];
+  document.getElementById('ocLineasCount').textContent = `(${lineas.length})`;
+  
+  if(!cliente){
+    container.innerHTML = '<div class="alert alert-info">Seleccioná un cliente para ver las medidas disponibles.</div>';
+    return;
   }
+  if(productosCliente.length === 0){
+    container.innerHTML = '<div class="alert alert-warning">Este cliente no tiene productos en el catálogo. Agregá uno antes de continuar.</div>';
+    return;
+  }
+  
+  let html = '';
+  lineas.forEach((linea, idx)=>{
+    html += `<div style="border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:10px;background:var(--bg-2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong style="color:var(--navy)">Línea ${idx+1}</strong>
+        <button class="btn btn-sm btn-danger" onclick="eliminarLineaOc(${idx})">× Eliminar</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Medida</label>
+          <select class="form-select" id="ocLinea_${idx}_medida">
+            <option value="">— Seleccionar —</option>
+            ${productosCliente.map(p=>`<option value="${p.medida}" ${linea.medida===p.medida?'selected':''}>${p.medida} (final ${p.anchoFinal}mm)</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">kg solicitados</label>
+          <input type="number" class="form-input" id="ocLinea_${idx}_kg" min="1" step="any" value="${linea.kgSolicitados||''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio USD/kg</label>
+          <input type="number" class="form-input" id="ocLinea_${idx}_precio" min="0" step="0.01" value="${linea.precioUsdKg||''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de entrega</label>
+          <input type="date" class="form-input" id="ocLinea_${idx}_fecha" value="${linea.fechaEntrega||''}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas de la línea (opcional)</label>
+        <input type="text" class="form-input" id="ocLinea_${idx}_notas" value="${linea.notas||''}">
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
 }
 
 function generarNumeroInterno(){
@@ -1990,26 +2185,65 @@ function generarNumeroInterno(){
 
 function guardarOc(idEditar){
   let cliente = document.getElementById('ocCliente').value;
-  let medida = document.getElementById('ocMedida').value;
   let numero = document.getElementById('ocNumero').value.trim();
-  const kg = parseFloat(document.getElementById('ocKg').value);
-  const precio = parseFloat(document.getElementById('ocPrecio').value);
-  const fechaEntrega = document.getElementById('ocFechaEntrega').value;
   const modalidad = document.getElementById('ocModalidad').value;
   const plazoPago = document.getElementById('ocPlazoPago').value;
   const notas = document.getElementById('ocNotas').value;
   
   if(cliente === '__nuevo__'){
-    cliente = prompt('Nombre del cliente nuevo:');
-    if(!cliente) return;
-  }
-  if(medida === '__nuevo__' || !medida){
-    alert('Para cargar un producto nuevo, agregalo primero en Catálogo.');
+    alert('Seleccioná un cliente válido.');
     return;
   }
-  if(!cliente || !medida || !kg || !precio || !fechaEntrega){
-    alert('Faltan campos obligatorios: cliente, medida, kg, precio y fecha de entrega.');
+  if(!cliente){
+    alert('Falta cliente.');
     return;
+  }
+  
+  // Capturar valores del DOM
+  capturarValoresLineas();
+  
+  // Validar líneas
+  const lineas = (window._ocFormLineas || []).map(l=>({
+    id: l.id && l.id.startsWith('OCL-') ? l.id : uid('OCL'), // si era temporal, generar id real
+    medida: l.medida,
+    kgSolicitados: parseFloat(l.kgSolicitados),
+    precioUsdKg: parseFloat(l.precioUsdKg),
+    fechaEntrega: l.fechaEntrega,
+    notas: l.notas || ''
+  }));
+  
+  if(lineas.length === 0){
+    alert('Tiene que haber al menos una línea.');
+    return;
+  }
+  
+  for(let i=0; i<lineas.length; i++){
+    const l = lineas[i];
+    if(!l.medida || !l.kgSolicitados || !l.precioUsdKg || !l.fechaEntrega){
+      alert(`Línea ${i+1}: faltan campos obligatorios (medida, kg, precio, fecha de entrega).`);
+      return;
+    }
+    if(l.kgSolicitados <= 0){alert(`Línea ${i+1}: los kg deben ser mayores a 0.`); return;}
+    if(l.precioUsdKg <= 0){alert(`Línea ${i+1}: el precio debe ser mayor a 0.`); return;}
+  }
+  
+  // Validación regla 3: misma medida + mismo precio = no permitir
+  for(let i=0; i<lineas.length; i++){
+    for(let j=i+1; j<lineas.length; j++){
+      if(lineas[i].medida === lineas[j].medida && Math.abs(lineas[i].precioUsdKg - lineas[j].precioUsdKg) < 0.001){
+        if(lineas[i].fechaEntrega === lineas[j].fechaEntrega){
+          alert(`Líneas ${i+1} y ${j+1} tienen misma medida, precio y fecha. Combinalas en una sola línea.`);
+          return;
+        }
+        // Si solo difiere fecha, permitir
+        continue;
+      }
+      // Si misma medida pero distinto precio: no permitir (regla 3)
+      if(lineas[i].medida === lineas[j].medida && Math.abs(lineas[i].precioUsdKg - lineas[j].precioUsdKg) >= 0.001){
+        alert(`Líneas ${i+1} y ${j+1}: misma medida con distinto precio. No se permite. Si el cliente requiere precios distintos, hablá con él.`);
+        return;
+      }
+    }
   }
   
   if(idEditar){
@@ -2020,28 +2254,44 @@ function guardarOc(idEditar){
     let esNumeroInterno = oc.esNumeroInterno;
     if(!numero){
       if(!oc.esNumeroInterno){
-        // Antes tenía número formal, ahora vacío → cambiar a interno
         numero = generarNumeroInterno();
         esNumeroInterno = true;
       } else {
-        numero = oc.numero; // mantener interno existente
+        numero = oc.numero;
       }
     } else {
       esNumeroInterno = false;
     }
     
+    // Verificar que no se borren líneas que ya tienen OPs
+    const lineasViejas = oc.lineas || [];
+    lineasViejas.forEach(lvieja=>{
+      if(!lineas.find(l=>l.id===lvieja.id)){
+        // Esta línea fue borrada, ver si tiene OPs
+        const opsLinea = state.ops.filter(op=>op.ocId===oc.id && op.ocLineaId===lvieja.id);
+        if(opsLinea.length > 0){
+          alert(`No se puede borrar una línea que tiene OPs asociadas. Eliminá primero las OPs.`);
+          throw new Error('Línea con OPs');
+        }
+      }
+    });
+    
     oc.numero = numero;
     oc.esNumeroInterno = esNumeroInterno;
     oc.cliente = cliente;
-    oc.medida = medida;
-    oc.kgSolicitados = kg;
-    oc.precioUsdKg = precio;
-    oc.fechaEntrega = fechaEntrega;
     oc.modalidad = modalidad;
     oc.plazoPago = plazoPago;
     oc.notas = notas;
+    oc.lineas = lineas;
     oc.modificadoPor = currentUser.nombre;
     oc.fechaModificacion = new Date().toISOString();
+    
+    // Limpiar campos viejos del modelo anterior si existen
+    delete oc.medida;
+    delete oc.kgSolicitados;
+    delete oc.precioUsdKg;
+    delete oc.fechaEntrega;
+    
     saveState();
     closeModal();
     navigateTo('ocs');
@@ -2057,24 +2307,23 @@ function guardarOc(idEditar){
   
   state.ocs.push({
     id: uid('OC'),
-    numero, esNumeroInterno, cliente, medida,
-    kgSolicitados: kg,
-    precioUsdKg: precio,
-    fechaEntrega, modalidad, plazoPago, notas,
+    numero, esNumeroInterno, cliente,
+    modalidad, plazoPago, notas,
+    lineas,
     fechaCreacion: new Date().toISOString(),
     creadoPor: currentUser.nombre
   });
   saveState();
   closeModal();
   navigateTo('ocs');
-  alert(`OC ${numero} guardada${esNumeroInterno?' (con código interno)':''}.`);
+  alert(`OC ${numero} guardada con ${lineas.length} línea(s)${esNumeroInterno?' (con código interno)':''}.`);
 }
 
 function verOc(id){
   const oc = state.ocs.find(o=>o.id===id);
   if(!oc) return;
   const d = calcularDatosOc(oc);
-  const kgDisponibles = oc.kgSolicitados - d.kgEnOp;
+  const lineas = oc.lineas || [];
   
   // Buscar todos los remitos que tienen líneas de OPs de esta OC
   const remitosOc = [];
@@ -2089,16 +2338,16 @@ function verOc(id){
   });
   
   const pctEntregaVisual = Math.min(100, d.pctEntregado * 100);
-  const pctProducidoVisual = oc.kgSolicitados > 0 ? Math.min(100, (d.kgProducido / oc.kgSolicitados) * 100) : 0;
+  const pctProducidoVisual = Math.min(100, d.pctProducido * 100);
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>OC ${oc.numero} ${oc.esNumeroInterno?'(interno)':''} — ${oc.cliente}</h2>
     
     <div class="detail-grid">
       <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value">${oc.cliente}</div></div>
-      <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value">${oc.medida}</div></div>
-      <div class="detail-item"><div class="detail-label">kg solicitados</div><div class="detail-value">${oc.kgSolicitados.toFixed(0)} kg</div></div>
-      <div class="detail-item"><div class="detail-label">Entrega</div><div class="detail-value">${fmtDate(oc.fechaEntrega)}</div></div>
+      <div class="detail-item"><div class="detail-label">Líneas</div><div class="detail-value">${lineas.length}</div></div>
+      <div class="detail-item"><div class="detail-label">Solicitado total</div><div class="detail-value">${d.kgSolicitadoTotal.toFixed(0)} kg</div></div>
+      <div class="detail-item"><div class="detail-label">Próx. entrega</div><div class="detail-value">${d.proximaEntrega?fmtDate(d.proximaEntrega):'—'}</div></div>
       <div class="detail-item"><div class="detail-label">Modalidad</div><div class="detail-value">${oc.modalidad==='con_flete'?'Con flete':'Sin flete'}</div></div>
       <div class="detail-item"><div class="detail-label">Plazo pago</div><div class="detail-value">${oc.plazoPago||'—'}</div></div>
     </div>
@@ -2106,11 +2355,14 @@ function verOc(id){
     ${oc.notas ? `<div class="alert alert-info"><strong>Notas:</strong> ${oc.notas}</div>` : ''}
     
     <div class="card" style="margin-top:14px;background:var(--bg-2)">
-      <div class="card-title" style="margin-bottom:10px;border:none;padding:0">Avance de la OC</div>
+      <div class="card-title" style="margin-bottom:10px;border:none;padding:0">
+        Avance consolidado
+        <span class="badge ${getEstadoLineaBadge(d.estadoConsolidado)}" style="margin-left:8px">${getEstadoLineaLabel(d.estadoConsolidado)}</span>
+      </div>
       
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
-          <span>Producido: <strong style="color:var(--blue)">${d.kgProducido.toFixed(1)} kg</strong> de ${oc.kgSolicitados.toFixed(0)} kg</span>
+          <span>Producido: <strong style="color:var(--blue)">${d.kgProducido.toFixed(1)} kg</strong> de ${d.kgSolicitadoTotal.toFixed(0)} kg</span>
           <span><strong>${pctProducidoVisual.toFixed(1)}%</strong></span>
         </div>
         <div style="background:white;border-radius:4px;height:10px;overflow:hidden;border:1px solid var(--line)">
@@ -2120,7 +2372,7 @@ function verOc(id){
       
       <div>
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
-          <span>Entregado: <strong style="color:var(--green)">${d.kgEntregado.toFixed(1)} kg</strong> de ${oc.kgSolicitados.toFixed(0)} kg</span>
+          <span>Entregado: <strong style="color:var(--green)">${d.kgEntregado.toFixed(1)} kg</strong> de ${d.kgSolicitadoTotal.toFixed(0)} kg</span>
           <span><strong>${pctEntregaVisual.toFixed(1)}%</strong></span>
         </div>
         <div style="background:white;border-radius:4px;height:10px;overflow:hidden;border:1px solid var(--line)">
@@ -2148,17 +2400,61 @@ function verOc(id){
       </div>
     </div>
     
-    <div class="card-title" style="margin-top:20px">OPs vinculadas (${d.opsAsoc.length})</div>`;
+    <div class="card-title" style="margin-top:20px">Líneas de la OC (${lineas.length})</div>`;
   
+  if(lineas.length === 0){
+    html += '<div class="alert alert-warning">⚠ Esta OC no tiene líneas. Editala para agregar.</div>';
+  } else {
+    html += `<table class="table">
+      <thead><tr>
+        <th class="center">#</th><th>Medida</th>
+        <th class="num">Solicitado</th>
+        <th class="num">En OPs</th>
+        <th class="num">Producido</th>
+        <th class="num">Entregado</th>
+        <th class="num">Pendiente</th>
+        <th class="num">Precio</th>
+        <th>Entrega</th><th>Estado</th><th></th>
+      </tr></thead><tbody>`;
+    
+    lineas.forEach((linea, idx)=>{
+      const dl = calcularDatosLineaOc(oc, linea);
+      const estadoLinea = getEstadoLineaOc(oc, linea);
+      const kgDisponiblesLinea = linea.kgSolicitados - dl.kgEnOp;
+      
+      html += `<tr>
+        <td class="center"><strong>${idx+1}</strong></td>
+        <td><strong>${linea.medida}</strong>${linea.notas?`<div style="font-size:11px;color:var(--muted)">${linea.notas}</div>`:''}</td>
+        <td class="num">${linea.kgSolicitados.toFixed(0)} kg</td>
+        <td class="num">${dl.kgEnOp.toFixed(0)}</td>
+        <td class="num">${dl.kgProducido.toFixed(1)}</td>
+        <td class="num">${dl.kgEntregado.toFixed(1)}</td>
+        <td class="num"><strong style="color:${dl.kgPendienteEntregar>0?'var(--orange)':'var(--green)'}">${dl.kgPendienteEntregar.toFixed(1)}</strong></td>
+        <td class="num">${fmtUsdShort(linea.precioUsdKg)}</td>
+        <td>${fmtDate(linea.fechaEntrega)}</td>
+        <td><span class="badge ${getEstadoLineaBadge(estadoLinea)}">${getEstadoLineaLabel(estadoLinea)}</span></td>
+        <td>
+          ${kgDisponiblesLinea > 0 ? `<button class="btn btn-sm" onclick="closeModal();nuevaOpDesdeLinea('${oc.id}','${linea.id}')">+ OP</button>` : ''}
+        </td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  
+  // OPs vinculadas
+  html += `<div class="card-title" style="margin-top:20px">OPs vinculadas (${d.opsAsoc.length})</div>`;
   if(d.opsAsoc.length===0){
     html += '<p style="color:var(--muted)">No hay OPs creadas para esta OC todavía.</p>';
   } else {
-    html += '<table class="table"><thead><tr><th>OP</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
+    html += '<table class="table"><thead><tr><th>OP</th><th>Línea OC</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
     d.opsAsoc.forEach(op=>{
       const consOp = calcularConsumosOp(op);
       const estadoOp = getEstadoOp(op);
+      const linea = lineas.find(l=>l.id===op.ocLineaId);
+      const lineaIdx = lineas.findIndex(l=>l.id===op.ocLineaId);
       html += `<tr class="row-clickable" onclick="closeModal();verOp('${op.id}')">
         <td>${op.numero}</td>
+        <td>${linea?`L${lineaIdx+1}: ${linea.medida}`:'(huérfana)'}</td>
         <td class="num">${op.kgSolicitados.toFixed(0)} kg</td>
         <td class="num">${consOp.kgFinales.toFixed(1)} kg</td>
         <td><span class="badge ${getEstadoBadge(estadoOp)}">${getEstadoLabel(estadoOp)}</span></td>
@@ -2187,25 +2483,8 @@ function verOc(id){
     html += '</tbody></table>';
   }
   
-  // Mensaje resumen
-  let mensaje, alertClass;
-  if(d.kgEntregado >= oc.kgSolicitados){
-    mensaje = `OC totalmente entregada. ${d.kgEntregado.toFixed(1)} de ${oc.kgSolicitados.toFixed(0)} kg.`;
-    alertClass = 'alert-success';
-  } else if(d.kgEntregado > 0){
-    mensaje = `Entregado parcial: ${d.kgEntregado.toFixed(1)} kg. Faltan ${d.kgPendienteEntregar.toFixed(1)} kg por entregar.`;
-    alertClass = 'alert-warning';
-  } else if(kgDisponibles > 0){
-    mensaje = `Faltan generar OPs por ${kgDisponibles.toFixed(0)} kg de los ${oc.kgSolicitados.toFixed(0)} solicitados.`;
-    alertClass = 'alert-info';
-  } else {
-    mensaje = `OC totalmente cubierta por OPs. Pendiente producir y entregar.`;
-    alertClass = 'alert-info';
-  }
-  html += `<div class="alert ${alertClass}" style="margin-top:14px">${mensaje}</div>`;
-  
-  html += `<div class="form-row">
-    ${kgDisponibles>0 ? `<button class="btn" onclick="closeModal();nuevaOpDesdeOc('${oc.id}')">+ Generar OP</button>` : ''}
+  html += `<div class="form-row" style="margin-top:18px">
+    ${d.kgEnOp < d.kgSolicitadoTotal ? `<button class="btn" onclick="closeModal();selectorLineaParaOp('${oc.id}')">+ Generar OP</button>` : ''}
     <button class="btn btn-secondary" onclick="closeModal();editarOc('${oc.id}')">✎ Editar OC</button>
     <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
     <button class="btn btn-danger" onclick="eliminarOc('${oc.id}')" style="margin-left:auto">Eliminar OC</button>
@@ -2214,8 +2493,68 @@ function verOc(id){
   showModal(html, true);
 }
 
+// Selector de línea para crear OP cuando hay varias líneas con kg disponibles
+function selectorLineaParaOp(ocId){
+  const oc = state.ocs.find(o=>o.id===ocId);
+  if(!oc) return;
+  
+  const lineasDisponibles = (oc.lineas||[]).map((l, idx)=>{
+    const dl = calcularDatosLineaOc(oc, l);
+    const disponibles = l.kgSolicitados - dl.kgEnOp;
+    return {linea:l, idx, disponibles};
+  }).filter(x=>x.disponibles > 0);
+  
+  if(lineasDisponibles.length === 0){
+    alert('Todas las líneas ya tienen OPs creadas que cubren los kg solicitados.');
+    return;
+  }
+  
+  if(lineasDisponibles.length === 1){
+    // Si hay una sola línea con kg disponibles, ir directo
+    nuevaOpDesdeLinea(ocId, lineasDisponibles[0].linea.id);
+    return;
+  }
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Generar OP — OC ${oc.numero}</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Seleccioná de qué línea querés generar la OP:</p>
+    <div style="display:flex;flex-direction:column;gap:8px">`;
+  
+  lineasDisponibles.forEach(item=>{
+    const l = item.linea;
+    html += `<div class="row-clickable" onclick="closeModal();nuevaOpDesdeLinea('${oc.id}','${l.id}')" 
+              style="padding:14px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:white">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Línea ${item.idx+1}: ${l.medida}</strong>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Solicitado: ${l.kgSolicitados.toFixed(0)} kg · Precio: ${fmtUsdShort(l.precioUsdKg)} · Entrega: ${fmtDate(l.fechaEntrega)}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase">Disponibles</div>
+          <div style="font-size:18px;font-weight:600;color:var(--green)">${item.disponibles.toFixed(0)} kg</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  
+  html += `</div><div class="form-row" style="margin-top:14px">
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+  </div>`;
+  
+  showModal(html, true);
+}
+
 function eliminarOc(id){
-  if(!confirm('¿Eliminar esta OC? Las OPs asociadas no se borran pero quedarán huérfanas.')) return;
+  const oc = state.ocs.find(o=>o.id===id);
+  if(!oc) return;
+  const opsAsoc = state.ops.filter(op=>op.ocId===id);
+  if(opsAsoc.length > 0){
+    alert(`Esta OC tiene ${opsAsoc.length} OP(s) asociadas. Eliminá primero las OPs.`);
+    return;
+  }
+  if(!confirm('¿Eliminar esta OC? Esta acción no se puede deshacer.')) return;
   state.ocs = state.ocs.filter(o=>o.id!==id);
   saveState();
   closeModal();
@@ -2261,16 +2600,18 @@ function renderOpsTable(){
   if(ops.length===0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay OPs. Generá una desde una OC.</p>';
   } else {
-    html = '<table class="table"><thead><tr><th>OP</th><th>OC</th><th>Cliente</th><th>Producto</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Avance</th><th>Estado</th><th>Creada</th><th></th></tr></thead><tbody>';
+    html = '<table class="table"><thead><tr><th>OP</th><th>OC / Línea</th><th>Cliente</th><th>Producto</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Avance</th><th>Estado</th><th>Creada</th><th></th></tr></thead><tbody>';
     ops.forEach(op=>{
       const oc = state.ocs.find(o=>o.id===op.ocId);
+      const lineaIdx = oc && op.ocLineaId ? (oc.lineas||[]).findIndex(l=>l.id===op.ocLineaId) : -1;
+      const ocDisplay = oc ? `${oc.numero}${lineaIdx>=0?` / L${lineaIdx+1}`:''}` : '—';
       const estadoActual = getEstadoOp(op);
       const cons = calcularConsumosOp(op);
       const pctAvance = op.kgSolicitados > 0 ? Math.min(100, (cons.kgFinales / op.kgSolicitados) * 100) : 0;
       
       html += `<tr class="row-clickable" onclick="verOp('${op.id}')">
         <td><strong>${op.numero}</strong></td>
-        <td>${oc?oc.numero:'—'}</td>
+        <td style="font-size:12px">${ocDisplay}</td>
         <td>${op.cliente}</td>
         <td>${op.medida}</td>
         <td class="num">${(+op.kgSolicitados).toFixed(0)} kg</td>
@@ -2291,24 +2632,33 @@ function renderOpsTable(){
   document.getElementById('opsTableWrap').innerHTML = html;
 }
 
+// nuevaOpDesdeOc es legacy - redirige al selector
 function nuevaOpDesdeOc(ocId){
+  selectorLineaParaOp(ocId);
+}
+
+function nuevaOpDesdeLinea(ocId, lineaId){
   const oc = state.ocs.find(o=>o.id===ocId);
   if(!oc) return;
-  const opsAsoc = state.ops.filter(op=>op.ocId===ocId);
-  const kgEnOp = opsAsoc.reduce((s,op)=>s+(+op.kgSolicitados||0),0);
-  const kgDisponibles = oc.kgSolicitados - kgEnOp;
+  const linea = (oc.lineas||[]).find(l=>l.id===lineaId);
+  if(!linea){alert('Línea no encontrada'); return;}
   
-  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===oc.medida);
+  const dl = calcularDatosLineaOc(oc, linea);
+  const kgDisponibles = linea.kgSolicitados - dl.kgEnOp;
+  const lineaIdx = (oc.lineas||[]).findIndex(l=>l.id===lineaId);
+  
+  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===linea.medida);
   if(!producto){alert('Producto no encontrado en catálogo.'); return;}
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
-    <h2>Nueva OP — ${oc.numero}</h2>
+    <h2>Nueva OP — ${oc.numero} / Línea ${lineaIdx+1}</h2>
     
     <div class="detail-grid">
       <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value">${oc.cliente}</div></div>
-      <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value">${oc.medida}</div></div>
+      <div class="detail-item"><div class="detail-label">Medida</div><div class="detail-value">${linea.medida}</div></div>
       <div class="detail-item"><div class="detail-label">kg disponibles</div><div class="detail-value">${kgDisponibles.toFixed(0)} kg</div></div>
-      <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${fmtDate(oc.fechaEntrega)}</div></div>
+      <div class="detail-item"><div class="detail-label">Precio</div><div class="detail-value">${fmtUsdShort(linea.precioUsdKg)}/kg</div></div>
+      <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${fmtDate(linea.fechaEntrega)}</div></div>
     </div>
     
     <div class="form-grid">
@@ -2325,36 +2675,40 @@ function nuevaOpDesdeOc(ocId){
     
     <div class="form-group">
       <label class="form-label">Notas para producción</label>
-      <textarea class="form-textarea" id="opNotas" rows="2" placeholder="Lo que ingenieros y operarios tienen que saber"></textarea>
+      <textarea class="form-textarea" id="opNotas" rows="2" placeholder="Lo que ingenieros y operarios tienen que saber">${linea.notas?'Notas de la línea: '+linea.notas:''}</textarea>
     </div>
     
     <div class="form-row">
-      <button class="btn" onclick="guardarOp('${ocId}')">Crear OP</button>
+      <button class="btn" onclick="guardarOp('${ocId}','${lineaId}')">Crear OP</button>
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     </div>`;
   
   showModal(html, true);
 }
 
-function guardarOp(ocId){
+function guardarOp(ocId, lineaId){
   const oc = state.ocs.find(o=>o.id===ocId);
+  if(!oc) return;
+  const linea = (oc.lineas||[]).find(l=>l.id===lineaId);
+  if(!linea){alert('Línea no encontrada'); return;}
+  
   const kg = parseFloat(document.getElementById('opKg').value);
   const fechaPrevista = document.getElementById('opFechaPrevista').value;
   const notas = document.getElementById('opNotas').value;
   
   if(!kg || kg <= 0){alert('kg inválidos'); return;}
   
-  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===oc.medida);
+  const producto = state.catalogo.find(p=>p.cliente===oc.cliente && p.medida===linea.medida);
   const numero = 'OP-'+(state.ops.length+1).toString().padStart(4,'0');
   
   const op = {
     id: uid('OP'),
-    numero, ocId,
+    numero, ocId, ocLineaId: lineaId,
     cliente: oc.cliente,
-    medida: oc.medida,
+    medida: linea.medida,
     producto,
     kgSolicitados: kg,
-    precioUsdKg: oc.precioUsdKg,
+    precioUsdKg: linea.precioUsdKg,
     fechaPrevista,
     notas,
     estado: 'nueva',
@@ -2424,12 +2778,16 @@ function verOp(id){
     </div>
   </div>`;
   
+  // Buscar la línea de OC asociada
+  const lineaOc = oc && op.ocLineaId ? (oc.lineas||[]).find(l=>l.id===op.ocLineaId) : null;
+  const lineaIdx = oc && op.ocLineaId ? (oc.lineas||[]).findIndex(l=>l.id===op.ocLineaId) : -1;
+  
   html += `<div class="detail-grid">
-    <div class="detail-item"><div class="detail-label">OC asociada</div><div class="detail-value">${oc?oc.numero:'—'}</div></div>
+    <div class="detail-item"><div class="detail-label">OC / Línea</div><div class="detail-value">${oc?oc.numero:'—'}${lineaIdx>=0?` <span style="color:var(--accent);font-size:12px">/ L${lineaIdx+1}</span>`:''}</div></div>
     <div class="detail-item"><div class="detail-label">kg solicitados</div><div class="detail-value">${op.kgSolicitados.toFixed(0)} kg</div></div>
     <div class="detail-item"><div class="detail-label">Precio venta</div><div class="detail-value">${fmtUsdShort(op.precioUsdKg)}/kg</div></div>
     <div class="detail-item"><div class="detail-label">Producción planeada</div><div class="detail-value">${fmtDate(op.fechaPrevista)}</div></div>
-    <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${oc?fmtDate(oc.fechaEntrega):'—'}</div></div>
+    <div class="detail-item"><div class="detail-label">Entrega al cliente</div><div class="detail-value">${lineaOc?fmtDate(lineaOc.fechaEntrega):(oc?fmtDate(oc.fechaEntrega):'—')}</div></div>
     <div class="detail-item"><div class="detail-label">Creada</div><div class="detail-value">${fmtDate(op.fechaCreacion)}</div></div>
   </div>`;
   
@@ -2750,6 +3108,9 @@ function enviarMailIngenieros(opId){
   const op = state.ops.find(o=>o.id===opId);
   const nec = calcularNecesidades(op.producto, op.kgSolicitados);
   const c = state.config;
+  const oc = state.ocs.find(o=>o.id===op.ocId);
+  const lineaOc = oc && op.ocLineaId ? (oc.lineas||[]).find(l=>l.id===op.ocLineaId) : null;
+  const fechaEntregaCliente = lineaOc ? lineaOc.fechaEntrega : (oc?oc.fechaEntrega:null);
   
   const subject = encodeURIComponent(`OP ${op.numero} — ${op.cliente} ${op.medida} — ${op.kgSolicitados.toFixed(0)} kg`);
   const body = encodeURIComponent(
@@ -2760,7 +3121,9 @@ Se generó la OP ${op.numero} para ${op.cliente}.
 DATOS DEL PEDIDO:
 - Producto: ${op.medida}
 - kg finales: ${op.kgSolicitados.toFixed(0)}
-- Fecha prevista: ${fmtDate(op.fechaPrevista)}
+- Fecha producción planeada: ${fmtDate(op.fechaPrevista)}
+- Fecha entrega al cliente: ${fechaEntregaCliente?fmtDate(fechaEntregaCliente):'—'}
+${oc ? `- OC del cliente: ${oc.numero}` : ''}
 
 ESPECIFICACIONES:
 - Lámina PET: ${op.producto.anchoPet}mm de ancho, ${op.producto.espPet}µm

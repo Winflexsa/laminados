@@ -712,12 +712,26 @@ function calcularReal(op){
   };
 }
 
+function getEstadoOp(op){
+  // Si está cerrada manualmente, devolver cerrada
+  if(op.estado === 'cerrada') return 'cerrada';
+  
+  const cons = calcularConsumosOp(op);
+  const tieneTurnos = (op.turnosLaminado||[]).length > 0 || (op.turnosRefilado||[]).length > 0;
+  
+  if(!tieneTurnos) return 'nueva';
+  
+  // Si los kg refilados llegan o superan los solicitados, lista para cerrar
+  if(cons.kgFinales >= op.kgSolicitados) return 'lista_para_cerrar';
+  
+  return 'en_produccion';
+}
+
 function getEstadoLabel(estado){
   const labels = {
     'nueva': 'Nueva',
-    'laminando': 'Laminando',
-    'para_refilar': 'Para refilar',
-    'refilando': 'Refilando',
+    'en_produccion': 'En producción',
+    'lista_para_cerrar': 'Lista para cerrar',
     'cerrada': 'Cerrada'
   };
   return labels[estado] || estado;
@@ -726,9 +740,8 @@ function getEstadoLabel(estado){
 function getEstadoBadge(estado){
   const map = {
     'nueva': 'badge-pending',
-    'laminando': 'badge-active',
-    'para_refilar': 'badge-orange',
-    'refilando': 'badge-warning',
+    'en_produccion': 'badge-active',
+    'lista_para_cerrar': 'badge-warning',
     'cerrada': 'badge-success'
   };
   return map[estado] || 'badge-pending';
@@ -742,15 +755,17 @@ function renderOperarioHome(){
     <div class="op-tab active">Mis tareas</div>
   </div>`;
   
-  const opsParaLaminar = state.ops.filter(op=>op.estado==='nueva' || op.estado==='laminando' || op.estado==='para_refilar');
+  // OPs disponibles para laminar: NO cerradas
+  const opsParaLaminar = state.ops.filter(op=>op.estado !== 'cerrada');
+  
+  // OPs disponibles para refilar: NO cerradas Y con bobinas laminadas pendientes
   const opsParaRefilar = state.ops.filter(op=>{
     if(op.estado === 'cerrada') return false;
-    // Hay bobinas laminadas para refilar
     const turnosLam = (op.turnosLaminado||[]);
     const bobinasLamTotal = turnosLam.flatMap(t=>t.bobinasSalientes||[]);
     const turnosRef = (op.turnosRefilado||[]);
-    const bobinasRefiladas = turnosRef.flatMap(t=>t.bobinasRefiladas||[]).flatMap(br=>br.bobinaLamId);
-    const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladas.includes(bl.id));
+    const bobinasRefiladasIds = turnosRef.flatMap(t=>t.bobinasRefiladas||[]).map(br=>br.bobinaLamId);
+    const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladasIds.includes(bl.id));
     return bobinasLamPendientes.length > 0;
   });
   
@@ -765,16 +780,18 @@ function renderOperarioHome(){
       const nec = calcularNecesidades(op.producto, op.kgSolicitados);
       const turnos = op.turnosLaminado || [];
       const turnoActivo = turnos.find(t=>!t.cerrado);
-      const totalKgLam = turnos.flatMap(t=>t.bobinasSalientes||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
+      const cons = calcularConsumosOp(op);
+      const estadoActual = getEstadoOp(op);
+      const kgPendientesLam = Math.max(0, op.kgSolicitados - cons.kgFinales);
       
       html += `<div class="op-card">
-        <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></div>
+        <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(estadoActual)}">${getEstadoLabel(estadoActual)}</span></div>
         <div class="op-card-medida">${op.medida} — ${op.numero}</div>
         <div class="op-card-meta">
           <div><div class="label">Solicitado</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
-          <div><div class="label">PET necesario</div><div class="value">${nec.kgPetTotal.toFixed(1)} kg</div></div>
-          <div><div class="label">PE necesario</div><div class="value">${nec.kgPeTotal.toFixed(1)} kg</div></div>
-          <div><div class="label">Laminado a la fecha</div><div class="value">${totalKgLam.toFixed(1)} kg · ${turnos.length} turno(s)</div></div>
+          <div><div class="label">Refilado a la fecha</div><div class="value">${cons.kgFinales.toFixed(1)} kg</div></div>
+          <div><div class="label">Laminado a la fecha</div><div class="value">${cons.kgLaminados.toFixed(1)} kg · ${turnos.length} turno(s)</div></div>
+          <div><div class="label">Pendiente para llegar al objetivo</div><div class="value" style="color:${kgPendientesLam>0?'var(--orange)':'var(--green)'}">${kgPendientesLam.toFixed(1)} kg</div></div>
         </div>
         ${op.notas ? `<div class="alert alert-info" style="margin-top:10px;font-size:12px"><strong>Notas:</strong> ${op.notas}</div>` : ''}
         <div class="op-card-action">
@@ -792,7 +809,7 @@ function renderOperarioHome(){
     <h2 style="font-size:16px;color:var(--navy);margin-bottom:10px;font-weight:600">✂ REFILADO (${opsParaRefilar.length})</h2>`;
   
   if(opsParaRefilar.length === 0){
-    html += '<div class="op-card"><p style="color:var(--muted);text-align:center;padding:14px">No hay OPs para refilar.</p></div>';
+    html += '<div class="op-card"><p style="color:var(--muted);text-align:center;padding:14px">No hay bobinas laminadas pendientes de refilar.</p></div>';
   } else {
     opsParaRefilar.forEach(op=>{
       const turnos = op.turnosRefilado || [];
@@ -803,12 +820,13 @@ function renderOperarioHome(){
       const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladasIds.includes(bl.id));
       const kgPendientes = bobinasLamPendientes.reduce((s,b)=>s+(b.pesoNeto||0),0);
       const kgRefilado = turnos.flatMap(t=>t.bobinasRefiladas||[]).reduce((s,b)=>s+(b.pesoNeto||0),0);
+      const estadoActual = getEstadoOp(op);
       
       html += `<div class="op-card">
-        <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></div>
+        <div class="op-card-cliente">${op.cliente} <span class="badge ${getEstadoBadge(estadoActual)}">${getEstadoLabel(estadoActual)}</span></div>
         <div class="op-card-medida">${op.medida} — ${op.numero}</div>
         <div class="op-card-meta">
-          <div><div class="label">Bobinas pendientes</div><div class="value">${bobinasLamPendientes.length} · ${kgPendientes.toFixed(1)} kg</div></div>
+          <div><div class="label">Bobinas pendientes refilar</div><div class="value">${bobinasLamPendientes.length} · ${kgPendientes.toFixed(1)} kg</div></div>
           <div><div class="label">Solicitado final</div><div class="value">${op.kgSolicitados.toFixed(0)} kg</div></div>
           <div><div class="label">Refilado a la fecha</div><div class="value">${kgRefilado.toFixed(1)} kg</div></div>
           <div><div class="label">Tiras / final</div><div class="value">${op.producto.tiras} × ${op.producto.anchoFinal}mm</div></div>
@@ -832,12 +850,9 @@ function renderOperarioHome(){
 function opNuevoTurnoLaminado(opId){
   const op = state.ops.find(o=>o.id===opId);
   if(!op) return;
+  if(op.estado === 'cerrada'){alert('La OP ya está cerrada'); return;}
   
-  // Si OP está nueva, pasar a laminando
-  if(op.estado === 'nueva'){
-    op.estado = 'laminando';
-    op.fechaUltimoCambio = new Date().toISOString();
-  }
+  op.fechaUltimoCambio = new Date().toISOString();
   
   if(!op.turnosLaminado) op.turnosLaminado = [];
   
@@ -1317,14 +1332,11 @@ function opCerrarTurnoLaminado(opId, turnoId){
   turno.notas = document.getElementById('turnoNotasLam').value;
   turno.cerrado = true;
   turno.fechaFin = new Date().toISOString();
-  
-  // Si estaba en estado nueva o laminando, pasar a para_refilar
-  if(op.estado === 'nueva' || op.estado === 'laminando'){
-    op.estado = 'para_refilar';
-  }
   op.fechaUltimoCambio = new Date().toISOString();
   saveState();
-  alert('Turno cerrado. La OP queda lista para que se siga refilando o se haga otro turno de laminado.');
+  
+  const cons = calcularConsumosOp(op);
+  alert(`Turno de laminado cerrado.\n\n${cons.cantBobinasLam} bobina(s) laminada(s) · ${cons.kgLaminados.toFixed(1)} kg\n\nLa bobina(s) ya está disponible para refilar.`);
   renderOperarioHome();
 }
 
@@ -1334,11 +1346,9 @@ function opCerrarTurnoLaminado(opId, turnoId){
 function opNuevoTurnoRefilado(opId){
   const op = state.ops.find(o=>o.id===opId);
   if(!op) return;
+  if(op.estado === 'cerrada'){alert('La OP ya está cerrada'); return;}
   
-  if(op.estado === 'para_refilar'){
-    op.estado = 'refilando';
-    op.fechaUltimoCambio = new Date().toISOString();
-  }
+  op.fechaUltimoCambio = new Date().toISOString();
   
   if(!op.turnosRefilado) op.turnosRefilado = [];
   
@@ -1560,22 +1570,15 @@ function opCerrarTurnoRefilado(opId, turnoId){
   turno.notas = document.getElementById('turnoNotasRef').value;
   turno.cerrado = true;
   turno.fechaFin = new Date().toISOString();
-  
-  // Verificar si todas las bobinas laminadas fueron refiladas
-  const turnosLam = op.turnosLaminado || [];
-  const bobinasLamIds = turnosLam.flatMap(t=>(t.bobinasSalientes||[]).map(b=>b.id));
-  const bobinasRefiladasIds = (op.turnosRefilado||[]).flatMap(t=>(t.bobinasRefiladas||[]).map(br=>br.bobinaLamId));
-  const todasRefiladas = bobinasLamIds.every(id=>bobinasRefiladasIds.includes(id));
-  
-  if(todasRefiladas && bobinasLamIds.length > 0){
-    op.estado = 'cerrada';
-    op.fechaCierre = new Date().toISOString();
-  } else {
-    op.estado = 'para_refilar';
-  }
   op.fechaUltimoCambio = new Date().toISOString();
+  
+  // El cierre de la OP es manual desde gestión, NO automático
   saveState();
-  alert(todasRefiladas ? 'Turno cerrado. ¡OP cerrada completamente!' : 'Turno cerrado. Aún quedan bobinas laminadas pendientes de refilar.');
+  
+  // Mensaje informativo
+  const cons = calcularConsumosOp(op);
+  const pctAvance = (cons.kgFinales / op.kgSolicitados * 100).toFixed(1);
+  alert(`Turno cerrado.\n\nProgreso de la OP: ${cons.kgFinales.toFixed(1)} / ${op.kgSolicitados.toFixed(0)} kg (${pctAvance}%)\n\nLa OP queda abierta hasta que se cierre manualmente desde gestión.`);
   renderOperarioHome();
 }
 
@@ -1608,16 +1611,21 @@ function renderDashboard(){
     if(margenes.length) margenPromedio = margenes.reduce((s,m)=>s+m,0) / margenes.length;
   }
   
-  const opsParaLaminar = opsActivas.filter(op=>op.estado==='nueva' || op.estado==='laminando');
-  const opsParaRefilar = opsActivas.filter(op=>op.estado==='para_refilar' || op.estado==='refilando');
+  const opsNuevas = opsActivas.filter(op=>getEstadoOp(op)==='nueva');
+  const opsEnProduccion = opsActivas.filter(op=>getEstadoOp(op)==='en_produccion');
+  const opsListasParaCerrar = opsActivas.filter(op=>getEstadoOp(op)==='lista_para_cerrar');
   
   // Alertas
   const alertas = [];
   state.ops.forEach(op=>{
     if(op.estado!=='cerrada'){
+      const estadoActual = getEstadoOp(op);
       const dias = daysSince(op.fechaUltimoCambio || op.fechaCreacion);
-      if(dias > state.config.diasAlertaOp){
+      if(dias > state.config.diasAlertaOp && estadoActual !== 'lista_para_cerrar'){
         alertas.push({tipo:'warning', msg:`OP ${op.numero} (${op.cliente}) sin avanzar hace ${dias} días`});
+      }
+      if(estadoActual === 'lista_para_cerrar'){
+        alertas.push({tipo:'success', msg:`OP ${op.numero} (${op.cliente}) lista para cerrar manualmente`});
       }
     }
   });
@@ -1641,8 +1649,9 @@ function renderDashboard(){
   
   html += `<div class="kpi-grid">
     <div class="kpi"><div class="kpi-label">OPs activas</div><div class="kpi-value">${opsActivas.length}</div><div class="kpi-extra">${kgActivos.toFixed(0)} kg comprometidos</div></div>
-    <div class="kpi blue"><div class="kpi-label">Para laminar</div><div class="kpi-value">${opsParaLaminar.length}</div></div>
-    <div class="kpi orange"><div class="kpi-label">Para refilar</div><div class="kpi-value">${opsParaRefilar.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Nuevas (sin turnos)</div><div class="kpi-value">${opsNuevas.length}</div></div>
+    <div class="kpi blue"><div class="kpi-label">En producción</div><div class="kpi-value">${opsEnProduccion.length}</div></div>
+    <div class="kpi orange"><div class="kpi-label">Lista para cerrar</div><div class="kpi-value">${opsListasParaCerrar.length}</div></div>
     <div class="kpi green"><div class="kpi-label">Producido del mes</div><div class="kpi-value">${kgMes.toFixed(0)} kg</div><div class="kpi-extra">${opsMes.length} OPs cerradas</div></div>
     <div class="kpi"><div class="kpi-label">Margen real promedio</div><div class="kpi-value">${margenPromedio!==null?fmtPct(margenPromedio):'—'}</div><div class="kpi-extra">Mes en curso</div></div>
   </div>`;
@@ -1651,16 +1660,26 @@ function renderDashboard(){
   if(opsActivas.length===0){
     html += '<p style="color:var(--muted);text-align:center;padding:24px">No hay OPs activas. Generá una desde una OC.</p>';
   } else {
-    html += '<table class="table"><thead><tr><th>OP</th><th>Cliente</th><th>Producto</th><th class="num">kg</th><th>Estado</th><th>Días</th><th></th></tr></thead><tbody>';
+    html += '<table class="table"><thead><tr><th>OP</th><th>Cliente</th><th>Producto</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Avance</th><th>Estado</th><th>Días</th><th></th></tr></thead><tbody>';
     opsActivas.forEach(op=>{
       const dias = daysSince(op.fechaUltimoCambio || op.fechaCreacion);
-      const badgeClass = dias > state.config.diasAlertaOp ? 'badge-warning' : getEstadoBadge(op.estado);
+      const estadoActual = getEstadoOp(op);
+      const cons = calcularConsumosOp(op);
+      const pctAvance = op.kgSolicitados > 0 ? Math.min(100, (cons.kgFinales / op.kgSolicitados) * 100) : 0;
+      const badgeClass = dias > state.config.diasAlertaOp && estadoActual !== 'lista_para_cerrar' ? 'badge-warning' : getEstadoBadge(estadoActual);
       html += `<tr class="row-clickable" onclick="verOp('${op.id}')">
         <td><strong>${op.numero}</strong></td>
         <td>${op.cliente}</td>
         <td>${op.medida}</td>
-        <td class="num">${(+op.kgSolicitados).toFixed(0)}</td>
-        <td><span class="badge ${badgeClass}">${getEstadoLabel(op.estado)}</span></td>
+        <td class="num">${(+op.kgSolicitados).toFixed(0)} kg</td>
+        <td class="num">${cons.kgFinales.toFixed(1)} kg</td>
+        <td>
+          <div style="background:var(--bg-2);border-radius:3px;height:6px;width:60px;overflow:hidden;border:1px solid var(--line);display:inline-block;vertical-align:middle">
+            <div style="background:var(--green);width:${pctAvance}%;height:100%"></div>
+          </div>
+          <span style="font-size:10px;color:var(--muted);margin-left:4px">${pctAvance.toFixed(0)}%</span>
+        </td>
+        <td><span class="badge ${badgeClass}">${getEstadoLabel(estadoActual)}</span></td>
         <td>${dias} días</td>
         <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOp('${op.id}')">Ver</button></td>
       </tr>`;
@@ -2007,15 +2026,14 @@ function eliminarOc(id){
 // =========================================================
 function renderOps(){
   let html = `<h1 class="page-title">Órdenes de Producción</h1>
-    <p class="page-subtitle">Cada OP tiene laminado y refilado como procesos separados.</p>`;
+    <p class="page-subtitle">Cada OP tiene laminado y refilado como procesos separados. El cierre es manual.</p>`;
   
   html += `<div class="filters">
     <select class="filter-input" id="opFiltroEstado" onchange="renderOpsTable()">
       <option value="">Todos los estados</option>
-      <option value="nueva">Nuevas</option>
-      <option value="laminando">Laminando</option>
-      <option value="para_refilar">Para refilar</option>
-      <option value="refilando">Refilando</option>
+      <option value="nueva">Nuevas (sin turnos)</option>
+      <option value="en_produccion">En producción</option>
+      <option value="lista_para_cerrar">Lista para cerrar</option>
       <option value="cerrada">Cerradas</option>
     </select>
     <input type="text" class="filter-input" placeholder="Buscar cliente..." id="opFiltroCliente" oninput="renderOpsTable()">
@@ -2031,7 +2049,8 @@ function renderOpsTable(){
   const filtroCliente = document.getElementById('opFiltroCliente')?.value.toLowerCase() || '';
   
   let ops = state.ops.filter(op=>{
-    if(filtroEstado && op.estado !== filtroEstado) return false;
+    const estadoActual = getEstadoOp(op);
+    if(filtroEstado && estadoActual !== filtroEstado) return false;
     if(filtroCliente && !op.cliente.toLowerCase().includes(filtroCliente)) return false;
     return true;
   });
@@ -2041,16 +2060,27 @@ function renderOpsTable(){
   if(ops.length===0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay OPs. Generá una desde una OC.</p>';
   } else {
-    html = '<table class="table"><thead><tr><th>OP</th><th>OC</th><th>Cliente</th><th>Producto</th><th class="num">kg</th><th>Estado</th><th>Creada</th><th></th></tr></thead><tbody>';
+    html = '<table class="table"><thead><tr><th>OP</th><th>OC</th><th>Cliente</th><th>Producto</th><th class="num">Solicitado</th><th class="num">Producido</th><th>Avance</th><th>Estado</th><th>Creada</th><th></th></tr></thead><tbody>';
     ops.forEach(op=>{
       const oc = state.ocs.find(o=>o.id===op.ocId);
+      const estadoActual = getEstadoOp(op);
+      const cons = calcularConsumosOp(op);
+      const pctAvance = op.kgSolicitados > 0 ? Math.min(100, (cons.kgFinales / op.kgSolicitados) * 100) : 0;
+      
       html += `<tr class="row-clickable" onclick="verOp('${op.id}')">
         <td><strong>${op.numero}</strong></td>
         <td>${oc?oc.numero:'—'}</td>
         <td>${op.cliente}</td>
         <td>${op.medida}</td>
-        <td class="num">${(+op.kgSolicitados).toFixed(0)}</td>
-        <td><span class="badge ${getEstadoBadge(op.estado)}">${getEstadoLabel(op.estado)}</span></td>
+        <td class="num">${(+op.kgSolicitados).toFixed(0)} kg</td>
+        <td class="num">${cons.kgFinales.toFixed(1)} kg</td>
+        <td>
+          <div style="background:var(--bg-2);border-radius:3px;height:8px;width:80px;overflow:hidden;border:1px solid var(--line)">
+            <div style="background:var(--green);width:${pctAvance}%;height:100%"></div>
+          </div>
+          <span style="font-size:10px;color:var(--muted)">${pctAvance.toFixed(1)}%</span>
+        </td>
+        <td><span class="badge ${getEstadoBadge(estadoActual)}">${getEstadoLabel(estadoActual)}</span></td>
         <td>${fmtDate(op.fechaCreacion)}</td>
         <td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();verOp('${op.id}')">Ver</button></td>
       </tr>`;
@@ -2153,15 +2183,45 @@ function verOp(id){
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>${op.numero} — ${op.cliente} ${op.medida}</h2>`;
   
-  // Stages
-  const estados = ['nueva','laminando','para_refilar','refilando','cerrada'];
-  const idxActual = estados.indexOf(op.estado);
+  // Estado dinámico
+  const estadoActual = getEstadoOp(op);
+  const cons = calcularConsumosOp(op);
+  const pctAvance = op.kgSolicitados > 0 ? Math.min(100, (cons.kgFinales / op.kgSolicitados) * 100) : 0;
+  const pctLaminado = op.kgSolicitados > 0 ? Math.min(100, (cons.kgLaminados / op.kgSolicitados) * 100) : 0;
+  const kgPendientes = Math.max(0, op.kgSolicitados - cons.kgFinales);
+  
+  // Indicador visual de estados (solo 4 ahora)
+  const estados = ['nueva','en_produccion','lista_para_cerrar','cerrada'];
+  const idxActual = estados.indexOf(estadoActual);
   html += '<div class="stages">';
   estados.forEach((est, i)=>{
     const cls = i < idxActual ? 'done' : i === idxActual ? 'active' : '';
     html += `<div class="stage ${cls}">${getEstadoLabel(est)}</div>`;
   });
   html += '</div>';
+  
+  // Barra de progreso
+  html += `<div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:8px;border:none;padding:0">
+      Avance de la OP
+      <span class="badge ${getEstadoBadge(estadoActual)}" style="margin-left:8px">${getEstadoLabel(estadoActual)}</span>
+    </div>
+    <div style="margin:8px 0">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+        <span>Refilado: <strong style="color:var(--green)">${cons.kgFinales.toFixed(1)} kg</strong> de ${op.kgSolicitados.toFixed(0)} kg solicitados</span>
+        <span><strong>${pctAvance.toFixed(1)}%</strong></span>
+      </div>
+      <div style="background:var(--bg-2);border-radius:4px;height:14px;overflow:hidden;border:1px solid var(--line)">
+        <div style="background:linear-gradient(90deg,var(--green) 0%,var(--green) ${pctAvance}%,var(--bg-2) ${pctAvance}%);width:100%;height:100%;position:relative">
+          ${pctLaminado > pctAvance ? `<div style="position:absolute;top:0;left:0;width:${pctLaminado}%;height:100%;background:var(--blue);opacity:0.3"></div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
+        <span>Laminado total: ${cons.kgLaminados.toFixed(1)} kg</span>
+        <span>Pendiente para cubrir OP: <strong style="color:${kgPendientes>0?'var(--orange)':'var(--green)'}">${kgPendientes.toFixed(1)} kg</strong></span>
+      </div>
+    </div>
+  </div>`;
   
   html += `<div class="detail-grid">
     <div class="detail-item"><div class="detail-label">OC asociada</div><div class="detail-value">${oc?oc.numero:'—'}</div></div>
@@ -2179,22 +2239,89 @@ function verOp(id){
     <div class="tab ${currentOpTab==='necesidades'?'active':''}" onclick="setOpTab('necesidades','${op.id}')">Necesidades</div>
     <div class="tab ${currentOpTab==='laminado'?'active':''}" onclick="setOpTab('laminado','${op.id}')">Laminado ${tieneTurnosLam?'✓':''}</div>
     <div class="tab ${currentOpTab==='refilado'?'active':''}" onclick="setOpTab('refilado','${op.id}')">Refilado ${tieneTurnosRef?'✓':''}</div>
-    ${op.estado==='cerrada' ? `<div class="tab ${currentOpTab==='resultado'?'active':''}" onclick="setOpTab('resultado','${op.id}')">Resultado</div>` : ''}
+    ${estadoActual==='cerrada' ? `<div class="tab ${currentOpTab==='resultado'?'active':''}" onclick="setOpTab('resultado','${op.id}')">Resultado</div>` : ''}
   </div>`;
   
   html += '<div id="opTabContent">'+renderOpTabContent(op, necesidades, real, [])+'</div>';
   
   html += '<div class="form-row" style="margin-top:18px">';
-  if(op.estado === 'nueva'){
+  if(estadoActual === 'nueva'){
     html += `<button class="btn btn-accent" onclick="enviarMailIngenieros('${op.id}')">📧 Enviar mail a ingenieros</button>`;
   }
-  if(op.estado !== 'cerrada'){
+  if(estadoActual !== 'cerrada'){
     html += `<button class="btn btn-secondary" onclick="closeModal();editarOp('${op.id}')">✎ Editar OP</button>`;
+    // Botón cerrar OP manualmente (solo en gestión)
+    if(tieneTurnosLam || tieneTurnosRef){
+      const btnClass = estadoActual === 'lista_para_cerrar' ? 'btn-success' : 'btn-orange';
+      html += `<button class="btn ${btnClass}" onclick="cerrarOpManual('${op.id}')">🔒 Cerrar OP manualmente</button>`;
+    }
     html += `<button class="btn btn-danger" onclick="eliminarOp('${op.id}')" style="margin-left:auto">Eliminar OP</button>`;
+  } else {
+    html += `<button class="btn btn-secondary" onclick="reabrirOp('${op.id}')">↺ Reabrir OP</button>`;
   }
   html += '</div>';
   
   showModal(html, true);
+}
+
+function cerrarOpManual(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return;
+  const cons = calcularConsumosOp(op);
+  const kgPendientes = op.kgSolicitados - cons.kgFinales;
+  const pctAvance = op.kgSolicitados > 0 ? (cons.kgFinales / op.kgSolicitados) * 100 : 0;
+  
+  // Verificar bobinas laminadas no refiladas
+  const turnosLam = op.turnosLaminado || [];
+  const bobinasLamTotal = turnosLam.flatMap(t=>t.bobinasSalientes||[]);
+  const bobinasRefiladasIds = (op.turnosRefilado||[]).flatMap(t=>(t.bobinasRefiladas||[]).map(br=>br.bobinaLamId));
+  const bobinasLamPendientes = bobinasLamTotal.filter(bl => !bobinasRefiladasIds.includes(bl.id));
+  
+  let mensaje = `¿Confirmás cerrar la OP ${op.numero}?\n\n`;
+  mensaje += `Solicitado: ${op.kgSolicitados.toFixed(0)} kg\n`;
+  mensaje += `Producido (refilado): ${cons.kgFinales.toFixed(1)} kg (${pctAvance.toFixed(1)}%)\n`;
+  
+  let advertencias = [];
+  if(kgPendientes > 0){
+    advertencias.push(`Faltan ${kgPendientes.toFixed(1)} kg para cubrir lo solicitado`);
+  } else if(kgPendientes < 0){
+    advertencias.push(`Se produjeron ${Math.abs(kgPendientes).toFixed(1)} kg de más sobre lo solicitado`);
+  }
+  if(bobinasLamPendientes.length > 0){
+    const kgPendRefilar = bobinasLamPendientes.reduce((s,b)=>s+(b.pesoNeto||0),0);
+    advertencias.push(`Hay ${bobinasLamPendientes.length} bobina(s) laminada(s) sin refilar (${kgPendRefilar.toFixed(1)} kg)`);
+  }
+  
+  if(advertencias.length > 0){
+    mensaje += `\n⚠ ATENCIÓN:\n${advertencias.map(a=>'• '+a).join('\n')}\n`;
+  }
+  mensaje += `\nUna vez cerrada se puede reabrir si hace falta.`;
+  
+  if(!confirm(mensaje)) return;
+  
+  op.estado = 'cerrada';
+  op.fechaCierre = new Date().toISOString();
+  op.fechaUltimoCambio = new Date().toISOString();
+  op.cerradaPor = currentUser.nombre;
+  saveState();
+  closeModal();
+  alert(`OP ${op.numero} cerrada correctamente.`);
+  navigateTo('ops');
+}
+
+function reabrirOp(opId){
+  const op = state.ops.find(o=>o.id===opId);
+  if(!op) return;
+  if(!confirm(`¿Reabrir OP ${op.numero}? Vuelve a estado activa y los operarios podrán seguir cargando turnos.`)) return;
+  op.estado = 'nueva'; // El estado real se calcula dinámico
+  op.fechaCierre = null;
+  op.fechaUltimoCambio = new Date().toISOString();
+  op.reabiertaPor = currentUser.nombre;
+  op.fechaReapertura = new Date().toISOString();
+  saveState();
+  closeModal();
+  alert(`OP ${op.numero} reabierta.`);
+  navigateTo('ops');
 }
 
 function setOpTab(tab, opId){
@@ -2361,16 +2488,17 @@ function editarOp(opId){
   const op = state.ops.find(o=>o.id===opId);
   if(!op) return;
   if(op.estado === 'cerrada'){
-    alert('No se puede editar una OP cerrada.');
+    alert('No se puede editar una OP cerrada. Reabrila primero si es necesario.');
     return;
   }
   
-  const enProduccion = op.estado !== 'nueva';
+  const estadoActual = getEstadoOp(op);
+  const enProduccion = estadoActual !== 'nueva';
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>Editar OP ${op.numero}</h2>
     
-    ${enProduccion ? `<div class="alert alert-warning">⚠ Esta OP ya está en producción (${getEstadoLabel(op.estado)}). Solo se pueden editar la fecha planeada y las notas.</div>` : ''}
+    ${enProduccion ? `<div class="alert alert-warning">⚠ Esta OP ya está en producción (${getEstadoLabel(estadoActual)}). Solo se pueden editar la fecha planeada y las notas.</div>` : ''}
     
     <div class="form-grid">
       <div class="form-group">
@@ -2400,7 +2528,8 @@ function guardarEdicionOp(opId){
   const op = state.ops.find(o=>o.id===opId);
   if(!op) return;
   
-  const enProduccion = op.estado !== 'nueva';
+  const estadoActual = getEstadoOp(op);
+  const enProduccion = estadoActual !== 'nueva';
   
   if(!enProduccion){
     const kg = parseFloat(document.getElementById('opEditKg').value);

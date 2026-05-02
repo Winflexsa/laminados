@@ -986,6 +986,9 @@ function renderBobinaSalienteCard(b, opId, turnoId){
   
   return `<div class="bobina-card" style="border-left:3px solid var(--green)">
     <div class="code" style="color:var(--green)">★ ${b.numero}</div>
+    <div class="desc" style="font-weight:600;color:var(--navy);margin-top:2px">
+      Cliente: ${op.cliente}
+    </div>
     <div class="desc">
       Bruto ${b.pesoBruto.toFixed(1)}kg · Cono ${b.cono}kg · 
       <strong>Neto ${b.pesoNeto.toFixed(1)}kg</strong> · 
@@ -1422,7 +1425,10 @@ function opAbrirTurnoRefilado(opId, turnoId){
       : (turno.bobinasRefiladas||[]).map(br=>{
           const bl = bobinasLamTotal.find(x=>x.id===br.bobinaLamId);
           return `<div class="bobina-card" style="border-left:3px solid var(--green)">
-            <div class="code" style="color:var(--green)">★ ${br.numero}</div>
+            <div class="code" style="color:var(--green)">★ ${br.numero} ${br.partida ? `· P.${br.partida}` : ''}</div>
+            <div class="desc" style="font-weight:600;color:var(--navy);margin-top:2px">
+              Cliente: ${br.cliente || op.cliente}
+            </div>
             <div class="desc">
               Bruto ${br.pesoBruto.toFixed(1)}kg · Cono ${br.cono}kg · 
               <strong>Neto ${br.pesoNeto.toFixed(1)}kg</strong> · 
@@ -1471,9 +1477,13 @@ function opCargarBobinaRefilada(opId, turnoId, bobinaLamId){
   const numCount = (turno.bobinasRefiladas||[]).length + 1;
   const numeroSugerido = `R-${op.numero}-${numCount.toString().padStart(2,'0')}`;
   
+  // Buscar la última partida usada en este turno (para precargar)
+  const ultimaPartida = (turno.bobinasRefiladas||[]).slice(-1)[0]?.partida || '';
+  
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
     <h2>Cargar bobina REFILADA</h2>
     <div class="alert alert-info">
+      <strong>${op.cliente}</strong> · ${op.medida}<br>
       Esta bobina sale de la <strong>bobina laminada ${bobinaLam.numero}</strong> (${bobinaLam.pesoNeto.toFixed(1)}kg).
     </div>
     
@@ -1482,6 +1492,15 @@ function opCargarBobinaRefilada(opId, turnoId, bobinaLamId){
         <div class="form-group">
           <label class="form-label">N° de bobina</label>
           <input type="text" class="form-input" id="refNumero" value="${numeroSugerido}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° de partida</label>
+          <input type="text" class="form-input" id="refPartida" value="${ultimaPartida}" placeholder="ej: P-2605-001">
+          ${ultimaPartida ? `<div class="form-help">Precargada del último ingreso, podés cambiarla.</div>` : ''}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <input type="text" class="form-input" id="refCliente" value="${op.cliente}" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
         </div>
         <div class="form-group">
           <label class="form-label">Peso BRUTO (kg)</label>
@@ -1530,6 +1549,7 @@ function opGuardarBobinaRefilada(opId, turnoId, bobinaLamId){
   const turno = op.turnosRefilado.find(t=>t.id===turnoId);
   
   const numero = document.getElementById('refNumero').value.trim();
+  const partida = document.getElementById('refPartida').value.trim();
   const pesoBruto = parseFloat(document.getElementById('refPesoBruto').value);
   const cono = parseFloat(document.getElementById('refCono').value);
   const pesoNeto = parseFloat(document.getElementById('refPesoNeto').value);
@@ -1541,7 +1561,9 @@ function opGuardarBobinaRefilada(opId, turnoId, bobinaLamId){
   if(!turno.bobinasRefiladas) turno.bobinasRefiladas = [];
   turno.bobinasRefiladas.push({
     id: uid('REF'),
-    numero, pesoBruto, cono, pesoNeto, metros, notas,
+    numero, partida,
+    cliente: op.cliente, // se guarda automático desde la OP
+    pesoBruto, cono, pesoNeto, metros, notas,
     bobinaLamId,
     cargadaPor: currentUser.nombre,
     fecha: new Date().toISOString()

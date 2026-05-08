@@ -4144,15 +4144,43 @@ function importarExcelBobinas(ev, tipo){
   const file = ev.target.files[0];
   if(!file) return;
   
+  // Verificar que SheetJS esté cargado
+  if(typeof XLSX === 'undefined'){
+    alert('Error: la librería XLSX no se cargó. Verificá tu conexión a internet (necesita CDN) y refrescá la página.');
+    ev.target.value = '';
+    return;
+  }
+  
   const reader = new FileReader();
+  reader.onerror = (err) => {
+    alert('Error leyendo el archivo: ' + (err.message || 'desconocido'));
+    ev.target.value = '';
+  };
   reader.onload = (e) => {
     try {
       const data = new Uint8Array(e.target.result);
       const wb = XLSX.read(data, {type:'array', cellDates:true});
-      const ws = wb.Sheets['Detalle de Envio'] || wb.Sheets[wb.SheetNames[0]];
+      
+      console.log('Hojas encontradas:', wb.SheetNames);
+      
+      const sheetName = wb.SheetNames.find(n=>n.toLowerCase().includes('detalle')) || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      
+      if(!ws){
+        alert('No se pudo leer ninguna hoja del Excel. Hojas: ' + wb.SheetNames.join(', '));
+        ev.target.value = '';
+        return;
+      }
       
       // Leer todas las celdas como matriz
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:false, dateNF:'yyyy-mm-dd'});
+      console.log('Filas leídas:', rows.length);
+      
+      if(rows.length === 0){
+        alert('El Excel está vacío o no se pudo leer.');
+        ev.target.value = '';
+        return;
+      }
       
       // Buscar header del envío
       let fecha = null, remito = null;
@@ -4169,28 +4197,63 @@ function importarExcelBobinas(ev, tipo){
       let headerRow = -1;
       for(let i=0; i<rows.length; i++){
         const row = rows[i];
-        if(row && row[0] === 'Partida' && row[1] === 'Bobina N°'){
+        if(!row) continue;
+        const c0 = String(row[0]||'').trim();
+        const c1 = String(row[1]||'').trim();
+        if(c0 === 'Partida' && (c1 === 'Bobina N°' || c1.startsWith('Bobina'))){
           headerRow = i;
           break;
         }
       }
       
       if(headerRow === -1){
-        alert('No se encontraron los encabezados (Partida, Bobina N°). Verificá el formato del Excel.');
+        alert('No se encontraron los encabezados (fila con "Partida" y "Bobina N°"). Verificá el formato del Excel.');
+        ev.target.value = '';
         return;
       }
+      
+      // Función segura para convertir fecha de Excel a ISO
+      function fechaSegura(f){
+        if(!f) return new Date().toISOString();
+        try {
+          if(f instanceof Date) return f.toISOString();
+          if(typeof f === 'string'){
+            const d = new Date(f);
+            if(!isNaN(d.getTime())) return d.toISOString();
+          }
+          if(typeof f === 'number'){
+            // Excel serial number to date (días desde 1900-01-01)
+            const d = new Date((f - 25569) * 86400 * 1000);
+            if(!isNaN(d.getTime())) return d.toISOString();
+          }
+        } catch(e){console.warn('Fecha no parseable:', f);}
+        return new Date().toISOString();
+      }
+      
+      const fechaISO = fechaSegura(fecha);
       
       // Procesar bobinas: filas siguientes
       const bobinasNuevas = [];
       const ignoradas = {sin_destino:0, no_match_catalogo:0, duplicadas:0};
       const productosConMatch = new Set();
+      const sinMatchDetalle = new Set();
       
       for(let i=headerRow+1; i<rows.length; i++){
         const row = rows[i];
-        if(!row || row[0] === null || typeof row[1] !== 'number') continue;
+        if(!row || row[0] === null || row[0] === undefined) continue;
+        
+        // Bobina N° puede venir como número o string
+        let numBobina = row[1];
+        if(numBobina === null || numBobina === undefined || numBobina === '') continue;
+        // Si es string que parece número, parsear
+        if(typeof numBobina === 'string'){
+          const parsed = parseInt(numBobina);
+          if(isNaN(parsed)) continue;
+          numBobina = parsed;
+        }
+        if(typeof numBobina !== 'number') continue;
         
         const partida = String(row[0]||'').trim();
-        const numBobina = row[1];
         const peso = parseFloat(row[2]) || 0;
         const medida = String(row[3]||'').trim();
         const pallet = String(row[4]||'').trim();
@@ -4202,11 +4265,14 @@ function importarExcelBobinas(ev, tipo){
         // Filtrar: matchear con catálogo (cliente + medida del PET)
         const productoMatch = state.catalogo.find(p=>{
           const medidaPet = `${p.anchoPet}x${p.espPet}`;
-          // Match por cliente Y por medida PET
           return p.cliente.toLowerCase() === destino.toLowerCase() && medidaPet === medida;
         });
         
-        if(!productoMatch){ignoradas.no_match_catalogo++; continue;}
+        if(!productoMatch){
+          ignoradas.no_match_catalogo++;
+          sinMatchDetalle.add(`${destino} ${medida}`);
+          continue;
+        }
         
         productosConMatch.add(`${productoMatch.cliente} ${productoMatch.medida}`);
         
@@ -4229,16 +4295,16 @@ function importarExcelBobinas(ev, tipo){
         bobinasNuevas.push({
           id: uid('STK'),
           cliente: productoMatch.cliente,
-          medidaProductoFinal: productoMatch.medida, // medida del catálogo
-          medida: medida, // medida del PET madre del Excel
+          medidaProductoFinal: productoMatch.medida,
+          medida: medida,
           partida,
           numero: numBobina,
           peso,
           metros,
           pallet,
           solicitudPedido,
-          remito: remito || '',
-          fechaIngreso: fecha ? new Date(fecha).toISOString() : new Date().toISOString(),
+          remito: String(remito || ''),
+          fechaIngreso: fechaISO,
           estado: 'disponible',
           opUsadaId: null,
           opUsadaNumero: null,
@@ -4250,15 +4316,24 @@ function importarExcelBobinas(ev, tipo){
       }
       
       if(bobinasNuevas.length === 0){
-        alert(`No se importó ninguna bobina nueva.\n\nResumen:\n• Sin destino: ${ignoradas.sin_destino}\n• Cliente/medida no en catálogo: ${ignoradas.no_match_catalogo}\n• Duplicadas: ${ignoradas.duplicadas}`);
+        let msg = `No se importó ninguna bobina nueva.\n\nResumen:\n• Sin destino: ${ignoradas.sin_destino}\n• Cliente/medida no en catálogo: ${ignoradas.no_match_catalogo}\n• Duplicadas: ${ignoradas.duplicadas}`;
+        if(sinMatchDetalle.size > 0){
+          msg += '\n\nNo matchearon (cliente + medida):\n' + [...sinMatchDetalle].map(s=>'• '+s).join('\n');
+        }
+        alert(msg);
         ev.target.value = '';
         return;
       }
       
       // Confirmar antes de agregar
-      const resumen = `IMPORTAR ${bobinasNuevas.length} BOBINAS ${tipo.toUpperCase()}?\n\n` +
+      let resumen = `IMPORTAR ${bobinasNuevas.length} BOBINAS ${tipo.toUpperCase()}?\n\n` +
         `Productos detectados:\n${[...productosConMatch].map(p=>'• '+p).join('\n')}\n\n` +
         `Ignoradas:\n• Sin destino: ${ignoradas.sin_destino}\n• Cliente/medida no en catálogo: ${ignoradas.no_match_catalogo}\n• Duplicadas: ${ignoradas.duplicadas}`;
+      
+      if(sinMatchDetalle.size > 0){
+        resumen += '\n\nNo matchearon (cliente + medida):\n' + [...sinMatchDetalle].slice(0,5).map(s=>'• '+s).join('\n');
+        if(sinMatchDetalle.size > 5) resumen += `\n• ... +${sinMatchDetalle.size-5} más`;
+      }
       
       if(!confirm(resumen)){ev.target.value = ''; return;}
       
@@ -4274,8 +4349,8 @@ function importarExcelBobinas(ev, tipo){
         id: uid('IMP'),
         fecha: new Date().toISOString(),
         archivo: file.name,
-        remito: remito||'',
-        fechaEnvio: fecha?new Date(fecha).toISOString():null,
+        remito: String(remito||''),
+        fechaEnvio: fechaISO,
         cantBobinas: bobinasNuevas.length,
         ignoradas: ignoradas.sin_destino + ignoradas.no_match_catalogo + ignoradas.duplicadas,
         importadoPor: currentUser.nombre,
@@ -4287,8 +4362,8 @@ function importarExcelBobinas(ev, tipo){
       renderStockBobinas();
       ev.target.value = '';
     } catch(err){
-      console.error(err);
-      alert('Error procesando Excel: '+err.message);
+      console.error('Error procesando Excel:', err);
+      alert('Error procesando Excel: ' + (err.message || err.toString()) + '\n\nMirá la consola del navegador (F12) para más detalle.');
       ev.target.value = '';
     }
   };

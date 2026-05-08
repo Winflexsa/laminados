@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Winflex — OPs Laminado PET/PE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.1/xlsx.full.min.js"></script>
 <style>
 :root{
   --navy:#1F3A5F;--navy-2:#2A4D7C;
@@ -236,6 +237,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <a data-page="ocs"><span class="nav-icon">≡</span><span>OCs</span></a>
       <a data-page="ops"><span class="nav-icon">⚙</span><span>OPs Producción</span></a>
       <a data-page="bobinas"><span class="nav-icon">○</span><span>Bobinas</span></a>
+      <a data-page="stock"><span class="nav-icon">▣</span><span>Stock bobinas</span></a>
       <a data-page="remitos"><span class="nav-icon">▤</span><span>Remitos</span></a>
       <a data-page="catalogo"><span class="nav-icon">≣</span><span>Catálogo</span></a>
       <a data-page="reportes"><span class="nav-icon">▲</span><span>Reportes</span></a>
@@ -308,71 +310,74 @@ const DEFAULT_STATE = {
   catalogo: [
     // PDF Don Yeyo: PET 92kg/762m, PE 26kg/1550m, Final 35kg, Cilindro 340
     {cliente:'Don Yeyo', medida:'321x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:762, pesoBobinaPe:26, metrosBobinaPe:1550, pesoBobinaFinal:35, cilindroLaminador:340},
+     pesoBobinaPet:92, metrosBobinaPet:762, pesoBobinaPe:26, metrosBobinaPe:1550, pesoBobinaFinal:35, bobinasPetPorBobinaPe:2, cilindroLaminador:340},
     // PDF Molinos 472x235: PET 80kg/592m, PE 32kg/1900m, Final 40kg, Cilindro 490
     {cliente:'Molinos', medida:'472x235', anchoPet:500, espPet:200, anchoPe:530, espPe:35, anchoFinal:472, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:80, metrosBobinaPet:592, pesoBobinaPe:32, metrosBobinaPe:1900, pesoBobinaFinal:40, cilindroLaminador:490},
+     pesoBobinaPet:80, metrosBobinaPet:592, pesoBobinaPe:32, metrosBobinaPe:1900, pesoBobinaFinal:40, bobinasPetPorBobinaPe:3, cilindroLaminador:490},
     // PDF Molinos 421x500: PET 102kg/373m, PE 35.26kg/1600m, Final 25kg, Cilindro 440
     {cliente:'Molinos', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:102, metrosBobinaPet:373, pesoBobinaPe:35.26, metrosBobinaPe:1600, pesoBobinaFinal:25, cilindroLaminador:440},
+     pesoBobinaPet:102, metrosBobinaPet:373, pesoBobinaPe:35.26, metrosBobinaPe:1600, pesoBobinaFinal:25, bobinasPetPorBobinaPe:4, cilindroLaminador:440},
     // PDF Molinos 421x300: pesos pendientes (??), Final 35kg, Cilindro 440
     {cliente:'Molinos', medida:'421x300', anchoPet:450, espPet:250, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:35, cilindroLaminador:440},
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:35, bobinasPetPorBobinaPe:null, cilindroLaminador:440},
     // PDF Molinos 421x400: pesos pendientes (??), Final 30kg, Cilindro 440
     {cliente:'Molinos', medida:'421x400', anchoPet:450, espPet:350, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:30, cilindroLaminador:440},
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:30, bobinasPetPorBobinaPe:null, cilindroLaminador:440},
     // MFA 323x330 - no estaba en el PDF, mantengo datos actuales
     {cliente:'MFA', medida:'323x330', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:321, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, bobinasPetPorBobinaPe:null, cilindroLaminador:null},
     // MFA 461x300 - no estaba en PDF, mantengo
     {cliente:'MFA', medida:'461x300', anchoPet:480, espPet:250, anchoPe:500, espPe:50, anchoFinal:461, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, bobinasPetPorBobinaPe:null, cilindroLaminador:null},
     // PDF Dantelli 357: PET 92kg/597m, PE 33.72kg/1800m, Final 30kg, Cilindro 370
     {cliente:'Dantelli', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, cilindroLaminador:370},
+     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, bobinasPetPorBobinaPe:3, cilindroLaminador:370},
     // PDF Dantelli 357 NEGRO: igual al cristal
     {cliente:'Dantelli NEGRO', medida:'357x350', anchoPet:380, espPet:300, anchoPe:400, espPe:50, anchoFinal:357, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, cilindroLaminador:370},
+     pesoBobinaPet:92, metrosBobinaPet:597, pesoBobinaPe:33.72, metrosBobinaPe:1800, pesoBobinaFinal:30, bobinasPetPorBobinaPe:3, cilindroLaminador:370},
     // PDF Dantelli 323: PET 92kg/649m, PE 34.64kg/2000m, Final 30kg, Cilindro 340
     {cliente:'Dantelli', medida:'323x350', anchoPet:350, espPet:300, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:649, pesoBobinaPe:34.64, metrosBobinaPe:2000, pesoBobinaFinal:30, cilindroLaminador:340},
+     pesoBobinaPet:92, metrosBobinaPet:649, pesoBobinaPe:34.64, metrosBobinaPe:2000, pesoBobinaFinal:30, bobinasPetPorBobinaPe:3, cilindroLaminador:340},
     // PDF Huertas: PET 100kg/430m, PE 38.09kg/1800m, Final 25kg, Cilindro 420
     {cliente:'Huertas', medida:'200x450', anchoPet:430, espPet:400, anchoPe:450, espPe:50, anchoFinal:200, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:100, metrosBobinaPet:430, pesoBobinaPe:38.09, metrosBobinaPe:1800, pesoBobinaFinal:25, cilindroLaminador:420},
+     pesoBobinaPet:100, metrosBobinaPet:430, pesoBobinaPe:38.09, metrosBobinaPe:1800, pesoBobinaFinal:25, bobinasPetPorBobinaPe:4, cilindroLaminador:420},
     // PDF Cadrinorte (BarielPack 400): PET 92kg/354m, PE 35.92kg/1500m, Final 31kg, Cilindro 540
     {cliente:'Cadrinorte', medida:'520x400', anchoPet:550, espPet:350, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:354, pesoBobinaPe:35.92, metrosBobinaPe:1500, pesoBobinaFinal:31, cilindroLaminador:540},
+     pesoBobinaPet:92, metrosBobinaPet:354, pesoBobinaPe:35.92, metrosBobinaPe:1500, pesoBobinaFinal:31, bobinasPetPorBobinaPe:4, cilindroLaminador:540},
     // PDF La italiana 500: PET 80kg/292m, PE 26.4kg/1228m, Final 80kg, Cilindro 440
     {cliente:'La italiana', medida:'421x500', anchoPet:450, espPet:450, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:80, metrosBobinaPet:292, pesoBobinaPe:26.4, metrosBobinaPe:1228, pesoBobinaFinal:80, cilindroLaminador:440},
+     pesoBobinaPet:80, metrosBobinaPet:292, pesoBobinaPe:26.4, metrosBobinaPe:1228, pesoBobinaFinal:80, bobinasPetPorBobinaPe:4, cilindroLaminador:440},
     // PDF La italiana 350: PET 80kg/439m, PE 30kg/1380m, Final 80kg, Cilindro 440
     {cliente:'La italiana', medida:'421x350', anchoPet:450, espPet:300, anchoPe:470, espPe:50, anchoFinal:421, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:80, metrosBobinaPet:439, pesoBobinaPe:30, metrosBobinaPe:1380, pesoBobinaFinal:80, cilindroLaminador:440},
+     pesoBobinaPet:80, metrosBobinaPet:439, pesoBobinaPe:30, metrosBobinaPe:1380, pesoBobinaFinal:80, bobinasPetPorBobinaPe:3, cilindroLaminador:440},
     // El Artesano: mantengo espPet 200 + espPe 35 según indicación. PDF: PET 77kg/507m, PE 33kg/1530m, Final 25kg, Cilindro 440
     {cliente:'El artesano', medida:'422x250', anchoPet:450, espPet:200, anchoPe:470, espPe:35, anchoFinal:422, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:77, metrosBobinaPet:507, pesoBobinaPe:33, metrosBobinaPe:1530, pesoBobinaFinal:25, cilindroLaminador:440},
+     pesoBobinaPet:77, metrosBobinaPet:507, pesoBobinaPe:33, metrosBobinaPe:1530, pesoBobinaFinal:25, bobinasPetPorBobinaPe:3, cilindroLaminador:440},
     // PDF Mendia: PET 92kg/728m, PE 27.73kg/1600m, Final 31kg, Cilindro 340
     {cliente:'Mendia', medida:'312x300', anchoPet:350, espPet:250, anchoPe:370, espPe:50, anchoFinal:312, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:728, pesoBobinaPe:27.73, metrosBobinaPe:1600, pesoBobinaFinal:31, cilindroLaminador:340},
+     pesoBobinaPet:92, metrosBobinaPet:728, pesoBobinaPe:27.73, metrosBobinaPe:1600, pesoBobinaFinal:31, bobinasPetPorBobinaPe:2, cilindroLaminador:340},
     // Smams - no estaba en PDF, mantengo
     {cliente:'Smams', medida:'255x250', anchoPet:530, espPet:200, anchoPe:550, espPe:50, anchoFinal:255, tiras:2, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, cilindroLaminador:null},
+     pesoBobinaPet:null, metrosBobinaPet:null, pesoBobinaPe:null, metrosBobinaPe:null, pesoBobinaFinal:null, bobinasPetPorBobinaPe:null, cilindroLaminador:null},
     // PDF Villa D Agri 423: PET 83kg/594m, PE 39.10kg/1800m, Final 83kg, Cilindro 440 (asumo)
     {cliente:'Villa D Agri', medida:'423x280', anchoPet:450, espPet:230, anchoPe:470, espPe:50, anchoFinal:423, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:83, metrosBobinaPet:594, pesoBobinaPe:39.10, metrosBobinaPe:1800, pesoBobinaFinal:83, cilindroLaminador:440},
+     pesoBobinaPet:83, metrosBobinaPet:594, pesoBobinaPe:39.10, metrosBobinaPe:1800, pesoBobinaFinal:83, bobinasPetPorBobinaPe:3, cilindroLaminador:440},
     // PDF Villa D Agri 323: PET 70kg/644m, PE 34.50kg/2000m, Final 35kg, Cilindro 340
     {cliente:'Villa D Agri', medida:'323x280', anchoPet:350, espPet:280, anchoPe:370, espPe:50, anchoFinal:323, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:70, metrosBobinaPet:644, pesoBobinaPe:34.50, metrosBobinaPe:2000, pesoBobinaFinal:35, cilindroLaminador:340},
+     pesoBobinaPet:70, metrosBobinaPet:644, pesoBobinaPe:34.50, metrosBobinaPe:2000, pesoBobinaFinal:35, bobinasPetPorBobinaPe:3, cilindroLaminador:340},
     // PDF BarielPack 350: PET 92kg/413m, PE 37.92kg/1700m, Final 31kg, Cilindro 540
     {cliente:'BarielPack', medida:'520x350', anchoPet:550, espPet:300, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:413, pesoBobinaPe:37.92, metrosBobinaPe:1700, pesoBobinaFinal:31, cilindroLaminador:540},
+     pesoBobinaPet:92, metrosBobinaPet:413, pesoBobinaPe:37.92, metrosBobinaPe:1700, pesoBobinaFinal:31, bobinasPetPorBobinaPe:4, cilindroLaminador:540},
     // PDF BarielPack 600: PET 92kg/226m, PE 24.6kg/946m, Final 45kg, Cilindro 540
     {cliente:'BarielPack', medida:'520x600', anchoPet:550, espPet:550, anchoPe:570, espPe:50, anchoFinal:520, tiras:1, conoPet:2, conoPe:1, conoLaminado:0.5,
-     pesoBobinaPet:92, metrosBobinaPet:226, pesoBobinaPe:24.6, metrosBobinaPe:946, pesoBobinaFinal:45, cilindroLaminador:540},
+     pesoBobinaPet:92, metrosBobinaPet:226, pesoBobinaPe:24.6, metrosBobinaPe:946, pesoBobinaFinal:45, bobinasPetPorBobinaPe:4, cilindroLaminador:540},
   ],
   ocs: [],
   ops: [],
   bobinas: [], // ahora se cargan SOLO en proceso, no en stock previo
+  stockBobinasPet: [], // bobinas PET importadas de Excel, disponibles para asignar a turnos
+  stockBobinasPe: [],  // bobinas PE (a definir formato Excel después)
+  importacionesExcel: [], // log de importaciones {id, fecha, archivo, remito, fechaEnvio, cantBobinas, importadoPor}
   remitos: [],
 };
 
@@ -406,6 +411,9 @@ function loadState(){
         ocs: parsed.ocs || [],
         ops: parsed.ops || [],
         bobinas: parsed.bobinas || [],
+        stockBobinasPet: parsed.stockBobinasPet || [],
+        stockBobinasPe: parsed.stockBobinasPe || [],
+        importacionesExcel: parsed.importacionesExcel || [],
         remitos: parsed.remitos || [],
       };
       
@@ -416,7 +424,7 @@ function loadState(){
         if(!defaultProd) return p;
         // Completa solo los campos que faltan o son null/undefined
         const completed = {...p};
-        const camposNuevos = ['conoPet','conoPe','conoLaminado','pesoBobinaPet','metrosBobinaPet','pesoBobinaPe','metrosBobinaPe','pesoBobinaFinal','cilindroLaminador'];
+        const camposNuevos = ['conoPet','conoPe','conoLaminado','pesoBobinaPet','metrosBobinaPet','pesoBobinaPe','metrosBobinaPe','pesoBobinaFinal','cilindroLaminador','bobinasPetPorBobinaPe'];
         camposNuevos.forEach(campo=>{
           if(completed[campo] === undefined || completed[campo] === null || completed[campo] === ''){
             completed[campo] = defaultProd[campo];
@@ -661,6 +669,7 @@ function navigateTo(page){
     ocs: renderOcs,
     ops: renderOps,
     bobinas: renderBobinas,
+    stock: renderStockBobinas,
     remitos: renderRemitos,
     catalogo: renderCatalogo,
     reportes: renderReportes,
@@ -751,12 +760,12 @@ function calcularConsumosOp(op){
   
   turnosLam.forEach(t=>{
     (t.bobinasPet||[]).forEach(b=>{
-      kgPet += (b.pesoNeto || 0) - (b.scrapKg || 0);
+      kgPet += (b.pesoNeto || 0);
       cantBobinasPet++;
       metrosPet += (b.metros || 0);
     });
     (t.bobinasPe||[]).forEach(b=>{
-      kgPe += (b.pesoNeto || 0) - (b.scrapKg || 0);
+      kgPe += (b.pesoNeto || 0);
       cantBobinasPe++;
       metrosPe += (b.metros || 0);
     });
@@ -980,6 +989,7 @@ function opNuevoTurnoLaminado(opId){
     bobinasPet: [],
     bobinasPe: [],
     bobinasSalientes: [],
+    scrapFinal: 0, // scrap final del turno (kg)
     notas: '',
     cerrado: false
   };
@@ -1062,6 +1072,11 @@ function opAbrirTurnoLaminado(opId, turnoId){
     <div class="op-card-title">Cerrar turno</div>
     <div class="form-tablet">
       <div class="form-group">
+        <label class="form-label">Scrap final del turno (kg)</label>
+        <input type="number" class="form-input" id="turnoScrapFinalLam" value="${turno.scrapFinal||''}" step="any" inputmode="decimal" placeholder="0">
+        <div class="form-help">Total de scrap del turno (restos de bobinas no usadas, defectuosos, arranque, etc).</div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Notas del turno (paradas, problemas, etc)</label>
         <textarea class="form-textarea" id="turnoNotasLam" rows="2">${turno.notas||''}</textarea>
       </div>
@@ -1086,7 +1101,6 @@ function renderBobinaEntranteCard(b, opId, turnoId){
       Bruto ${b.pesoBruto.toFixed(1)}kg · Cono ${b.cono}kg · 
       <strong>Neto ${b.pesoNeto.toFixed(1)}kg</strong> · 
       ${b.metros}m
-      ${b.scrapKg > 0 ? ` · <span style="color:var(--orange)">Scrap final ${b.scrapKg.toFixed(1)}kg</span>` : ''}
     </div>
     <div class="actions">
       <button class="btn-icon" onclick="opEditarBobinaEntrante('${opId}','${turnoId}','${b.id}')" title="Editar">✎</button>
@@ -1102,7 +1116,7 @@ function renderBobinaSalienteCard(b, opId, turnoId){
   const peUsadas = (b.bobinasPeIds||[]).map(id=>turno.bobinasPe.find(x=>x.id===id)).filter(Boolean);
   
   return `<div class="bobina-card" style="border-left:3px solid var(--green)">
-    <div class="code" style="color:var(--green)">★ ${b.numero}</div>
+    <div class="code" style="color:var(--green)">★ ${b.numero} ${b.partida?`· P.${b.partida}`:''}</div>
     <div class="desc" style="font-weight:600;color:var(--navy);margin-top:2px">
       Cliente: ${op.cliente}
     </div>
@@ -1124,7 +1138,106 @@ function renderBobinaSalienteCard(b, opId, turnoId){
 }
 
 function opCargarBobinaEntrante(opId, turnoId, tipo){
-  bobinaEntranteFormModal(opId, turnoId, tipo, null);
+  // Mostrar selector desde stock filtrado por cliente y medida del producto
+  selectorBobinaStock(opId, turnoId, tipo);
+}
+
+function selectorBobinaStock(opId, turnoId, tipo){
+  const op = state.ops.find(o=>o.id===opId);
+  const stockArr = tipo === 'PET' ? state.stockBobinasPet : state.stockBobinasPe;
+  const medidaPet = `${op.producto.anchoPet}x${op.producto.espPet}`;
+  const medidaPe = `${op.producto.anchoPe}x${op.producto.espPe}`;
+  const medidaBuscada = tipo === 'PET' ? medidaPet : medidaPe;
+  
+  // Filtrar disponibles del cliente y medida del producto
+  const disponibles = stockArr.filter(b=>
+    b.cliente === op.cliente && 
+    b.medida === medidaBuscada && 
+    b.estado === 'disponible'
+  );
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>Seleccionar bobina ${tipo} del stock</h2>
+    <div class="alert alert-info" style="font-size:12px">
+      <strong>${op.cliente}</strong> · medida ${tipo}: ${medidaBuscada}<br>
+      Mostrando bobinas disponibles del stock que matchean.
+    </div>`;
+  
+  if(disponibles.length === 0){
+    html += `<div class="alert alert-warning">
+      No hay bobinas ${tipo} disponibles en stock para este producto.<br>
+      Importá Excel desde "Stock bobinas" o cargá manualmente.
+    </div>
+    <div class="form-row">
+      <button class="btn btn-secondary" onclick="closeModal();bobinaEntranteFormModal('${opId}','${turnoId}','${tipo}',null)">Cargar a mano (sin stock)</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  } else {
+    html += `<div style="max-height:60vh;overflow-y:auto;margin-top:10px">
+      <table class="table">
+        <thead><tr>
+          <th>Bobina N°</th><th>Partida</th>
+          <th class="num">Peso</th><th class="num">Metros</th>
+          <th>Recibida</th><th></th>
+        </tr></thead><tbody>
+        ${disponibles.map(b=>`<tr>
+          <td><strong>${b.numero}</strong></td>
+          <td>${b.partida}</td>
+          <td class="num">${(b.peso||0).toFixed(0)} kg</td>
+          <td class="num">${b.metros?b.metros.toFixed(0)+' m':'—'}</td>
+          <td style="font-size:12px">${fmtDate(b.fechaIngreso)}</td>
+          <td><button class="btn btn-sm" onclick="usarBobinaStock('${opId}','${turnoId}','${tipo}','${b.id}')">Usar →</button></td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeModal();bobinaEntranteFormModal('${opId}','${turnoId}','${tipo}',null)">Cargar a mano (sin stock)</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  }
+  showModal(html, true);
+}
+
+function usarBobinaStock(opId, turnoId, tipo, stockId){
+  const op = state.ops.find(o=>o.id===opId);
+  const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  const stockArr = tipo === 'PET' ? state.stockBobinasPet : state.stockBobinasPe;
+  const stockBob = stockArr.find(b=>b.id===stockId);
+  if(!stockBob) return;
+  
+  const conoDefault = tipo === 'PET' ? (op.producto.conoPet||2) : (op.producto.conoPe||1);
+  
+  // Marcar la bobina como consumida
+  stockBob.estado = 'consumida';
+  stockBob.opUsadaId = op.id;
+  stockBob.opUsadaNumero = op.numero;
+  stockBob.turnoUsadaId = turno.id;
+  stockBob.fechaConsumida = new Date().toISOString();
+  
+  // Crear la bobina en el turno (peso bruto = peso del stock + cono estimado)
+  // Pero necesitamos peso bruto real (con cono). Asumimos que peso del stock es BRUTO ya con cono.
+  // Si querés cambiar: peso del stock es NETO (sin cono), entonces peso bruto = peso + cono
+  // Por ahora: tratamos peso del stock como BRUTO (es lo que mide la balanza al recibir)
+  const arr = tipo === 'PET' ? turno.bobinasPet : turno.bobinasPe;
+  arr.push({
+    id: uid('BOB'),
+    tipo, 
+    numero: String(stockBob.numero),
+    partida: stockBob.partida,
+    pesoBruto: stockBob.peso,
+    cono: conoDefault,
+    pesoNeto: Math.max(0, stockBob.peso - conoDefault),
+    metros: stockBob.metros || 0,
+    notas: '',
+    stockId: stockBob.id, // referencia al stock
+    cargadaPor: currentUser.nombre,
+    fecha: new Date().toISOString()
+  });
+  
+  saveState();
+  closeModal();
+  opAbrirTurnoLaminado(opId, turnoId);
 }
 
 function opEditarBobinaEntrante(opId, turnoId, bobId){
@@ -1200,22 +1313,6 @@ function bobinaEntranteFormModal(opId, turnoId, tipo, bobId){
         </div>
       </div>
       
-      <div class="alert alert-orange" style="margin-top:10px">
-        <strong>Si quedó scrap al final:</strong> pesá el resto físico (cono + sobrante) y cargalo. La app calcula los kg de scrap.
-      </div>
-      
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Peso del resto al final (kg)</label>
-          <input type="number" class="form-input" id="bobScrapBruto" value="${bob?(bob.scrapBruto||''):''}" step="any" inputmode="decimal" oninput="calcularScrapEntrante(${conoDefault})" placeholder="Cono + sobrante">
-          <div class="form-help">Si la bobina se gastó completa, dejar vacío.</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Scrap calculado (kg)</label>
-          <input type="number" class="form-input" id="bobScrapKg" value="${bob?(bob.scrapKg||0).toFixed(2):'0'}" step="any" readonly style="background:var(--bg-2);color:var(--orange);font-weight:600">
-        </div>
-      </div>
-      
       <div class="form-group" style="margin-top:6px">
         <label class="form-label">Notas (opcional)</label>
         <input type="text" class="form-input" id="bobNotas" value="${bob?(bob.notas||''):''}">
@@ -1272,13 +1369,6 @@ function calcularNetoEntrante(conoDefault){
   calcularScrapEntrante(conoDefault);
 }
 
-function calcularScrapEntrante(conoDefault){
-  const scrapBruto = parseFloat(document.getElementById('bobScrapBruto').value) || 0;
-  const cono = parseFloat(document.getElementById('bobCono').value) || conoDefault;
-  const scrapKg = scrapBruto > 0 ? Math.max(0, scrapBruto - cono) : 0;
-  document.getElementById('bobScrapKg').value = scrapKg.toFixed(2);
-}
-
 function opGuardarBobinaEntrante(opId, turnoId, tipo, bobId){
   const op = state.ops.find(o=>o.id===opId);
   const turno = op.turnosLaminado.find(t=>t.id===turnoId);
@@ -1289,8 +1379,6 @@ function opGuardarBobinaEntrante(opId, turnoId, tipo, bobId){
   const cono = parseFloat(document.getElementById('bobCono').value);
   const pesoNeto = parseFloat(document.getElementById('bobPesoNeto').value);
   const metros = parseFloat(document.getElementById('bobMetros').value);
-  const scrapBruto = parseFloat(document.getElementById('bobScrapBruto').value) || 0;
-  const scrapKg = parseFloat(document.getElementById('bobScrapKg').value) || 0;
   const notas = document.getElementById('bobNotas').value;
   
   if(!numero || !pesoBruto || !cono){alert('Faltan datos: número, peso bruto y cono'); return;}
@@ -1308,15 +1396,12 @@ function opGuardarBobinaEntrante(opId, turnoId, tipo, bobId){
     b.cono = cono;
     b.pesoNeto = pesoNeto;
     b.metros = metros;
-    b.scrapBruto = scrapBruto;
-    b.scrapKg = scrapKg;
     b.notas = notas;
   } else {
     arr.push({
       id: uid('BOB'),
       tipo, numero, partida,
-      pesoBruto, cono, pesoNeto, metros,
-      scrapBruto, scrapKg, notas,
+      pesoBruto, cono, pesoNeto, metros, notas,
       cargadaPor: currentUser.nombre,
       fecha: new Date().toISOString()
     });
@@ -1327,9 +1412,28 @@ function opGuardarBobinaEntrante(opId, turnoId, tipo, bobId){
 }
 
 function opEliminarBobinaEntrante(opId, turnoId, bobId){
-  if(!confirm('¿Eliminar esta bobina?')) return;
+  if(!confirm('¿Eliminar esta bobina?\n\nSi vino del stock, vuelve a estar disponible.')) return;
   const op = state.ops.find(o=>o.id===opId);
   const turno = op.turnosLaminado.find(t=>t.id===turnoId);
+  
+  // Buscar la bobina antes de eliminarla
+  let bob = turno.bobinasPet.find(b=>b.id===bobId);
+  let tipo = 'PET';
+  if(!bob){bob = turno.bobinasPe.find(b=>b.id===bobId); tipo = 'PE';}
+  
+  // Si vino del stock, devolverla al stock
+  if(bob && bob.stockId){
+    const stockArr = tipo === 'PET' ? state.stockBobinasPet : state.stockBobinasPe;
+    const stockBob = stockArr.find(s=>s.id===bob.stockId);
+    if(stockBob){
+      stockBob.estado = 'disponible';
+      stockBob.opUsadaId = null;
+      stockBob.opUsadaNumero = null;
+      stockBob.turnoUsadaId = null;
+      stockBob.fechaConsumida = null;
+    }
+  }
+  
   turno.bobinasPet = turno.bobinasPet.filter(b=>b.id!==bobId);
   turno.bobinasPe = turno.bobinasPe.filter(b=>b.id!==bobId);
   // También quitarla de las salientes que la usaban
@@ -1371,8 +1475,8 @@ function bobinaSalienteFormModal(opId, turnoId, bobId){
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">N° de bobina</label>
-          <input type="text" class="form-input" id="lamNumero" value="${bob?bob.numero:numeroSugerido}">
-          <div class="form-help">Sugerido automático, podés cambiarlo.</div>
+          <input type="text" class="form-input" id="lamNumero" value="${bob?bob.numero:''}" placeholder="(se hereda del PET vinculado)">
+          <div class="form-help">Si vinculás bobinas PET abajo, el N° y partida se heredan automáticamente. Podés sobreescribir.</div>
         </div>
         <div class="form-group">
           <label class="form-label">Peso BRUTO (kg)${pesoRefFinal?` <span style="color:var(--muted);font-weight:400">(ref ~${pesoRefFinal} kg)</span>`:''}</label>
@@ -1472,7 +1576,7 @@ function opGuardarBobinaSaliente(opId, turnoId, bobId){
   const op = state.ops.find(o=>o.id===opId);
   const turno = op.turnosLaminado.find(t=>t.id===turnoId);
   
-  const numero = document.getElementById('lamNumero').value.trim();
+  const numeroManual = document.getElementById('lamNumero').value.trim();
   const pesoBruto = parseFloat(document.getElementById('lamPesoBruto').value);
   const cono = parseFloat(document.getElementById('lamCono').value);
   const pesoNeto = parseFloat(document.getElementById('lamPesoNeto').value);
@@ -1482,15 +1586,45 @@ function opGuardarBobinaSaliente(opId, turnoId, bobId){
   const bobinasPetIds = [...document.querySelectorAll('.lam-pet-check:checked')].map(c=>c.value);
   const bobinasPeIds = [...document.querySelectorAll('.lam-pe-check:checked')].map(c=>c.value);
   
-  if(!numero || !pesoBruto){alert('Faltan datos: número y peso bruto'); return;}
+  if(!pesoBruto){alert('Falta peso bruto'); return;}
   if(bobinasPetIds.length === 0 || bobinasPeIds.length === 0){
     if(!confirm('No marcaste bobinas PET o PE. ¿Guardar igual?')) return;
+  }
+  
+  // Heredar N° y partida del PET (regla: bobinaPET ↔ bobinaLAM 1:1)
+  let numero = numeroManual;
+  let partidaHeredada = '';
+  let partidasUsadas = [];
+  
+  if(bobinasPetIds.length > 0){
+    const petUsadas = bobinasPetIds.map(id=>turno.bobinasPet.find(b=>b.id===id)).filter(Boolean);
+    
+    // Si solo hay 1 PET vinculada, hereda directo
+    if(petUsadas.length === 1){
+      numero = petUsadas[0].numero;
+      partidaHeredada = petUsadas[0].partida || '';
+    } else if(petUsadas.length > 1){
+      // Si hay varias, concatena los números (separados por /)
+      numero = petUsadas.map(p=>p.numero).join('/');
+      partidasUsadas = [...new Set(petUsadas.map(p=>p.partida).filter(Boolean))];
+      partidaHeredada = partidasUsadas.join('/');
+    }
+  }
+  
+  // Si el operario escribió un número manualmente, respetarlo
+  if(numeroManual && numeroManual !== '' && bobId){
+    // En edición, mantener lo escrito
+    numero = numeroManual;
+  } else if(!bobinasPetIds.length){
+    // Si no hay PET vinculada, usar lo manual o sugerencia
+    numero = numeroManual || `L-${op.numero}-${(turno.bobinasSalientes.length+1).toString().padStart(2,'0')}`;
   }
   
   if(bobId){
     const b = turno.bobinasSalientes.find(x=>x.id===bobId);
     if(!b) return;
     b.numero = numero;
+    b.partida = partidaHeredada;
     b.pesoBruto = pesoBruto;
     b.cono = cono;
     b.pesoNeto = pesoNeto;
@@ -1501,7 +1635,8 @@ function opGuardarBobinaSaliente(opId, turnoId, bobId){
   } else {
     turno.bobinasSalientes.push({
       id: uid('LAM'),
-      numero, pesoBruto, cono, pesoNeto, metros, notas,
+      numero, partida: partidaHeredada,
+      pesoBruto, cono, pesoNeto, metros, notas,
       bobinasPetIds, bobinasPeIds,
       cargadaPor: currentUser.nombre,
       fecha: new Date().toISOString()
@@ -1513,8 +1648,14 @@ function opGuardarBobinaSaliente(opId, turnoId, bobId){
 }
 
 function opEliminarBobinaSaliente(opId, turnoId, bobId){
-  if(!confirm('¿Eliminar esta bobina laminada?')) return;
   const op = state.ops.find(o=>o.id===opId);
+  // Verificar que no haya sido refilada
+  const refilada = (op.turnosRefilado||[]).flatMap(t=>t.bobinasRefiladas||[]).find(br=>br.bobinaLamId===bobId);
+  if(refilada){
+    alert('No se puede eliminar esta bobina laminada porque ya fue refilada.');
+    return;
+  }
+  if(!confirm('¿Eliminar esta bobina laminada?')) return;
   const turno = op.turnosLaminado.find(t=>t.id===turnoId);
   turno.bobinasSalientes = turno.bobinasSalientes.filter(b=>b.id!==bobId);
   saveState();
@@ -1529,6 +1670,7 @@ function opCerrarTurnoLaminado(opId, turnoId){
     return;
   }
   turno.notas = document.getElementById('turnoNotasLam').value;
+  turno.scrapFinal = parseFloat(document.getElementById('turnoScrapFinalLam').value) || 0;
   turno.cerrado = true;
   turno.fechaFin = new Date().toISOString();
   op.fechaUltimoCambio = new Date().toISOString();
@@ -1558,6 +1700,7 @@ function opNuevoTurnoRefilado(opId){
     fechaFin: null,
     turno: getTurnoActual(),
     bobinasRefiladas: [], // {id, numero, pesoBruto, cono, pesoNeto, metros, bobinaLamId}
+    trimRefilado: 0, // trim de refilado (kg)
     notas: '',
     cerrado: false
   };
@@ -1644,6 +1787,11 @@ function opAbrirTurnoRefilado(opId, turnoId){
   <div class="op-card">
     <div class="op-card-title">Cerrar turno</div>
     <div class="form-tablet">
+      <div class="form-group">
+        <label class="form-label">Trim de refilado (kg)</label>
+        <input type="number" class="form-input" id="turnoTrimRef" value="${turno.trimRefilado||''}" step="any" inputmode="decimal" placeholder="0">
+        <div class="form-help">Tiras laterales que se cortaron al refilar (peso total del turno).</div>
+      </div>
       <div class="form-group">
         <label class="form-label">Notas del turno</label>
         <textarea class="form-textarea" id="turnoNotasRef" rows="2">${turno.notas||''}</textarea>
@@ -1786,6 +1934,7 @@ function opCerrarTurnoRefilado(opId, turnoId){
     return;
   }
   turno.notas = document.getElementById('turnoNotasRef').value;
+  turno.trimRefilado = parseFloat(document.getElementById('turnoTrimRef').value) || 0;
   turno.cerrado = true;
   turno.fechaFin = new Date().toISOString();
   op.fechaUltimoCambio = new Date().toISOString();
@@ -3343,7 +3492,7 @@ function renderBobinasTable(){
   if(todasBobinas.length === 0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay bobinas registradas todavía.</p>';
   } else {
-    html = '<table class="table"><thead><tr><th>Tipo</th><th>N° bobina</th><th>Partida</th><th class="num">Bruto</th><th class="num">Cono</th><th class="num">Neto</th><th class="num">Metros</th><th class="num">Scrap</th><th>OP</th><th>Cliente</th><th>Operario</th><th>Fecha</th></tr></thead><tbody>';
+    html = '<table class="table"><thead><tr><th>Tipo</th><th>N° bobina</th><th>Partida</th><th class="num">Bruto</th><th class="num">Cono</th><th class="num">Neto</th><th class="num">Metros</th><th>OP</th><th>Cliente</th><th>Operario</th><th>Fecha</th></tr></thead><tbody>';
     todasBobinas.forEach(b=>{
       const tipoLabel = {'PET':'PET','PE':'PE','LAM':'Laminada','REF':'Refilada'}[b.tipoCat] || b.tipoCat;
       const tipoBadge = {'PET':'badge-active','PE':'badge-success','LAM':'badge-warning','REF':'badge-orange'}[b.tipoCat] || 'badge-pending';
@@ -3355,7 +3504,6 @@ function renderBobinasTable(){
         <td class="num">${(b.cono||0).toFixed(1)} kg</td>
         <td class="num"><strong>${(b.pesoNeto||0).toFixed(1)} kg</strong></td>
         <td class="num">${b.metros?b.metros.toFixed(0)+' m':'—'}</td>
-        <td class="num">${(b.scrapKg||0)>0?b.scrapKg.toFixed(1)+' kg':'—'}</td>
         <td><a onclick="verOp('${b.opId}')" style="color:var(--navy);cursor:pointer;text-decoration:underline">${b.opNumero}</a></td>
         <td>${b.cliente}</td>
         <td>${b.turnoOperario||'—'}</td>
@@ -3620,6 +3768,7 @@ function renderCatalogoMedidas(){
       <th class="num">Final</th><th class="num">Tiras</th>
       <th class="num">Cono PET</th><th class="num">Cono PE</th><th class="num">Cono Lam</th>
       <th class="num">Cilindro</th>
+      <th class="num" title="Bobinas PET por bobina PE">PET/PE</th>
       <th></th>
     </tr></thead>
     <tbody>
@@ -3632,6 +3781,7 @@ function renderCatalogoMedidas(){
       <td class="num">${p.conoPe||1}kg</td>
       <td class="num">${p.conoLaminado||0.5}kg</td>
       <td class="num">${p.cilindroLaminador||'—'}</td>
+      <td class="num">${p.bobinasPetPorBobinaPe||'—'}</td>
       <td>
         <button class="btn-icon" onclick="editarProducto(${i})" title="Editar">✎</button>
         <button class="btn-icon" onclick="eliminarProducto(${i})" title="Eliminar">×</button>
@@ -3687,7 +3837,7 @@ function productoFormModal(idx){
   const p = esEdicion ? state.catalogo[idx] : {
     cliente:'',medida:'',anchoPet:'',espPet:'',anchoPe:'',espPe:'',anchoFinal:'',tiras:1,
     conoPet:2,conoPe:1,conoLaminado:0.5,
-    pesoBobinaPet:'',metrosBobinaPet:'',pesoBobinaPe:'',metrosBobinaPe:'',pesoBobinaFinal:'',cilindroLaminador:''
+    pesoBobinaPet:'',metrosBobinaPet:'',pesoBobinaPe:'',metrosBobinaPe:'',pesoBobinaFinal:'',cilindroLaminador:'',bobinasPetPorBobinaPe:''
   };
   
   let html = `<button class="modal-close" onclick="closeModal()">×</button>
@@ -3722,6 +3872,7 @@ function productoFormModal(idx){
       <div class="form-group"><label class="form-label">Metros bobina PE</label><input type="number" class="form-input" id="prodMetrosBobinaPe" value="${p.metrosBobinaPe||''}" step="any"></div>
       <div class="form-group"><label class="form-label">Peso bobina final (kg)</label><input type="number" class="form-input" id="prodPesoBobinaFinal" value="${p.pesoBobinaFinal||''}" step="any"></div>
       <div class="form-group"><label class="form-label">Cilindro laminador (mm)</label><input type="number" class="form-input" id="prodCilindro" value="${p.cilindroLaminador||''}"></div>
+      <div class="form-group"><label class="form-label">Bobinas PET por bobina PE</label><input type="number" class="form-input" id="prodBobPetPorPe" value="${p.bobinasPetPorBobinaPe||''}" min="1" step="1"><div class="form-help">Cuántas bobinas PET se usan con 1 bobina PE (ej: 3). Determina cuántas laminadas saldrán.</div></div>
     </div>
     
     <div class="form-row">
@@ -3752,6 +3903,7 @@ function guardarProducto(idx){
     metrosBobinaPe: numOrNull('prodMetrosBobinaPe'),
     pesoBobinaFinal: numOrNull('prodPesoBobinaFinal'),
     cilindroLaminador: numOrNull('prodCilindro'),
+    bobinasPetPorBobinaPe: numOrNull('prodBobPetPorPe'),
   };
   if(!p.cliente || !p.medida || !p.anchoPet){alert('Faltan datos básicos'); return;}
   if(idx === null){
@@ -3871,6 +4023,448 @@ function exportarCsv(){
 // =========================================================
 // MODO GESTIÓN — Config
 // =========================================================
+// =========================================================
+// MODO GESTIÓN — Stock de bobinas (PET importadas de Excel + PE)
+// =========================================================
+let currentStockTab = 'pet';
+let currentStockFiltroCliente = '';
+let currentStockFiltroEstado = 'disponible';
+
+function setStockTab(tab){
+  currentStockTab = tab;
+  renderStockBobinas();
+}
+
+function renderStockBobinas(){
+  const stock = currentStockTab === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+  const clientesUnicos = [...new Set(stock.map(b=>b.cliente))].sort();
+  
+  // Aplicar filtros
+  let filtradas = stock;
+  if(currentStockFiltroCliente) filtradas = filtradas.filter(b=>b.cliente===currentStockFiltroCliente);
+  if(currentStockFiltroEstado) filtradas = filtradas.filter(b=>b.estado===currentStockFiltroEstado);
+  
+  // Stats
+  const totalDisponibles = stock.filter(b=>b.estado==='disponible');
+  const kgDisponibles = totalDisponibles.reduce((s,b)=>s+(b.peso||0), 0);
+  
+  let html = `<h1 class="page-title">Stock de bobinas</h1>
+    <p class="page-subtitle">Bobinas PET y PE recibidas, disponibles para asignar a turnos de laminado.</p>
+    
+    <div class="tabs">
+      <div class="tab ${currentStockTab==='pet'?'active':''}" onclick="setStockTab('pet')">
+        PET (${state.stockBobinasPet.length})
+      </div>
+      <div class="tab ${currentStockTab==='pe'?'active':''}" onclick="setStockTab('pe')">
+        PE (${state.stockBobinasPe.length})
+      </div>
+    </div>
+    
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <strong style="color:var(--navy);font-size:14px">Stock ${currentStockTab.toUpperCase()}</strong>
+          <span style="color:var(--muted);font-size:12px;margin-left:10px">
+            ${totalDisponibles.length} bobinas disponibles · ${kgDisponibles.toFixed(0)} kg
+          </span>
+        </div>
+        <div class="form-row" style="margin:0">
+          <button class="btn" onclick="document.getElementById('importExcelInput').click()">📥 Importar Excel</button>
+          <input type="file" id="importExcelInput" accept=".xlsx,.xls" style="display:none" onchange="importarExcelBobinas(event,'${currentStockTab}')">
+          <button class="btn btn-secondary" onclick="agregarBobinaManual('${currentStockTab}')">+ Agregar manual</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="filters">
+      <select class="filter-input" onchange="currentStockFiltroCliente=this.value;renderStockBobinas()">
+        <option value="">Todos los clientes</option>
+        ${clientesUnicos.map(c=>`<option value="${c}" ${currentStockFiltroCliente===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <select class="filter-input" onchange="currentStockFiltroEstado=this.value;renderStockBobinas()">
+        <option value="">Todos los estados</option>
+        <option value="disponible" ${currentStockFiltroEstado==='disponible'?'selected':''}>Disponibles</option>
+        <option value="consumida" ${currentStockFiltroEstado==='consumida'?'selected':''}>Consumidas</option>
+      </select>
+    </div>
+    
+    <div class="card" id="stockTableWrap"></div>`;
+  
+  document.getElementById('content').innerHTML = html;
+  renderStockTable(filtradas);
+}
+
+function renderStockTable(bobinas){
+  let html;
+  if(bobinas.length === 0){
+    html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay bobinas en el stock con estos filtros.</p>';
+  } else {
+    html = `<table class="table">
+      <thead><tr>
+        <th>Cliente</th>
+        <th>Medida (PET madre)</th>
+        <th>Partida</th>
+        <th>Bobina N°</th>
+        <th class="num">Peso</th>
+        <th class="num">Metros</th>
+        <th>Pallet</th>
+        <th>Solic.</th>
+        <th>Recibida</th>
+        <th>Estado</th>
+        <th>Usada en</th>
+        <th></th>
+      </tr></thead><tbody>`;
+    bobinas.forEach(b=>{
+      const estadoBadge = b.estado === 'disponible' ? 'badge-success' : 'badge-pending';
+      const opLink = b.opUsadaId ? `<a onclick="verOp('${b.opUsadaId}')" style="color:var(--navy);cursor:pointer;text-decoration:underline">${b.opUsadaNumero||'(OP)'}</a>` : '—';
+      html += `<tr>
+        <td><strong>${b.cliente}</strong></td>
+        <td>${b.medida||'—'}</td>
+        <td>${b.partida||'—'}</td>
+        <td><strong style="font-family:'Courier New',monospace">${b.numero}</strong></td>
+        <td class="num">${(b.peso||0).toFixed(0)} kg</td>
+        <td class="num">${b.metros?b.metros.toFixed(0)+' m':'—'}</td>
+        <td>${b.pallet||'—'}</td>
+        <td>${b.solicitudPedido||'—'}</td>
+        <td>${b.fechaIngreso?fmtDate(b.fechaIngreso):'—'}</td>
+        <td><span class="badge ${estadoBadge}">${b.estado||'—'}</span></td>
+        <td>${opLink}</td>
+        <td>
+          ${b.estado==='disponible'?`<button class="btn-icon" onclick="editarBobinaStock('${b.id}','${currentStockTab}')" title="Editar">✎</button>
+          <button class="btn-icon" onclick="eliminarBobinaStock('${b.id}','${currentStockTab}')" title="Eliminar">×</button>`:''}
+        </td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  document.getElementById('stockTableWrap').innerHTML = html;
+}
+
+function importarExcelBobinas(ev, tipo){
+  const file = ev.target.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const ws = wb.Sheets['Detalle de Envio'] || wb.Sheets[wb.SheetNames[0]];
+      
+      // Leer todas las celdas como matriz
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+      
+      // Buscar header del envío
+      let fecha = null, remito = null;
+      for(let i=0; i<Math.min(5,rows.length); i++){
+        const row = rows[i];
+        if(!row) continue;
+        for(let j=0; j<row.length; j++){
+          if(row[j] === 'Fecha' && row[j+1]) fecha = row[j+1];
+          if(row[j] === 'Remito' && row[j+1]) remito = row[j+1];
+        }
+      }
+      
+      // Buscar fila de encabezados
+      let headerRow = -1;
+      for(let i=0; i<rows.length; i++){
+        const row = rows[i];
+        if(row && row[0] === 'Partida' && row[1] === 'Bobina N°'){
+          headerRow = i;
+          break;
+        }
+      }
+      
+      if(headerRow === -1){
+        alert('No se encontraron los encabezados (Partida, Bobina N°). Verificá el formato del Excel.');
+        return;
+      }
+      
+      // Procesar bobinas: filas siguientes
+      const bobinasNuevas = [];
+      const ignoradas = {sin_destino:0, no_match_catalogo:0, duplicadas:0};
+      const productosConMatch = new Set();
+      
+      for(let i=headerRow+1; i<rows.length; i++){
+        const row = rows[i];
+        if(!row || row[0] === null || typeof row[1] !== 'number') continue;
+        
+        const partida = String(row[0]||'').trim();
+        const numBobina = row[1];
+        const peso = parseFloat(row[2]) || 0;
+        const medida = String(row[3]||'').trim();
+        const pallet = String(row[4]||'').trim();
+        const solicitudPedido = String(row[5]||'').trim();
+        const destino = String(row[6]||'').trim();
+        
+        if(!destino){ignoradas.sin_destino++; continue;}
+        
+        // Filtrar: matchear con catálogo (cliente + medida del PET)
+        const productoMatch = state.catalogo.find(p=>{
+          const medidaPet = `${p.anchoPet}x${p.espPet}`;
+          // Match por cliente Y por medida PET
+          return p.cliente.toLowerCase() === destino.toLowerCase() && medidaPet === medida;
+        });
+        
+        if(!productoMatch){ignoradas.no_match_catalogo++; continue;}
+        
+        productosConMatch.add(`${productoMatch.cliente} ${productoMatch.medida}`);
+        
+        // Detectar duplicado: cliente + partida + número de bobina
+        const stockArr = tipo === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+        const duplicada = stockArr.find(b => 
+          b.cliente === productoMatch.cliente && 
+          b.partida === partida && 
+          b.numero == numBobina
+        );
+        
+        if(duplicada){ignoradas.duplicadas++; continue;}
+        
+        // Estimar metros si tenemos referencia de catálogo
+        let metros = null;
+        if(productoMatch.pesoBobinaPet && productoMatch.metrosBobinaPet){
+          metros = Math.round((peso / productoMatch.pesoBobinaPet) * productoMatch.metrosBobinaPet);
+        }
+        
+        bobinasNuevas.push({
+          id: uid('STK'),
+          cliente: productoMatch.cliente,
+          medidaProductoFinal: productoMatch.medida, // medida del catálogo
+          medida: medida, // medida del PET madre del Excel
+          partida,
+          numero: numBobina,
+          peso,
+          metros,
+          pallet,
+          solicitudPedido,
+          remito: remito || '',
+          fechaIngreso: fecha ? new Date(fecha).toISOString() : new Date().toISOString(),
+          estado: 'disponible',
+          opUsadaId: null,
+          opUsadaNumero: null,
+          turnoUsadaId: null,
+          fechaConsumida: null,
+          importadoPor: currentUser.nombre,
+          fechaImportacion: new Date().toISOString()
+        });
+      }
+      
+      if(bobinasNuevas.length === 0){
+        alert(`No se importó ninguna bobina nueva.\n\nResumen:\n• Sin destino: ${ignoradas.sin_destino}\n• Cliente/medida no en catálogo: ${ignoradas.no_match_catalogo}\n• Duplicadas: ${ignoradas.duplicadas}`);
+        ev.target.value = '';
+        return;
+      }
+      
+      // Confirmar antes de agregar
+      const resumen = `IMPORTAR ${bobinasNuevas.length} BOBINAS ${tipo.toUpperCase()}?\n\n` +
+        `Productos detectados:\n${[...productosConMatch].map(p=>'• '+p).join('\n')}\n\n` +
+        `Ignoradas:\n• Sin destino: ${ignoradas.sin_destino}\n• Cliente/medida no en catálogo: ${ignoradas.no_match_catalogo}\n• Duplicadas: ${ignoradas.duplicadas}`;
+      
+      if(!confirm(resumen)){ev.target.value = ''; return;}
+      
+      // Agregar al stock
+      if(tipo === 'pet'){
+        state.stockBobinasPet.push(...bobinasNuevas);
+      } else {
+        state.stockBobinasPe.push(...bobinasNuevas);
+      }
+      
+      // Log
+      state.importacionesExcel.push({
+        id: uid('IMP'),
+        fecha: new Date().toISOString(),
+        archivo: file.name,
+        remito: remito||'',
+        fechaEnvio: fecha?new Date(fecha).toISOString():null,
+        cantBobinas: bobinasNuevas.length,
+        ignoradas: ignoradas.sin_destino + ignoradas.no_match_catalogo + ignoradas.duplicadas,
+        importadoPor: currentUser.nombre,
+        tipo
+      });
+      
+      saveState();
+      alert(`✓ ${bobinasNuevas.length} bobinas importadas correctamente.`);
+      renderStockBobinas();
+      ev.target.value = '';
+    } catch(err){
+      console.error(err);
+      alert('Error procesando Excel: '+err.message);
+      ev.target.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function agregarBobinaManual(tipo){
+  bobinaStockFormModal(null, tipo);
+}
+
+function editarBobinaStock(id, tipo){
+  bobinaStockFormModal(id, tipo);
+}
+
+function bobinaStockFormModal(id, tipo){
+  const stockArr = tipo === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+  const esEdicion = id !== null;
+  const b = esEdicion ? stockArr.find(x=>x.id===id) : {
+    cliente:'',medida:'',medidaProductoFinal:'',partida:'',numero:'',peso:'',metros:'',pallet:'',solicitudPedido:'',
+    estado:'disponible'
+  };
+  if(esEdicion && !b){alert('Bobina no encontrada'); return;}
+  
+  const clientesUnicos = [...new Set(state.catalogo.map(p=>p.cliente))];
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>${esEdicion?'Editar':'Agregar'} bobina ${tipo.toUpperCase()} en stock</h2>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <select class="form-select" id="bsCliente" onchange="actualizarMedidasStockManual('${tipo}')">
+          <option value="">— Seleccionar —</option>
+          ${clientesUnicos.map(c=>`<option value="${c}" ${b.cliente===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Producto (medida final)</label>
+        <select class="form-select" id="bsMedidaFinal">
+          <option value="">— Seleccionar cliente primero —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Medida PET madre (ancho × espesor)</label>
+        <input type="text" class="form-input" id="bsMedidaPet" value="${b.medida||''}" placeholder="ej: 350x250">
+        <div class="form-help">Auto-llena al elegir producto. Editable.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Partida</label>
+        <input type="text" class="form-input" id="bsPartida" value="${b.partida||''}" placeholder="ej: 7926S-1VX">
+      </div>
+      <div class="form-group">
+        <label class="form-label">N° de bobina</label>
+        <input type="text" class="form-input" id="bsNumero" value="${b.numero||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Peso (kg)</label>
+        <input type="number" class="form-input" id="bsPeso" value="${b.peso||''}" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Metros</label>
+        <input type="number" class="form-input" id="bsMetros" value="${b.metros||''}" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pallet (opcional)</label>
+        <input type="text" class="form-input" id="bsPallet" value="${b.pallet||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Solicitud de pedido (opcional)</label>
+        <input type="text" class="form-input" id="bsSolicitud" value="${b.solicitudPedido||''}">
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <button class="btn" onclick="guardarBobinaStock(${esEdicion?`'${id}'`:'null'},'${tipo}')">${esEdicion?'Guardar cambios':'Crear bobina'}</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  showModal(html, true);
+  
+  // Si es edición, cargar las medidas del cliente
+  if(esEdicion){
+    setTimeout(()=>{
+      actualizarMedidasStockManual(tipo);
+      const sel = document.getElementById('bsMedidaFinal');
+      if(sel) sel.value = b.medidaProductoFinal||'';
+    }, 50);
+  }
+}
+
+function actualizarMedidasStockManual(tipo){
+  const cliente = document.getElementById('bsCliente').value;
+  const sel = document.getElementById('bsMedidaFinal');
+  const inputMedidaPet = document.getElementById('bsMedidaPet');
+  
+  const productos = state.catalogo.filter(p=>p.cliente===cliente);
+  if(productos.length === 0){
+    sel.innerHTML = '<option value="">No hay productos para este cliente</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    productos.map(p=>`<option value="${p.medida}" data-anchopet="${p.anchoPet}" data-esppet="${p.espPet}">${p.medida} (PET ${p.anchoPet}x${p.espPet})</option>`).join('');
+  
+  sel.onchange = function(){
+    const opt = sel.selectedOptions[0];
+    if(opt && opt.dataset.anchopet){
+      inputMedidaPet.value = `${opt.dataset.anchopet}x${opt.dataset.esppet}`;
+    }
+  };
+}
+
+function guardarBobinaStock(id, tipo){
+  const stockArr = tipo === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+  const cliente = document.getElementById('bsCliente').value;
+  const medidaProductoFinal = document.getElementById('bsMedidaFinal').value;
+  const medida = document.getElementById('bsMedidaPet').value.trim();
+  const partida = document.getElementById('bsPartida').value.trim();
+  const numero = document.getElementById('bsNumero').value.trim();
+  const peso = parseFloat(document.getElementById('bsPeso').value) || 0;
+  const metros = parseFloat(document.getElementById('bsMetros').value) || null;
+  const pallet = document.getElementById('bsPallet').value;
+  const solicitudPedido = document.getElementById('bsSolicitud').value;
+  
+  if(!cliente || !medidaProductoFinal || !partida || !numero || !peso){
+    alert('Faltan datos: cliente, producto, partida, número de bobina y peso.');
+    return;
+  }
+  
+  if(id){
+    const b = stockArr.find(x=>x.id===id);
+    if(!b) return;
+    b.cliente = cliente;
+    b.medidaProductoFinal = medidaProductoFinal;
+    b.medida = medida;
+    b.partida = partida;
+    b.numero = numero;
+    b.peso = peso;
+    b.metros = metros;
+    b.pallet = pallet;
+    b.solicitudPedido = solicitudPedido;
+  } else {
+    // Verificar duplicado
+    const dup = stockArr.find(b => b.cliente===cliente && b.partida===partida && b.numero==numero);
+    if(dup){alert('Ya existe una bobina con ese cliente + partida + número.'); return;}
+    
+    stockArr.push({
+      id: uid('STK'),
+      cliente, medidaProductoFinal, medida, partida, numero,
+      peso, metros, pallet, solicitudPedido,
+      remito: '',
+      fechaIngreso: new Date().toISOString(),
+      estado: 'disponible',
+      opUsadaId: null, opUsadaNumero: null, turnoUsadaId: null, fechaConsumida: null,
+      importadoPor: currentUser.nombre,
+      fechaImportacion: new Date().toISOString()
+    });
+  }
+  saveState();
+  closeModal();
+  renderStockBobinas();
+}
+
+function eliminarBobinaStock(id, tipo){
+  if(!confirm('¿Eliminar esta bobina del stock?')) return;
+  const stockArr = tipo === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+  const b = stockArr.find(x=>x.id===id);
+  if(!b) return;
+  if(b.estado === 'consumida'){alert('No se puede eliminar una bobina consumida.'); return;}
+  if(tipo === 'pet'){
+    state.stockBobinasPet = state.stockBobinasPet.filter(x=>x.id!==id);
+  } else {
+    state.stockBobinasPe = state.stockBobinasPe.filter(x=>x.id!==id);
+  }
+  saveState();
+  renderStockBobinas();
+}
+
 function renderConfig(){
   const c = state.config;
   

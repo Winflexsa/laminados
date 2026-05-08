@@ -409,6 +409,30 @@ function loadState(){
         remitos: parsed.remitos || [],
       };
       
+      // Migración: completar campos nuevos del catálogo si están faltantes
+      // Hace match por cliente + medida con el DEFAULT_STATE y completa campos null/undefined
+      result.catalogo = result.catalogo.map(p=>{
+        const defaultProd = DEFAULT_STATE.catalogo.find(d=>d.cliente===p.cliente && d.medida===p.medida);
+        if(!defaultProd) return p;
+        // Completa solo los campos que faltan o son null/undefined
+        const completed = {...p};
+        const camposNuevos = ['conoPet','conoPe','conoLaminado','pesoBobinaPet','metrosBobinaPet','pesoBobinaPe','metrosBobinaPe','pesoBobinaFinal','cilindroLaminador'];
+        camposNuevos.forEach(campo=>{
+          if(completed[campo] === undefined || completed[campo] === null || completed[campo] === ''){
+            completed[campo] = defaultProd[campo];
+          }
+        });
+        return completed;
+      });
+      
+      // Agregar productos nuevos del DEFAULT_STATE que no existan todavía
+      DEFAULT_STATE.catalogo.forEach(defaultProd=>{
+        const existe = result.catalogo.find(p=>p.cliente===defaultProd.cliente && p.medida===defaultProd.medida);
+        if(!existe){
+          result.catalogo.push({...defaultProd});
+        }
+      });
+      
       // Migración: si las OCs tienen formato viejo (sin lineas), convertir
       result.ocs.forEach(oc=>{
         if(!oc.lineas){
@@ -3907,6 +3931,16 @@ function renderConfig(){
     </div>
     
     <div class="card" style="margin-top:18px">
+      <div class="card-title">Catálogo</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Si el catálogo quedó desactualizado (faltan productos nuevos o pesos de bobina/cilindros), podés restaurarlo desde los datos defaults sin perder OCs, OPs ni remitos.
+      </p>
+      <div class="form-row">
+        <button class="btn btn-secondary" onclick="restaurarCatalogo()">Restaurar catálogo desde defaults</button>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top:18px">
       <div class="card-title">Datos del sistema</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
         OCs: ${state.ocs.length} · OPs: ${state.ops.length} · Bobinas registradas: ${contarBobinasTotales()} · Remitos: ${state.remitos.length}
@@ -3974,6 +4008,35 @@ function importarBackup(event){
     }catch(err){alert('Error: '+err.message)}
   };
   reader.readAsText(file);
+}
+
+function restaurarCatalogo(){
+  if(!confirm('¿Restaurar el catálogo desde los datos defaults?\n\nEsto va a:\n• Sobreescribir TODOS los campos de los productos defaults (medidas, espesores, conos, pesos, cilindros).\n• Agregar productos defaults que no estén en tu catálogo.\n\nProductos que agregaste manualmente (que no están en el default) NO se tocan.\n\n¿Continuar?')) return;
+  
+  let actualizados = 0, agregados = 0;
+  
+  // Sobreescribir campos de productos existentes que matchean con default
+  state.catalogo = state.catalogo.map(p=>{
+    const defaultProd = DEFAULT_STATE.catalogo.find(d=>d.cliente===p.cliente && d.medida===p.medida);
+    if(defaultProd){
+      actualizados++;
+      return {...defaultProd}; // copia completa del default
+    }
+    return p; // producto manual, no tocar
+  });
+  
+  // Agregar productos defaults que no existen
+  DEFAULT_STATE.catalogo.forEach(defaultProd=>{
+    const existe = state.catalogo.find(p=>p.cliente===defaultProd.cliente && p.medida===defaultProd.medida);
+    if(!existe){
+      state.catalogo.push({...defaultProd});
+      agregados++;
+    }
+  });
+  
+  saveState();
+  alert(`Catálogo restaurado.\n\n${actualizados} producto(s) actualizado(s).\n${agregados} producto(s) agregado(s).`);
+  navigateTo('catalogo');
 }
 
 function resetearDatos(){

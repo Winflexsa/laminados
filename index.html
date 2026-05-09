@@ -4096,6 +4096,7 @@ function renderStockBobinas(){
         <div class="form-row" style="margin:0">
           <button class="btn" onclick="document.getElementById('importExcelInput').click()">📥 Importar Excel</button>
           <input type="file" id="importExcelInput" accept=".xlsx,.xls" style="display:none" onchange="importarExcelBobinas(event,'${currentStockTab}')">
+          <button class="btn btn-success" onclick="cargaRapidaBobinas('${currentStockTab}')">⚡ Carga rápida</button>
           <button class="btn btn-secondary" onclick="agregarBobinaManual('${currentStockTab}')">+ Agregar manual</button>
         </div>
       </div>
@@ -4431,6 +4432,383 @@ function importarExcelBobinas(ev, tipo){
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+// =========================================================
+// Carga rápida tipo planilla (form en tabla, sin Excel)
+// =========================================================
+let _cargaRapidaState = null;
+
+function cargaRapidaBobinas(tipo){
+  const clientesUnicos = [...new Set(state.catalogo.map(p=>p.cliente))].sort();
+  
+  // Inicializar state
+  _cargaRapidaState = {
+    tipo,
+    cliente: '',
+    medidaProductoFinal: '',
+    medida: '', // medida del PE/PET
+    partida: '',
+    fecha: new Date().toISOString().split('T')[0],
+    operarioDefault: '',
+    filas: [{numero:1, peso:'', operario:''}]
+  };
+  
+  let html = `<button class="modal-close" onclick="closeModal()">×</button>
+    <h2>⚡ Carga rápida — ${tipo.toUpperCase()}</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+      Ingresá los datos del envío arriba y las bobinas en la tabla. Tab pasa al siguiente campo. Al final del peso de una fila se crea otra automáticamente.
+    </p>
+    
+    <div class="card-title" style="margin-top:6px">Datos del envío</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <select class="form-select" id="crCliente" onchange="cargaRapidaCambioCliente()">
+          <option value="">— Seleccionar —</option>
+          ${clientesUnicos.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Producto (medida final)</label>
+        <select class="form-select" id="crMedidaFinal" onchange="cargaRapidaCambioMedida()">
+          <option value="">— Seleccionar cliente primero —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Medida ${tipo.toUpperCase()} (auto)</label>
+        <input type="text" class="form-input" id="crMedida" readonly style="background:var(--bg-2);color:var(--navy);font-weight:600">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Partida / OT</label>
+        <input type="text" class="form-input" id="crPartida" placeholder="ej: 2-46131" oninput="_cargaRapidaState.partida=this.value">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input type="date" class="form-input" id="crFecha" value="${_cargaRapidaState.fecha}" oninput="_cargaRapidaState.fecha=this.value">
+      </div>
+      ${tipo === 'pe' ? `<div class="form-group">
+        <label class="form-label">Operario por defecto</label>
+        <input type="text" class="form-input" id="crOperarioDef" placeholder="ej: M" maxlength="10" oninput="_cargaRapidaState.operarioDefault=this.value;cargaRapidaActualizarOperarios()">
+      </div>` : ''}
+    </div>
+    
+    <div class="card-title" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center">
+      <span>Bobinas <span style="color:var(--muted);font-weight:400" id="crCount">(1)</span></span>
+      <div>
+        <button class="btn btn-sm btn-secondary" onclick="cargaRapidaAgregarFila(1)">+ 1 fila</button>
+        <button class="btn btn-sm btn-secondary" onclick="cargaRapidaAgregarFila(10)">+ 10 filas</button>
+        <button class="btn btn-sm btn-secondary" onclick="cargaRapidaAgregarFila(20)">+ 20 filas</button>
+      </div>
+    </div>
+    
+    <div id="crFilasContainer" style="max-height:50vh;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--bg-2)"></div>
+    
+    <div id="crAdvertencias" style="margin-top:8px"></div>
+    
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn" onclick="cargaRapidaGuardar()">💾 Guardar al stock</button>
+      <button class="btn btn-secondary" onclick="cargaRapidaDescargarExcel()">📥 Descargar como Excel</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  
+  showModal(html, true);
+  setTimeout(()=>cargaRapidaRenderFilas(), 50);
+}
+
+function cargaRapidaCambioCliente(){
+  const cliente = document.getElementById('crCliente').value;
+  _cargaRapidaState.cliente = cliente;
+  
+  const productos = state.catalogo.filter(p=>p.cliente===cliente);
+  const sel = document.getElementById('crMedidaFinal');
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    productos.map(p=>{
+      const tipo = _cargaRapidaState.tipo;
+      const medidaTipo = tipo === 'pet' ? `${p.anchoPet}x${p.espPet}` : `${p.anchoPe}x${p.espPe}`;
+      return `<option value="${p.medida}" data-medida-tipo="${medidaTipo}">${p.medida} (${tipo.toUpperCase()} ${medidaTipo})</option>`;
+    }).join('');
+  document.getElementById('crMedida').value = '';
+  _cargaRapidaState.medidaProductoFinal = '';
+  _cargaRapidaState.medida = '';
+}
+
+function cargaRapidaCambioMedida(){
+  const sel = document.getElementById('crMedidaFinal');
+  const opt = sel.selectedOptions[0];
+  _cargaRapidaState.medidaProductoFinal = sel.value;
+  if(opt && opt.dataset.medidaTipo){
+    document.getElementById('crMedida').value = opt.dataset.medidaTipo;
+    _cargaRapidaState.medida = opt.dataset.medidaTipo;
+  }
+}
+
+function cargaRapidaActualizarOperarios(){
+  // Aplica el operario por defecto a las filas que no tengan operario
+  const def = _cargaRapidaState.operarioDefault;
+  if(!def) return;
+  let cambio = false;
+  _cargaRapidaState.filas.forEach((f,i)=>{
+    if(!f.operario){
+      f.operario = def;
+      const inp = document.getElementById('crOperario_'+i);
+      if(inp) inp.value = def;
+    }
+  });
+}
+
+function cargaRapidaAgregarFila(cant){
+  cargaRapidaCapturarValores();
+  const ultimaN = _cargaRapidaState.filas.length > 0 ? 
+    Math.max(..._cargaRapidaState.filas.map(f=>parseInt(f.numero)||0)) : 0;
+  for(let i=0; i<cant; i++){
+    _cargaRapidaState.filas.push({
+      numero: ultimaN + 1 + i,
+      peso: '',
+      operario: _cargaRapidaState.operarioDefault || ''
+    });
+  }
+  cargaRapidaRenderFilas();
+}
+
+function cargaRapidaEliminarFila(idx){
+  if(_cargaRapidaState.filas.length <= 1){
+    alert('Tiene que quedar al menos una fila.');
+    return;
+  }
+  cargaRapidaCapturarValores();
+  _cargaRapidaState.filas.splice(idx, 1);
+  cargaRapidaRenderFilas();
+}
+
+function cargaRapidaCapturarValores(){
+  _cargaRapidaState.filas.forEach((f,i)=>{
+    const numEl = document.getElementById('crNum_'+i);
+    const pesoEl = document.getElementById('crPeso_'+i);
+    const opEl = document.getElementById('crOperario_'+i);
+    if(numEl) f.numero = numEl.value;
+    if(pesoEl) f.peso = pesoEl.value;
+    if(opEl) f.operario = opEl.value;
+  });
+}
+
+function cargaRapidaRenderFilas(){
+  const tipo = _cargaRapidaState.tipo;
+  const cont = document.getElementById('crFilasContainer');
+  if(!cont) return;
+  
+  const filas = _cargaRapidaState.filas;
+  document.getElementById('crCount').textContent = `(${filas.length})`;
+  
+  let html = `<table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:var(--bg);border-bottom:2px solid var(--line)">
+        <th style="text-align:left;padding:6px;font-size:11px;color:var(--muted);width:60px">N°</th>
+        <th style="text-align:left;padding:6px;font-size:11px;color:var(--muted);width:120px">Peso (kg)</th>
+        ${tipo === 'pe' ? '<th style="text-align:left;padding:6px;font-size:11px;color:var(--muted);width:80px">Operario</th>' : ''}
+        <th style="width:40px"></th>
+      </tr>
+    </thead><tbody>`;
+  
+  filas.forEach((f, i)=>{
+    html += `<tr>
+      <td style="padding:3px"><input type="number" class="form-input" id="crNum_${i}" value="${f.numero}" style="margin:0;padding:6px" tabindex="${i*3+1}"></td>
+      <td style="padding:3px"><input type="number" class="form-input" id="crPeso_${i}" value="${f.peso}" step="any" inputmode="decimal" style="margin:0;padding:6px" tabindex="${i*3+2}" 
+        onkeydown="if(event.key==='Enter'){event.preventDefault();cargaRapidaSiguienteFila(${i});}"
+        oninput="cargaRapidaValidarPeso(${i})"></td>
+      ${tipo === 'pe' ? `<td style="padding:3px"><input type="text" class="form-input" id="crOperario_${i}" value="${f.operario||''}" maxlength="10" style="margin:0;padding:6px" tabindex="${i*3+3}"></td>` : ''}
+      <td style="padding:3px;text-align:center">
+        <button type="button" class="btn-icon" onclick="cargaRapidaEliminarFila(${i})" title="Eliminar">×</button>
+      </td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  cont.innerHTML = html;
+}
+
+function cargaRapidaSiguienteFila(idx){
+  // Si es la última fila, agrega una nueva
+  cargaRapidaCapturarValores();
+  if(idx === _cargaRapidaState.filas.length - 1){
+    cargaRapidaAgregarFila(1);
+  }
+  setTimeout(()=>{
+    const nextPeso = document.getElementById('crPeso_'+(idx+1));
+    if(nextPeso) nextPeso.focus();
+  }, 50);
+}
+
+function cargaRapidaValidarPeso(idx){
+  const inp = document.getElementById('crPeso_'+idx);
+  if(!inp) return;
+  const v = parseFloat(inp.value);
+  inp.style.borderColor = '';
+  if(isNaN(v) || v === 0){return;}
+  
+  // Buscar peso de referencia del catálogo
+  const cliente = _cargaRapidaState.cliente;
+  const medida = _cargaRapidaState.medidaProductoFinal;
+  const tipo = _cargaRapidaState.tipo;
+  const prod = state.catalogo.find(p=>p.cliente===cliente && p.medida===medida);
+  if(!prod) return;
+  
+  const pesoRef = tipo === 'pet' ? prod.pesoBobinaPet : prod.pesoBobinaPe;
+  if(!pesoRef) return;
+  
+  const desv = Math.abs(v - pesoRef) / pesoRef;
+  if(desv > 0.5){
+    inp.style.borderColor = 'var(--red)';
+    inp.title = `Muy lejos del peso típico (~${pesoRef} kg)`;
+  } else if(desv > 0.2){
+    inp.style.borderColor = 'var(--orange)';
+    inp.title = `Diferencia ~${(desv*100).toFixed(0)}% con el típico (~${pesoRef} kg)`;
+  } else {
+    inp.style.borderColor = 'var(--green)';
+    inp.title = '';
+  }
+}
+
+function cargaRapidaGuardar(){
+  cargaRapidaCapturarValores();
+  const s = _cargaRapidaState;
+  
+  // Validaciones
+  if(!s.cliente){alert('Falta seleccionar cliente.'); return;}
+  if(!s.medidaProductoFinal){alert('Falta seleccionar producto.'); return;}
+  if(!s.partida){alert('Falta partida / OT.'); return;}
+  
+  // Filtrar filas válidas (con número y peso > 0)
+  const validas = s.filas.filter(f=>{
+    const num = parseInt(f.numero);
+    const peso = parseFloat(f.peso);
+    return !isNaN(num) && num > 0 && !isNaN(peso) && peso > 0;
+  });
+  
+  if(validas.length === 0){alert('No hay bobinas válidas para guardar (necesitan número y peso).'); return;}
+  
+  // Detectar duplicados internos (entre filas)
+  const numsUsados = new Set();
+  for(const f of validas){
+    const num = parseInt(f.numero);
+    if(numsUsados.has(num)){
+      alert(`Hay bobinas con N° ${num} duplicado en la lista.`);
+      return;
+    }
+    numsUsados.add(num);
+  }
+  
+  // Detectar duplicados con stock existente
+  const stockArr = s.tipo === 'pet' ? state.stockBobinasPet : state.stockBobinasPe;
+  const dupExistentes = validas.filter(f=>{
+    return stockArr.find(b => 
+      b.cliente === s.cliente && 
+      b.partida === s.partida && 
+      b.numero == parseInt(f.numero)
+    );
+  });
+  
+  let aGuardar = validas;
+  if(dupExistentes.length > 0){
+    if(!confirm(`Hay ${dupExistentes.length} bobina(s) que ya están en el stock (mismo cliente + partida + N°).\n\nNúmeros: ${dupExistentes.map(f=>f.numero).join(', ')}\n\n¿Saltar las duplicadas y guardar el resto?`)){
+      return;
+    }
+    aGuardar = validas.filter(f=>!dupExistentes.includes(f));
+  }
+  
+  if(aGuardar.length === 0){alert('No queda nada para guardar.'); return;}
+  
+  // Confirmar
+  if(!confirm(`Guardar ${aGuardar.length} bobina(s) ${s.tipo.toUpperCase()} de ${s.cliente} (${s.medidaProductoFinal}) al stock?`)) return;
+  
+  // Encontrar producto para metros
+  const prod = state.catalogo.find(p=>p.cliente===s.cliente && p.medida===s.medidaProductoFinal);
+  const pesoRefKey = s.tipo === 'pet' ? 'pesoBobinaPet' : 'pesoBobinaPe';
+  const metrosRefKey = s.tipo === 'pet' ? 'metrosBobinaPet' : 'metrosBobinaPe';
+  
+  aGuardar.forEach(f=>{
+    const peso = parseFloat(f.peso);
+    let metros = null;
+    if(prod && prod[pesoRefKey] && prod[metrosRefKey]){
+      metros = Math.round((peso / prod[pesoRefKey]) * prod[metrosRefKey]);
+    }
+    
+    stockArr.push({
+      id: uid('STK'),
+      cliente: s.cliente,
+      medidaProductoFinal: s.medidaProductoFinal,
+      medida: s.medida,
+      partida: s.partida,
+      numero: parseInt(f.numero),
+      peso,
+      metros,
+      pallet: '',
+      operario: f.operario || '',
+      solicitudPedido: '',
+      remito: s.partida,
+      fechaIngreso: new Date(s.fecha + 'T12:00:00').toISOString(),
+      estado: 'disponible',
+      opUsadaId: null, opUsadaNumero: null, turnoUsadaId: null, fechaConsumida: null,
+      importadoPor: currentUser.nombre,
+      fechaImportacion: new Date().toISOString()
+    });
+  });
+  
+  // Log de carga
+  state.importacionesExcel.push({
+    id: uid('IMP'),
+    fecha: new Date().toISOString(),
+    archivo: '(carga rápida)',
+    remito: s.partida,
+    fechaEnvio: new Date(s.fecha+'T12:00:00').toISOString(),
+    cantBobinas: aGuardar.length,
+    ignoradas: 0,
+    importadoPor: currentUser.nombre,
+    tipo: s.tipo
+  });
+  
+  saveState();
+  alert(`✓ ${aGuardar.length} bobina(s) guardada(s) al stock.`);
+  closeModal();
+  renderStockBobinas();
+}
+
+function cargaRapidaDescargarExcel(){
+  if(typeof XLSX === 'undefined'){alert('XLSX no disponible'); return;}
+  cargaRapidaCapturarValores();
+  const s = _cargaRapidaState;
+  
+  if(!s.cliente || !s.medidaProductoFinal || !s.partida){
+    alert('Completá cliente, producto y partida antes de descargar.');
+    return;
+  }
+  
+  // Armar matriz para Excel con la misma estructura que importarExcelBobinas espera
+  const matrix = [
+    [`WINFLEX S.A. - Producción ${s.tipo.toUpperCase()} - Bobinas a despachar`],
+    ['Fecha', s.fecha, '', 'Remito', s.partida],
+    ['Partida', 'Bobina N°', 'Peso', 'Medida', s.tipo === 'pet' ? 'Pallet' : 'Operario', 'Solicitud', 'Destino']
+  ];
+  
+  s.filas.forEach(f=>{
+    const num = parseInt(f.numero);
+    const peso = parseFloat(f.peso);
+    if(isNaN(num) || isNaN(peso) || peso <= 0) return;
+    matrix.push([
+      s.partida, num, peso, s.medida,
+      f.operario || '',
+      '',
+      s.cliente
+    ]);
+  });
+  
+  const ws = XLSX.utils.aoa_to_sheet(matrix);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Detalle de Envio');
+  
+  const fechaStr = s.fecha.replace(/-/g, '');
+  const filename = `Stock_${s.tipo.toUpperCase()}_${s.cliente.replace(/\s/g,'_')}_${fechaStr}.xlsx`;
+  XLSX.writeFile(wb, filename);
 }
 
 function agregarBobinaManual(tipo){

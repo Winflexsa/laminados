@@ -4120,6 +4120,10 @@ function renderStockBobinas(){
 }
 
 function renderStockTable(bobinas){
+  const esPet = currentStockTab === 'pet';
+  const colExtra = esPet ? 'Pallet' : 'Operario';
+  const labelMadre = esPet ? 'Medida (PET madre)' : 'Medida (PE)';
+  
   let html;
   if(bobinas.length === 0){
     html = '<p style="color:var(--muted);text-align:center;padding:30px">No hay bobinas en el stock con estos filtros.</p>';
@@ -4127,12 +4131,12 @@ function renderStockTable(bobinas){
     html = `<table class="table">
       <thead><tr>
         <th>Cliente</th>
-        <th>Medida (PET madre)</th>
+        <th>${labelMadre}</th>
         <th>Partida</th>
         <th>Bobina N°</th>
         <th class="num">Peso</th>
         <th class="num">Metros</th>
-        <th>Pallet</th>
+        <th>${colExtra}</th>
         <th>Solic.</th>
         <th>Recibida</th>
         <th>Estado</th>
@@ -4142,14 +4146,15 @@ function renderStockTable(bobinas){
     bobinas.forEach(b=>{
       const estadoBadge = b.estado === 'disponible' ? 'badge-success' : 'badge-pending';
       const opLink = b.opUsadaId ? `<a onclick="verOp('${b.opUsadaId}')" style="color:var(--navy);cursor:pointer;text-decoration:underline">${b.opUsadaNumero||'(OP)'}</a>` : '—';
+      const colExtraVal = esPet ? (b.pallet||'—') : (b.operario||'—');
       html += `<tr>
         <td><strong>${b.cliente}</strong></td>
         <td>${b.medida||'—'}</td>
         <td>${b.partida||'—'}</td>
         <td><strong style="font-family:'Courier New',monospace">${b.numero}</strong></td>
-        <td class="num">${(b.peso||0).toFixed(0)} kg</td>
+        <td class="num">${(b.peso||0).toFixed(1)} kg</td>
         <td class="num">${b.metros?b.metros.toFixed(0)+' m':'—'}</td>
-        <td>${b.pallet||'—'}</td>
+        <td>${colExtraVal}</td>
         <td>${b.solicitudPedido||'—'}</td>
         <td>${b.fechaIngreso?fmtDate(b.fechaIngreso):'—'}</td>
         <td><span class="badge ${estadoBadge}">${b.estado||'—'}</span></td>
@@ -4218,8 +4223,10 @@ function importarExcelBobinas(ev, tipo){
         }
       }
       
-      // Buscar fila de encabezados
+      // Buscar fila de encabezados y mapear columnas dinámicamente
       let headerRow = -1;
+      let colMap = {}; // nombre normalizado → índice de columna
+      
       for(let i=0; i<rows.length; i++){
         const row = rows[i];
         if(!row) continue;
@@ -4227,6 +4234,19 @@ function importarExcelBobinas(ev, tipo){
         const c1 = String(row[1]||'').trim();
         if(c0 === 'Partida' && (c1 === 'Bobina N°' || c1.startsWith('Bobina'))){
           headerRow = i;
+          // Mapear cada columna a su índice
+          row.forEach((cellValue, idx)=>{
+            if(!cellValue) return;
+            const name = String(cellValue).trim().toLowerCase();
+            if(name === 'partida') colMap.partida = idx;
+            else if(name.startsWith('bobina')) colMap.numero = idx;
+            else if(name === 'peso' || name.includes('peso')) colMap.peso = idx;
+            else if(name === 'medida') colMap.medida = idx;
+            else if(name === 'pallet') colMap.pallet = idx;
+            else if(name === 'operario' || name.startsWith('oper')) colMap.operario = idx;
+            else if(name.includes('solicit') || name.includes('pedido')) colMap.solicitud = idx;
+            else if(name === 'destino' || name === 'cliente') colMap.destino = idx;
+          });
           break;
         }
       }
@@ -4236,6 +4256,15 @@ function importarExcelBobinas(ev, tipo){
         ev.target.value = '';
         return;
       }
+      
+      // Verificar columnas obligatorias
+      if(colMap.partida === undefined || colMap.numero === undefined || colMap.peso === undefined || colMap.medida === undefined || colMap.destino === undefined){
+        alert('Faltan columnas obligatorias en el Excel. Necesarias: Partida, Bobina N°, Peso, Medida, Destino.\n\nColumnas encontradas: ' + Object.keys(colMap).join(', '));
+        ev.target.value = '';
+        return;
+      }
+      
+      console.log('Mapeo de columnas:', colMap);
       
       // Función segura para convertir fecha de Excel a ISO
       function fechaSegura(f){
@@ -4265,12 +4294,15 @@ function importarExcelBobinas(ev, tipo){
       
       for(let i=headerRow+1; i<rows.length; i++){
         const row = rows[i];
-        if(!row || row[0] === null || row[0] === undefined) continue;
+        if(!row) continue;
+        
+        const partidaCell = row[colMap.partida];
+        const numCell = row[colMap.numero];
+        if(partidaCell === null || partidaCell === undefined) continue;
         
         // Bobina N° puede venir como número o string
-        let numBobina = row[1];
+        let numBobina = numCell;
         if(numBobina === null || numBobina === undefined || numBobina === '') continue;
-        // Si es string que parece número, parsear
         if(typeof numBobina === 'string'){
           const parsed = parseInt(numBobina);
           if(isNaN(parsed)) continue;
@@ -4278,19 +4310,22 @@ function importarExcelBobinas(ev, tipo){
         }
         if(typeof numBobina !== 'number') continue;
         
-        const partida = String(row[0]||'').trim();
-        const peso = parseFloat(row[2]) || 0;
-        const medida = String(row[3]||'').trim();
-        const pallet = String(row[4]||'').trim();
-        const solicitudPedido = String(row[5]||'').trim();
-        const destino = String(row[6]||'').trim();
+        const partida = String(partidaCell||'').trim();
+        const peso = parseFloat(row[colMap.peso]) || 0;
+        const medida = String(row[colMap.medida]||'').trim();
+        const pallet = colMap.pallet !== undefined ? String(row[colMap.pallet]||'').trim() : '';
+        const operario = colMap.operario !== undefined ? String(row[colMap.operario]||'').trim() : '';
+        const solicitudPedido = colMap.solicitud !== undefined ? String(row[colMap.solicitud]||'').trim() : '';
+        const destino = String(row[colMap.destino]||'').trim();
         
         if(!destino){ignoradas.sin_destino++; continue;}
         
-        // Filtrar: matchear con catálogo (cliente + medida del PET)
+        // Filtrar: matchear con catálogo según TIPO (PET o PE)
         const productoMatch = state.catalogo.find(p=>{
-          const medidaPet = `${p.anchoPet}x${p.espPet}`;
-          return p.cliente.toLowerCase() === destino.toLowerCase() && medidaPet === medida;
+          const medidaCatalogo = tipo === 'pet' 
+            ? `${p.anchoPet}x${p.espPet}` 
+            : `${p.anchoPe}x${p.espPe}`;
+          return p.cliente.toLowerCase() === destino.toLowerCase() && medidaCatalogo === medida;
         });
         
         if(!productoMatch){
@@ -4311,10 +4346,12 @@ function importarExcelBobinas(ev, tipo){
         
         if(duplicada){ignoradas.duplicadas++; continue;}
         
-        // Estimar metros si tenemos referencia de catálogo
+        // Estimar metros si tenemos referencia de catálogo (según tipo PET/PE)
         let metros = null;
-        if(productoMatch.pesoBobinaPet && productoMatch.metrosBobinaPet){
-          metros = Math.round((peso / productoMatch.pesoBobinaPet) * productoMatch.metrosBobinaPet);
+        const pesoRefKey = tipo === 'pet' ? 'pesoBobinaPet' : 'pesoBobinaPe';
+        const metrosRefKey = tipo === 'pet' ? 'metrosBobinaPet' : 'metrosBobinaPe';
+        if(productoMatch[pesoRefKey] && productoMatch[metrosRefKey]){
+          metros = Math.round((peso / productoMatch[pesoRefKey]) * productoMatch[metrosRefKey]);
         }
         
         bobinasNuevas.push({
@@ -4327,6 +4364,7 @@ function importarExcelBobinas(ev, tipo){
           peso,
           metros,
           pallet,
+          operario,
           solicitudPedido,
           remito: String(remito || ''),
           fechaIngreso: fechaISO,

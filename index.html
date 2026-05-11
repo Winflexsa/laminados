@@ -303,6 +303,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
 // ESTADO Y PERSISTENCIA
 // =========================================================
 const STORE_KEY = 'winflex_op_v4';
+const CLOUD_CONFIG_KEY = 'winflex_op_v4_cloud_config'; // separado del state, queda local por PC
+
+// Cloud sync state
+let _cloudSyncEnabled = false;
+let _cloudConfig = {apiKey:'', binId:'', autoRefreshSec:30};
+let _cloudSyncTimer = null;
+let _cloudLastSync = null;
+let _cloudSyncing = false;
+let _cloudPendingSave = false;
 
 const DEFAULT_STATE = {
   config: {
@@ -505,9 +514,241 @@ function loadState(){
 function saveState(){
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    // Si la sincronización en la nube está activa, marcar pendiente y subir (debounced)
+    if(_cloudSyncEnabled){
+      _cloudPendingSave = true;
+      clearTimeout(window._cloudDebounce);
+      window._cloudDebounce = setTimeout(()=>cloudSubirEstado(), 1500); // debounce 1.5s
+    }
   }catch(e){
     alert('Error guardando datos: '+e.message);
   }
+}
+
+// =========================================================
+// CLOUD SYNC (JSONBin)
+// =========================================================
+
+function loadCloudConfig(){
+  try{
+    const raw = localStorage.getItem(CLOUD_CONFIG_KEY);
+    if(raw){
+      _cloudConfig = JSON.parse(raw);
+      if(_cloudConfig.apiKey && _cloudConfig.binId){
+        _cloudSyncEnabled = true;
+      }
+    }
+  }catch(e){console.warn('Error cargando config cloud',e);}
+}
+
+function saveCloudConfig(){
+  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(_cloudConfig));
+}
+
+function cloudSetStatusIndicator(status, text){
+  const el = document.getElementById('cloudStatusIndicator');
+  if(!el) return;
+  const colors = {syncing:'var(--orange)', ok:'var(--green)', error:'var(--red)', offline:'var(--muted)', idle:'var(--muted)'};
+  const icons = {syncing:'⟳', ok:'✓', error:'⚠', offline:'○', idle:'○'};
+  el.style.color = colors[status] || 'var(--muted)';
+  el.innerHTML = `<span style="font-weight:600">${icons[status]||'○'}</span> ${text||''}`;
+}
+
+async function cloudSubirEstado(){
+  if(!_cloudSyncEnabled || _cloudSyncing) return;
+  if(!_cloudConfig.apiKey || !_cloudConfig.binId){console.warn('Cloud sync no configurado'); return;}
+  
+  _cloudSyncing = true;
+  cloudSetStatusIndicator('syncing', 'Subiendo...');
+  
+  const payload = {
+    ocs: state.ocs || [],
+    ops: state.ops || [],
+    stockBobinasPet: state.stockBobinasPet || [],
+    stockBobinasPe: state.stockBobinasPe || [],
+    remitos: state.remitos || [],
+    bobinas: state.bobinas || [],
+    importacionesExcel: state.importacionesExcel || [],
+    _lastModified: new Date().toISOString(),
+    _modifiedBy: currentUser ? currentUser.nombre : 'desconocido'
+  };
+  
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${_cloudConfig.binId}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json','X-Master-Key':_cloudConfig.apiKey,'X-Bin-Versioning':'false'},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){const err = await res.text(); throw new Error(`HTTP ${res.status}: ${err.slice(0,200)}`);}
+    _cloudLastSync = new Date();
+    _cloudPendingSave = false;
+    state._lastModified = payload._lastModified;
+    cloudSetStatusIndicator('ok', `Sincronizado · ${fmtHora(_cloudLastSync)}`);
+  } catch(err){
+    console.error('Error subiendo a cloud:', err);
+    cloudSetStatusIndicator('error', 'Error al subir');
+  } finally {_cloudSyncing = false;}
+}
+
+async function cloudBajarEstado(silent){
+  if(!_cloudSyncEnabled || _cloudSyncing){if(!silent)alert('Sync en proceso, esperá unos segundos.'); return null;}
+  if(!_cloudConfig.apiKey || !_cloudConfig.binId){if(!silent)alert('Cloud sync no configurado.'); return null;}
+  
+  _cloudSyncing = true;
+  if(!silent) cloudSetStatusIndicator('syncing', 'Bajando...');
+  
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${_cloudConfig.binId}/latest`, {
+      method: 'GET', headers: {'X-Master-Key': _cloudConfig.apiKey}
+    });
+    if(!res.ok){const err = await res.text(); throw new Error(`HTTP ${res.status}: ${err.slice(0,200)}`);}
+    const data = await res.json();
+    const cloud = data.record || data;
+    _cloudLastSync = new Date();
+    cloudSetStatusIndicator('ok', `Sincronizado · ${fmtHora(_cloudLastSync)}`);
+    return cloud;
+  } catch(err){
+    console.error('Error bajando de cloud:', err);
+    if(!silent) cloudSetStatusIndicator('error', 'Error al bajar');
+    return null;
+  } finally {_cloudSyncing = false;}
+}
+
+function cloudAplicarEstado(cloud){
+  if(cloud.ocs) state.ocs = cloud.ocs;
+  if(cloud.ops) state.ops = cloud.ops;
+  if(cloud.stockBobinasPet) state.stockBobinasPet = cloud.stockBobinasPet;
+  if(cloud.stockBobinasPe) state.stockBobinasPe = cloud.stockBobinasPe;
+  if(cloud.remitos) state.remitos = cloud.remitos;
+  if(cloud.bobinas) state.bobinas = cloud.bobinas;
+  if(cloud.importacionesExcel) state.importacionesExcel = cloud.importacionesExcel;
+  if(cloud._lastModified) state._lastModified = cloud._lastModified;
+}
+
+async function cloudInicializar(){
+  if(!_cloudSyncEnabled) return;
+  
+  cloudSetStatusIndicator('syncing', 'Conectando...');
+  const cloud = await cloudBajarEstado(true);
+  if(!cloud){cloudSetStatusIndicator('error', 'Sin conexión'); return;}
+  
+  const cloudCounts = {ocs:(cloud.ocs||[]).length, ops:(cloud.ops||[]).length, stockPet:(cloud.stockBobinasPet||[]).length, stockPe:(cloud.stockBobinasPe||[]).length, remitos:(cloud.remitos||[]).length};
+  const localCounts = {ocs:state.ocs.length, ops:state.ops.length, stockPet:state.stockBobinasPet.length, stockPe:state.stockBobinasPe.length, remitos:state.remitos.length};
+  
+  const totalCloud = Object.values(cloudCounts).reduce((s,n)=>s+n,0);
+  const totalLocal = Object.values(localCounts).reduce((s,n)=>s+n,0);
+  
+  if(totalLocal === 0 && totalCloud > 0){
+    cloudAplicarEstado(cloud);
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    cloudSetStatusIndicator('ok', `Sincronizado · ${fmtHora(_cloudLastSync)}`);
+    return;
+  }
+  if(totalLocal === 0 && totalCloud === 0){
+    cloudSetStatusIndicator('ok', 'Sincronizado · sin datos');
+    return;
+  }
+  
+  const lastModCloud = cloud._lastModified ? new Date(cloud._lastModified) : null;
+  const modBy = cloud._modifiedBy || 'desconocido';
+  
+  const mensaje = `¿Cómo querés sincronizar?\n\n` +
+    `📤 EN LA NUBE: ${cloudCounts.ocs} OCs · ${cloudCounts.ops} OPs · ${cloudCounts.stockPet} PET · ${cloudCounts.stockPe} PE · ${cloudCounts.remitos} remitos\n` +
+    `(modificado por ${modBy}${lastModCloud?' el '+lastModCloud.toLocaleString('es-AR'):''})\n\n` +
+    `💻 EN TU PC: ${localCounts.ocs} OCs · ${localCounts.ops} OPs · ${localCounts.stockPet} PET · ${localCounts.stockPe} PE · ${localCounts.remitos} remitos\n\n` +
+    `OK = Bajar de la nube (PIERDE lo local)\n` +
+    `Cancelar = Subir lo local (PISA lo de la nube)`;
+  
+  if(confirm(mensaje)){
+    cloudAplicarEstado(cloud);
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    alert('Datos de la nube descargados. Tu PC ahora tiene lo mismo que la nube.');
+    if(currentUser && currentPage) navigateTo(currentPage);
+  } else {
+    await cloudSubirEstado();
+    alert('Datos locales subidos a la nube. La nube ahora tiene lo mismo que tu PC.');
+  }
+}
+
+async function cloudRefrescar(){
+  if(!_cloudSyncEnabled || _cloudSyncing || _cloudPendingSave) return;
+  const cloud = await cloudBajarEstado(true);
+  if(!cloud) return;
+  
+  const cloudMod = cloud._lastModified;
+  const localMod = state._lastModified;
+  
+  if(cloudMod && cloudMod !== localMod){
+    cloudAplicarEstado(cloud);
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    if(currentUser && currentPage) navigateTo(currentPage);
+  }
+}
+
+function cloudIniciarAutoRefresh(){
+  if(_cloudSyncTimer) clearInterval(_cloudSyncTimer);
+  if(!_cloudSyncEnabled) return;
+  const seg = _cloudConfig.autoRefreshSec || 30;
+  _cloudSyncTimer = setInterval(cloudRefrescar, seg * 1000);
+}
+
+function cloudDetenerAutoRefresh(){
+  if(_cloudSyncTimer){clearInterval(_cloudSyncTimer); _cloudSyncTimer = null;}
+}
+
+function fmtHora(d){
+  if(!d) return '—';
+  return d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+}
+
+async function cloudActivar(apiKey, binId, autoRefreshSec){
+  _cloudConfig.apiKey = apiKey.trim();
+  _cloudConfig.binId = binId.trim();
+  _cloudConfig.autoRefreshSec = autoRefreshSec || 30;
+  
+  cloudSetStatusIndicator('syncing', 'Probando conexión...');
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${_cloudConfig.binId}/latest`, {
+      method: 'GET', headers: {'X-Master-Key': _cloudConfig.apiKey}
+    });
+    if(!res.ok){const err = await res.text(); throw new Error(`HTTP ${res.status}: ${err.slice(0,300)}`);}
+  } catch(err){
+    cloudSetStatusIndicator('error', 'Falló conexión');
+    alert('No se pudo conectar a JSONBin:\n\n' + err.message + '\n\nRevisá la API key y el Bin ID.');
+    return false;
+  }
+  
+  _cloudSyncEnabled = true;
+  saveCloudConfig();
+  await cloudInicializar();
+  cloudIniciarAutoRefresh();
+  return true;
+}
+
+function cloudDesactivar(){
+  if(!confirm('¿Desactivar sincronización con la nube?\n\nLos datos locales en tu PC se conservan. Lo que está en la nube no se borra.')) return;
+  _cloudSyncEnabled = false;
+  cloudDetenerAutoRefresh();
+  cloudSetStatusIndicator('offline', 'Desactivado');
+  navigateTo('config');
+}
+
+async function cloudForzarBajar(){
+  if(!_cloudSyncEnabled){alert('Cloud sync no activado.'); return;}
+  if(!confirm('¿Bajar el estado de la nube y SOBREESCRIBIR lo local?')) return;
+  const cloud = await cloudBajarEstado(false);
+  if(!cloud) return;
+  cloudAplicarEstado(cloud);
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  alert('Datos descargados.');
+  navigateTo(currentPage || 'dashboard');
+}
+
+async function cloudForzarSubir(){
+  if(!_cloudSyncEnabled){alert('Cloud sync no activado.'); return;}
+  if(!confirm('¿Subir tu estado local a la nube y SOBREESCRIBIR lo que haya allá?')) return;
+  await cloudSubirEstado();
+  alert('Datos subidos.');
 }
 
 // =========================================================
@@ -635,6 +876,14 @@ document.getElementById('pinInput').addEventListener('keypress', e=>{
 });
 
 window.addEventListener('DOMContentLoaded', ()=>{
+  // Inicializar cloud sync si está configurado
+  loadCloudConfig();
+  if(_cloudSyncEnabled){
+    cloudIniciarAutoRefresh();
+    // Bajar el último estado de la nube al abrir (silencioso, sin diálogo)
+    cloudRefrescar();
+  }
+  
   const saved = sessionStorage.getItem('winflex_op_user');
   if(saved){
     try{
@@ -5051,6 +5300,14 @@ function renderConfig(){
     </div>
     
     <div class="card" style="margin-top:18px">
+      <div class="card-title">☁ Sincronización con la nube</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Compartí datos con Jonathan, Mirta, Agustín y otros usuarios. Los cambios se suben/bajan automáticamente.
+      </p>
+      <div id="cloudConfigPanel"></div>
+    </div>
+    
+    <div class="card" style="margin-top:18px">
       <div class="card-title">Datos del sistema</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
         OCs: ${state.ocs.length} · OPs: ${state.ops.length} · Bobinas registradas: ${contarBobinasTotales()} · Remitos: ${state.remitos.length}
@@ -5064,6 +5321,78 @@ function renderConfig(){
     </div>`;
   
   document.getElementById('content').innerHTML = html;
+  renderCloudConfigPanel();
+}
+
+function renderCloudConfigPanel(){
+  const cont = document.getElementById('cloudConfigPanel');
+  if(!cont) return;
+  
+  if(!_cloudSyncEnabled){
+    // No configurado
+    cont.innerHTML = `
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">API key de JSONBin</label>
+          <input type="password" class="form-input" id="cfgCloudKey" placeholder="$2a$10$..." value="${_cloudConfig.apiKey||''}">
+          <div class="form-help">La misma key que usás en las otras apps de Winflex.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bin ID</label>
+          <input type="text" class="form-input" id="cfgCloudBin" placeholder="6a02..." value="${_cloudConfig.binId||''}">
+          <div class="form-help">El ID del bin específico para esta app.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auto-refresh cada (segundos)</label>
+          <input type="number" class="form-input" id="cfgCloudRefresh" value="${_cloudConfig.autoRefreshSec||30}" min="10" max="300">
+          <div class="form-help">Cada cuánto chequear cambios de otros usuarios.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <button class="btn btn-success" onclick="cfgCloudActivar()">☁ Conectar a la nube</button>
+      </div>
+      <div id="cloudStatusIndicator" style="margin-top:10px;font-size:12px;color:var(--muted)">○ Desactivado</div>`;
+  } else {
+    // Configurado y activo
+    const ultimoSync = _cloudLastSync ? _cloudLastSync.toLocaleString('es-AR') : 'nunca';
+    cont.innerHTML = `
+      <div class="alert alert-success" style="margin-bottom:12px;font-size:13px">
+        <strong>☁ Conectado a la nube</strong><br>
+        Bin ID: <code style="font-family:monospace;font-size:11px">${_cloudConfig.binId}</code><br>
+        Auto-refresh: cada ${_cloudConfig.autoRefreshSec} segundos<br>
+        Último sync: ${ultimoSync}
+      </div>
+      <div id="cloudStatusIndicator" style="margin-bottom:10px;font-size:12px;color:var(--muted)">○</div>
+      <div class="form-row">
+        <button class="btn btn-secondary" onclick="cloudForzarBajar()">⬇ Bajar de la nube</button>
+        <button class="btn btn-secondary" onclick="cloudForzarSubir()">⬆ Subir a la nube</button>
+        <button class="btn btn-danger" onclick="cloudDesactivar()" style="margin-left:auto">Desactivar sync</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+        <strong>⬇ Bajar de la nube</strong>: trae el último estado y pisa lo local.<br>
+        <strong>⬆ Subir a la nube</strong>: sube tu estado local y pisa lo de la nube.<br>
+        En operación normal no hace falta tocar nada: la sincronización es automática.
+      </p>`;
+    // Actualizar estado actual
+    if(_cloudLastSync){
+      cloudSetStatusIndicator('ok', `Sincronizado · ${fmtHora(_cloudLastSync)}`);
+    } else {
+      cloudSetStatusIndicator('idle', 'Esperando primer sync...');
+    }
+  }
+}
+
+async function cfgCloudActivar(){
+  const apiKey = document.getElementById('cfgCloudKey').value.trim();
+  const binId = document.getElementById('cfgCloudBin').value.trim();
+  const refreshSec = parseInt(document.getElementById('cfgCloudRefresh').value) || 30;
+  
+  if(!apiKey || !binId){alert('Faltan API key o Bin ID'); return;}
+  
+  const ok = await cloudActivar(apiKey, binId, refreshSec);
+  if(ok){
+    navigateTo('config');
+  }
 }
 
 function mostrarAgregarOperarioConfig(){
